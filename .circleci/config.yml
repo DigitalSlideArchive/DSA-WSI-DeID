@@ -1,0 +1,36 @@
+---
+version: 2.1
+jobs:
+  test:
+    docker:
+      - image: girder/girder_test:latest
+      - image: circleci/mongo:4.0-ram
+        command: ["mongod", "--storageEngine", "ephemeralForTest", "--dbpath", "/dev/shm/mongo"]
+
+    steps:
+      - checkout
+      - run:
+          name: Run server tests
+          command: tox
+      - run:
+          name: Run web tests
+          command: |
+            npm install
+            npm run lint
+          working_directory: dsa_seer/web_client
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - test
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - test
