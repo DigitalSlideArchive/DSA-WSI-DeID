@@ -4,6 +4,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
+from .rest import DSASeerResource
 
 
 try:
@@ -31,5 +32,4 @@ class GirderPlugin(plugin.GirderPlugin):
     CLIENT_SOURCE_PATH = 'web_client'
 
     def load(self, info):
-        # add plugin loading logic here
-        pass
+        info['apiRoot'].dsaseer = DSASeerResource()
