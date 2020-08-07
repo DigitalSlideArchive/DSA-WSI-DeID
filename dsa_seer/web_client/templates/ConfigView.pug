@@ -1,0 +1,52 @@
+.g-config-breadcrumb-container
+p.g-hui-description
+  | Provides a workflow for redacting metadata and images.
+  .form-group
+    label(for="g-hui-quarantine-folder") Quarantine Folder
+    p.g-hui-description
+      | If a quarantine folder is specified, users with write access will see a Quarantine button next to items.  When clicked, this moves that item to the quarantine folder and adds metadata to record where it was originally.
+    .input-group.input-group-sm
+      input#g-hui-quarantine-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.quarantine_folder'] || '',
+          title="A folder to store quarantined items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
+    label(for="g-hui-processed-folder") Audited Folder
+    p.g-hui-description
+      | This is the location that redacted files are moved to upon approval.  They should still be reviewed before release.
+    .input-group.input-group-sm
+      input#g-hui-processed-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.processed_folder'] || '',
+          title="A folder to store redacted items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
+    label(for="g-hui-rejected-folder") Rejected Folder
+    p.g-hui-description
+      | This is the location to move files that cannot be successfully redacted.
+    .input-group.input-group-sm
+      input#g-hui-rejected-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.rejected_folder'] || '',
+          title="A folder to store items that cannot be fully processed.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
+    label(for="g-hui-original-folder") Original Folder
+    p.g-hui-description
+      | When an item is processed, the original item is moved here so a record of it is kept.
+    .input-group.input-group-sm
+      input#g-hui-original-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.original_folder'] || '',
+          title="A folder to store original items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  p#g-hui-error-message.g-validation-failed-message
+.g-hui-buttons
+  button#g-hui-save.btn.btn-sm.btn-primary Save
+  button#g-hui-cancel.btn.btn-sm.btn-default Cancel
+
