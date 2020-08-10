@@ -43,10 +43,12 @@ var ConfigView = View.extend({
         });
 
         this.settingsKeys = {
+            'histomicsui.ingest_folder': {name: 'Ingest', id: 'g-hui-ingest-folder'},
             'histomicsui.quarantine_folder': {name: 'Quarantine', id: 'g-hui-quarantine-folder'},
             'histomicsui.processed_folder': {name: 'Audited', id: 'g-hui-processed-folder'},
             'histomicsui.rejected_folder': {name: 'Rejected', id: 'g-hui-rejected-folder'},
             'histomicsui.original_folder': {name: 'Original', id: 'g-hui-original-folder'},
+            'histomicsui.finished_folder': {name: 'Finished', id: 'g-hui-finished-folder'},
         };
         this._browserWidgetView = {};
         $.when(

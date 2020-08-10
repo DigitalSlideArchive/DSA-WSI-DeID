@@ -15,12 +15,14 @@ except DistributionNotFound:
 
 
 @setting_utilities.validator({
+    PluginSettings.HUI_INGEST_FOLDER,
     PluginSettings.HUI_QUARANTINE_FOLDER,
     PluginSettings.HUI_PROCESSED_FOLDER,
     PluginSettings.HUI_REJECTED_FOLDER,
     PluginSettings.HUI_ORIGINAL_FOLDER,
+    PluginSettings.HUI_FINISHED_FOLDER,
 })
-def validateHistomicsUIQuarantineFolder(doc):
+def validateHistomicsUISettingsFolder(doc):
     if not doc.get('value', None):
         doc['value'] = None
     else:

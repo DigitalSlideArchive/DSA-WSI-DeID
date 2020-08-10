@@ -23,10 +23,12 @@ class DSASeerResource(Resource):
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
         project_folders = {
+            'ingest': PluginSettings.HUI_INGEST_FOLDER,
             'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
             'processed': PluginSettings.HUI_PROCESSED_FOLDER,
             'rejected': PluginSettings.HUI_REJECTED_FOLDER,
             'original': PluginSettings.HUI_ORIGINAL_FOLDER,
+            'finished': PluginSettings.HUI_FINISHED_FOLDER,
         }
         result = None
         for key in project_folders:

@@ -2,6 +2,17 @@
 p.g-hui-description
   | Provides a workflow for redacting metadata and images.
   .form-group
+    label(for="g-hui-ingest-folder") Ingest Folder
+    p.g-hui-description
+      | The location where new image files can first be processed.
+    .input-group.input-group-sm
+      input#g-hui-ingest-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.ingest_folder'] || '',
+          title="A folder to store ingested items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
     label(for="g-hui-quarantine-folder") Quarantine Folder
     p.g-hui-description
       | If a quarantine folder is specified, users with write access will see a Quarantine button next to items.  When clicked, this moves that item to the quarantine folder and adds metadata to record where it was originally.
@@ -42,6 +53,17 @@ p.g-hui-description
       input#g-hui-original-folder.form-control.input-sm(
           type="text", value=settings['histomicsui.original_folder'] || '',
           title="A folder to store original items.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
+    label(for="g-hui-finished-folder") Finished Folder
+    p.g-hui-description
+      | When an item is fully processed, it should be placed here to indicate it is finished.
+    .input-group.input-group-sm
+      input#g-hui-finished-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.finished_folder'] || '',
+          title="A folder to store finished items.")
       .input-group-btn
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
