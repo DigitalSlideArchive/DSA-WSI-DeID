@@ -3,6 +3,7 @@ from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
 from girder.constants import AccessType, TokenScope
 from girder.models.folder import Folder as FolderModel
+from girder.models.item import Item as ItemModel
 from girder.models.setting import Setting
 
 from .constants import PluginSettings
@@ -13,12 +14,13 @@ class DSASeerResource(Resource):
         super(DSASeerResource, self).__init__()
         self.resourceName = 'dsaseer'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
+        self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
         .modelParam('id', model=FolderModel, level=AccessType.WRITE)
         .errorResponse()
-        .errorResponse('Read access was denied on the folder.', 403)
+        .errorResponse('Write access was denied on the folder.', 403)
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
@@ -37,3 +39,17 @@ class DSASeerResource(Resource):
                 result = key
                 break
         return result
+
+    @autoDescribeRoute(
+        Description('Perform an action on an item.')
+        .modelParam('id', model=ItemModel, level=AccessType.WRITE)
+        .param('action', 'Action to perform on the item.  One of process, '
+               'reject, quarantine, unquarantine, finish.', paramType='path',
+               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish'])
+        .errorResponse()
+        .errorResponse('Write access was denied on the item.', 403)
+    )
+    @access.public(scope=TokenScope.DATA_READ)
+    def itemAction(self, item, action):
+        # ##DWM::
+        print(item, action)
