@@ -6,6 +6,8 @@ from girder.models.folder import Folder as FolderModel
 from girder.models.item import Item as ItemModel
 from girder.models.setting import Setting
 
+from histomicsui.rest.hui_resource import quarantine_item, restore_quarantine_item
+
 from .constants import PluginSettings
 
 
@@ -32,13 +34,15 @@ class DSASeerResource(Resource):
             'original': PluginSettings.HUI_ORIGINAL_FOLDER,
             'finished': PluginSettings.HUI_FINISHED_FOLDER,
         }
-        result = None
-        for key in project_folders:
-            projFolderId = Setting().get(project_folders[key])
-            if str(folder['_id']) == projFolderId:
-                result = key
+        while folder:
+            for key in project_folders:
+                projFolderId = Setting().get(project_folders[key])
+                if str(folder['_id']) == projFolderId:
+                    return key
+            if folder['parentType'] != 'folder':
                 break
-        return result
+            folder = FolderModel.load(folder['parentId'], force=True)
+        return None
 
     @autoDescribeRoute(
         Description('Perform an action on an item.')
@@ -51,5 +55,9 @@ class DSASeerResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def itemAction(self, item, action):
+        if action == 'quarantine':
+            return quarantine_item(self.getCurrentUser(), item)
+        if action == 'unquarantine':
+            return restore_quarantine_item(item)
         # ##DWM::
         print(item, action)

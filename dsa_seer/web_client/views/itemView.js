@@ -13,6 +13,10 @@ wrap(ItemView, 'render', function (render) {
         let redact_list = (this.model.get('meta') || {}).redact_list || {};
         redact_list.metadata = redact_list.metadata || {};
         redact_list.images = redact_list.images || {};
+        // TODO: If appropriate metadata is populated with replacement title,
+        // date, etc., populate the redaction list per file format
+        // appropriately.  Alternately, we may want an endpoint which is
+        // "default redaction list" so that all the code is in Python.
         return redact_list;
     };
 
@@ -118,21 +122,21 @@ wrap(ItemView, 'render', function (render) {
             rejected: {done: 'Item rejected.', fail: 'Failed to reject item.'},
             finished: {done: 'Item move to approved folder.', fail: 'Failed to finish item.'},
         };
+        // TODO: block the UI until this returns
         restRequest({
             type: 'PUT',
             url: 'dsaseer/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
-            console.log('done');
             events.trigger('g:alert', {
                 icon: 'ok',
                 text: actions[action].done,
                 type: 'success',
                 timeout: 4000
             });
-            this.render();
+            delete this.model.parent;
+            this.model.fetch({ success: () => this.render() });
         }).fail((resp) => {
-            console.log('fail');
             events.trigger('g:alert', {
                 icon: 'cancel',
                 text: actions[action].fail,
