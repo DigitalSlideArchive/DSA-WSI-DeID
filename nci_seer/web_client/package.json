@@ -33,7 +33,15 @@
     "eslintConfig": {
         "extends": "@girder",
         "root": true,
-        "no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 1 }]
+        "rules": {
+            "no-multiple-empty-lines": [
+                "error",
+                {
+                    "max": 2,
+                    "maxEOF": 1
+                }
+            ]
+        }
     },
     "pugLintConfig": {
         "extends": "@girder/pug-lint-config"

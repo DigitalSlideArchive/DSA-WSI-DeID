@@ -3,10 +3,6 @@ from setuptools import setup, find_packages
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-requirements = [
-    'girder>=3.0.0a1'
-]
-
 setup(
     author='Kitware, Inc.',
     author_email='kitware@kitware.com',
@@ -20,7 +16,10 @@ setup(
         'Programming Language :: Python :: 3.8'
     ],
     description='NCI SEER Pediatric WSI Pilot plugin.',
-    install_requires=requirements,
+    install_requires=[
+        'histomicsui',
+        'large_image[sources,memcached]',
+    ],
     license='Apache Software License 2.0',
     long_description=readme,
     long_description_content_type='text/x-rst',
