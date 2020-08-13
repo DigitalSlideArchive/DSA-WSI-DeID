@@ -38,7 +38,7 @@ var ConfigView = View.extend({
     },
     initialize: function () {
         this.breadcrumb = new PluginConfigBreadcrumbWidget({
-            pluginName: 'HistomicsUI',
+            pluginName: 'NCI SEER Pediatic WSI Pilot',
             parentView: this
         });
 

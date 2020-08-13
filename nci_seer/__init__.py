@@ -22,7 +22,7 @@ except DistributionNotFound:
     PluginSettings.HUI_ORIGINAL_FOLDER,
     PluginSettings.HUI_FINISHED_FOLDER,
 })
-def validateHistomicsUISettingsFolder(doc):
+def validateSettingsFolder(doc):
     if not doc.get('value', None):
         doc['value'] = None
     else:
