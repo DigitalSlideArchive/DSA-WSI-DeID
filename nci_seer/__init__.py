@@ -4,7 +4,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
-from .rest import DSASeerResource
+from .rest import NCISeerResource
 
 
 try:
@@ -30,8 +30,8 @@ def validateHistomicsUISettingsFolder(doc):
 
 
 class GirderPlugin(plugin.GirderPlugin):
-    DISPLAY_NAME = 'DSA SEER'
+    DISPLAY_NAME = 'NCI SEER Pediatic WSI Pilot'
     CLIENT_SOURCE_PATH = 'web_client'
 
     def load(self, info):
-        info['apiRoot'].dsaseer = DSASeerResource()
+        info['apiRoot'].nciseer = NCISeerResource()

@@ -1,5 +1,5 @@
 {
-    "name": "@girder/dsa_seer",
+    "name": "@girder/nci_seer",
     "version": "0.1.0",
     "private": true,
     "description": "NCI WSI plugin.",
@@ -9,7 +9,7 @@
         "@girder/core": "*"
     },
     "girderPlugin": {
-        "name": "dsa_seer",
+        "name": "nci_seer",
         "main": "./main.js"
     },
     "scripts": {

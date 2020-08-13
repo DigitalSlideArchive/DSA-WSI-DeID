@@ -125,7 +125,7 @@ wrap(ItemView, 'render', function (render) {
         // TODO: block the UI until this returns
         restRequest({
             type: 'PUT',
-            url: 'dsaseer/item/' + this.model.id + '/action/' + action,
+            url: 'nciseer/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
             events.trigger('g:alert', {
@@ -149,7 +149,7 @@ wrap(ItemView, 'render', function (render) {
     this.once('g:largeImageItemViewRendered', function () {
         if (this.model.get('largeImage') && this.model.get('largeImage').fileId && this.accessLevel >= AccessType.WRITE) {
             restRequest({
-                url: `dsaseer/project_folder/${this.model.get('folderId')}`,
+                url: `nciseer/project_folder/${this.model.get('folderId')}`,
                 error: null
             }).done((resp) => {
                 if (resp === 'ingest' || resp === 'quarantine') {

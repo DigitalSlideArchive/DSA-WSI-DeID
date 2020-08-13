@@ -2,7 +2,7 @@ include LICENSE
 include README.rst
 include setup.py
 
-graft dsa_seer
+graft nci_seer
 graft docs
 prune test
 global-exclude *.py[co] *.cmake __pycache__ node_modules

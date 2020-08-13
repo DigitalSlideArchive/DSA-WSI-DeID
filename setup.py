@@ -19,21 +19,21 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8'
     ],
-    description='NCI WSI plugin.',
+    description='NCI SEER Pediatric WSI Pilot plugin.',
     install_requires=requirements,
     license='Apache Software License 2.0',
     long_description=readme,
     long_description_content_type='text/x-rst',
     include_package_data=True,
-    keywords='girder-plugin, dsa_seer',
-    name='dsa_seer',
+    keywords='girder-plugin, nci_seer',
+    name='nci_seer',
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/DigitalSlideArchive',
     version='0.1.0',
     zip_safe=False,
     entry_points={
         'girder.plugin': [
-            'dsa_seer = dsa_seer:GirderPlugin'
+            'nci_seer = nci_seer:GirderPlugin'
         ]
     }
 )

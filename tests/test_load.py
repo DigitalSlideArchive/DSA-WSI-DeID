@@ -3,6 +3,6 @@ import pytest
 from girder.plugin import loadedPlugins
 
 
-@pytest.mark.plugin('dsa_seer')
+@pytest.mark.plugin('nci_seer')
 def test_import(server):
-    assert 'dsa_seer' in loadedPlugins()
+    assert 'nci_seer' in loadedPlugins()

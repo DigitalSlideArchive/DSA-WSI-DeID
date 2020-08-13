@@ -1,18 +1,18 @@
 -
   var folderButtonList = {
-    ingest: ['processed', 'rejected', 'quarantine'],
-    quarantine: ['processed', 'rejected', 'unquarantine'],
-    processed: ['quarantine', 'finished'],
+    ingest: ['process', 'reject', 'quarantine'],
+    quarantine: ['process', 'reject', 'unquarantine'],
+    processed: ['quarantine', 'finish'],
     rejected: ['quarantine'],
     original: ['quarantine'],
     finished: ['quarantine']
   };
   var buttons = {
-    processed: {name: 'Process', title: 'Keep a copy of the original image, redact marked fields, and move the result to the Audited location'},
-    rejected: {name: 'Reject', title: 'Select this if redaction is insufficient.  The image will be moved to the rejected folder'},
+    process: {name: 'Process', title: 'Keep a copy of the original image, redact marked fields, and move the result to the Audited location'},
+    reject: {name: 'Reject', title: 'Select this if redaction is insufficient.  The image will be moved to the rejected folder'},
     quarantine: {name: 'Quarantine', title: 'Move this image to the quarantine folder for redaction'},
     unquarantine: {name: 'Undo Quarantine', title: 'Move this image back to its location before quarantining'},
-    finished: {name: 'Finish', title: 'Move this image to the Finished location'},
+    finish: {name: 'Finish', title: 'Move this image to the Finished location'},
   };
   var buttonList = folderButtonList[project_folder] || ['quarantine']
 

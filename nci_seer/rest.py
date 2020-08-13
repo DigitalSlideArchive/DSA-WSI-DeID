@@ -2,6 +2,7 @@ from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
 from girder.constants import AccessType, TokenScope
+from girder.exceptions import RestException
 from girder.models.folder import Folder as FolderModel
 from girder.models.item import Item as ItemModel
 from girder.models.setting import Setting
@@ -11,10 +12,35 @@ from histomicsui.rest.hui_resource import quarantine_item, restore_quarantine_it
 from .constants import PluginSettings
 
 
-class DSASeerResource(Resource):
+def move_item(item, settingkey):
+    """
+    Move an item to one of the folders specified by a setting.
+
+    :param item: the item model to move.
+    :param settingkey: one of the PluginSettings values.
+    :returns: the item after move.
+    """
+    folderId = Setting().get(settingkey)
+    if not folderId:
+        raise RestException('The appropriate folder is not configured.')
+    folder = FolderModel().load(folderId, force=True)
+    if not folder:
+        raise RestException('The appropriate folder does not exist.')
+    if str(folder['_id']) == str(item['folderId']):
+        raise RestException('The item is already in the appropriate folder.')
+    # Do we want to mirror the location in the destination that we are in a
+    # current folder (do we need to move to a specific subfolder)?
+    return ItemModel().move(item, folder)
+
+
+def process_item(item):
+    pass
+
+
+class NCISeerResource(Resource):
     def __init__(self):
-        super(DSASeerResource, self).__init__()
-        self.resourceName = 'dsaseer'
+        super(NCISeerResource, self).__init__()
+        self.resourceName = 'nciseer'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
 
@@ -55,9 +81,13 @@ class DSASeerResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def itemAction(self, item, action):
-        if action == 'quarantine':
-            return quarantine_item(self.getCurrentUser(), item)
-        if action == 'unquarantine':
-            return restore_quarantine_item(item)
-        # ##DWM::
-        print(item, action)
+        user = self.getCurrentUser()
+        actionmap = {
+            'quarantine': (quarantine_item, (user, item)),
+            'unquarantine': (restore_quarantine_item, (item, )),
+            'reject': (move_item, (item, PluginSettings.HUI_REJECTED_FOLDER)),
+            'finish': (move_item, (item, PluginSettings.HUI_FINISHED_FOLDER)),
+            'process': (process_item, (item, )),
+        }
+        actionfunc, actionargs = actionmap[action]
+        return actionfunc(*actionargs)
