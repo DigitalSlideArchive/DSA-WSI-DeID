@@ -11,6 +11,7 @@ from girder.models.setting import Setting
 from girder.models.user import User
 from girder.utility.server import configureServer
 
+from girder_large_image.constants import PluginSettings as liSettings
 from nci_seer.constants import PluginSettings
 
 # This loads plugins, allowing setting validation
@@ -57,3 +58,9 @@ for settingKey, (folderName, public) in folders.items():
             seerCollection, folderName, parentType='collection',
             public=public, creator=adminUser)
         Setting().set(settingKey, str(folder['_id']))
+Setting().set(liSettings.LARGE_IMAGE_SHOW_EXTRA_ADMIN, '{"images": ["label", "macro"]}')
+Setting().set(liSettings.LARGE_IMAGE_SHOW_EXTRA, '{"images": ["label", "macro"]}')
+Setting().set(liSettings.LARGE_IMAGE_SHOW_ITEM_EXTRA_ADMIN,
+              '{"metadata": ["tile", "internal"], "images": ["label", "macro", "*"]}')
+Setting().set(liSettings.LARGE_IMAGE_SHOW_ITEM_EXTRA,
+              '{"metadata": ["tile", "internal"], "images": ["label", "macro", "*"]}')
