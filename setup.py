@@ -18,7 +18,7 @@ setup(
     description='NCI SEER Pediatric WSI Pilot plugin.',
     install_requires=[
         'histomicsui',
-        'large_image[sources,memcached]',
+        'large_image[tiff,openslide,memcached]',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
