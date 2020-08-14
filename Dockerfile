@@ -28,6 +28,8 @@ COPY . .
 
 # By using --no-cache-dir the Docker image is smaller
 RUN pip install --pre --no-cache-dir \
+    # Until https://github.com/cherrypy/cheroot/issues/312 is resolved.
+    cheroot!=8.4.3,!=8.4.4 \
     # git+https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
