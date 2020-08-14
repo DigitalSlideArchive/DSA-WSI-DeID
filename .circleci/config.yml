@@ -1,5 +1,18 @@
 ---
 version: 2.1
+commands:
+  usedockers:
+    description: "Make built dockers available"
+    steps:
+      - run:
+          name: Install dependencies
+          command: pip install ansible requests docker
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Load archived docker images
+          command: |
+            docker load -i /tmp/workspace/nciseer_girder.tar
 jobs:
   test:
     docker:
@@ -18,19 +31,83 @@ jobs:
             npm install
             npm run lint
           working_directory: nci_seer/web_client
+  docker-compose:
+    working_directory: ~/project
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Run docker-compose build
+          command: bash -c 'docker-compose build'
+          working_directory: ./devops/nciseer
+      - run:
+          name: Run docker-compose up
+          command: bash -c 'docker-compose up -d'
+          working_directory: ./devops/nciseer
+      - run:
+          name: Wait for girder to respond and be configured
+          command: |
+            for f in `seq 60`; do if curl --silent http://localhost:8080/api/v1/system/version | grep 'release'; then break; fi; sleep 1; done
+      - run:
+          name: Archive docker images
+          command: |
+            docker save -o nciseer_girder.tar dsarchive/nciseer:latest
+      - persist_to_workspace:
+          root: .
+          paths:
+            - ./nciseer_girder.tar
+      - store_artifacts:
+          path: ./nciseer_girder.tar
+  publish-docker:
+    working_directory: ~/project
+    machine: true
+    steps:
+      - checkout
+      - usedockers
+      - run:
+          name: Publish images to Docker Hub
+          command: |
+              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+              docker push dsarchive/nciseer:latest
+              if [[ $CIRCLE_TAG =~ ^v.*$ ]]; then
+              docker tag dsarchive/nciseer:latest "dsarchive/nciseer:$CIRCLE_TAG"
+              docker push "dsarchive/nciseer:$CIRCLE_TAG"
+              fi
 
 workflows:
   version: 2
   ci:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - docker-compose:
+          filters:
+            tags:
+              only: /^v.*/
+      - publish-docker:
+          requires:
+            - test
+            - docker-compose
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only:
+                - master
   nightly:
     triggers:
       - schedule:
-          cron: "0 0 * * *"
+          cron: "0 6 * * *"
           filters:
             branches:
               only:
                 - master
     jobs:
       - test
+      - docker-compose
+      - publish-docker:
+          requires:
+            - test
+            - docker-compose
