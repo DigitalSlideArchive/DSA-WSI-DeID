@@ -4,3 +4,12 @@
 **/*.pyc
 **/*.pyo
 *.egg-info
+.circleci
+devops
+tests
+.dockerignore
+.editorconfig
+.gitignore
+Dockerfile
+requirements-dev.txt
+tox.ini
