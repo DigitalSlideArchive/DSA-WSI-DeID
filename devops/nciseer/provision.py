@@ -12,6 +12,7 @@ from girder.models.user import User
 from girder.utility.server import configureServer
 
 from girder_large_image.constants import PluginSettings as liSettings
+import nci_seer
 from nci_seer.constants import PluginSettings
 
 # This loads plugins, allowing setting validation
@@ -33,7 +34,9 @@ Welcome to the **Digital Slide Archive**.
 
 Developers who want to use the Girder REST API should check out the
 [interactive web API docs](api/v1).
-""")
+
+NCI SEER Version: %s
+""" % (nci_seer.__version__))
 
 # Make sure we have an assetstore
 if Assetstore().findOne() is None:
