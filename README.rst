@@ -1,6 +1,6 @@
-===========================
-NCI SEER Pediatic WSI Pilot
-===========================
+==========================================================
+NCI SEER Pediatic WSI Pilot |build-status| |license-badge|
+==========================================================
 
 This builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), and Philips WSI files.
 
@@ -19,14 +19,15 @@ Initial Start
 
 From a command prompt in the ``devops/nciseer`` directory, type::
 
+    docker-compose pull
     docker-compose up -d
 
 This will download some necessary files and start the system.  The database, local files, and some logs are stored in docker volumes.
 
 The system will be available from a web browser on `http://localhost:8080`_.
 
-Update a Running System
------------------------
+Update an Existing System
+-------------------------
 
 From a command prompt in the ``devops/nciseer`` directory, type::
 
@@ -38,4 +39,13 @@ Import and Export Paths
 -----------------------
 
 TODO
+
+
+.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield
+    :target: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot
+    :alt: Build Status
+
+.. |license-badge| image:: https://img.shields.io/badge/license-Apache%202-blue.svg
+    :target: https://raw.githubusercontent.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/master/LICENSE
+    :alt: License
 
