@@ -16,34 +16,10 @@ At a minimum, you need `Docker <https://docs.docker.com/install/>`_ and `docker-
 
 Install commands need to be run from the ``devops/nciseer`` directory.  Examples are given via a command prompt, but a desktop version of Docker will work as well.
 
-Initial Start
--------------
-
-From a command prompt in the ``devops/nciseer`` directory, type::
-
-    docker-compose pull
-    docker-compose up -d
-
-This will download some necessary files and start the system.  The database, local files, and some logs are stored in docker volumes.
-
-The system will be available from a web browser on http://localhost:8080.
-
-Update an Existing System
--------------------------
-
-From a command prompt in the ``devops/nciseer`` directory, type::
-
-    git pull
-    docker-compose pull
-    docker-compose down
-    docker-compose up -d
-
-This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
-
 Import and Export Paths
 -----------------------
 
-It is useful to mount specific directories for import (ingest) and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory.  For instance, create a file called ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import (ingest) and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory, named ``docker-compose.local.yml`` which contains::
 
     ---
     version: '3'
@@ -53,9 +29,53 @@ It is useful to mount specific directories for import (ingest) and export of fil
           - c:\seer\ingest:/import
           - c:\seer\export:/export
 
-where the first part of the last two lines are paths on the local system that should be mounted.  To use this file, instead of doing ``docker-compose up -d``, type::
+where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\ingest/import`` specifies that the local filesystem directory ``c:\seer\ingest`` is mounted into the Pilot as the ``import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
-    docker-compose -f docker-compose.yml -f docker-composer.local.yml up -d
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+which will extend and override the definitions in ``docker-compose.yml`` with those in ``docker-compose.local.yml``.
+
+Initial Start
+-------------
+
+From a command prompt in the ``devops/nciseer`` directory, if you are using import and export paths, type::
+
+    docker-compose pull
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+or without the import and export paths, type::
+
+    docker-compose pull
+    docker-compose up -d
+
+
+This will download some necessary files (pre-built docker images) and start the system.  The database, local files, and some logs are stored in docker volumes.
+
+The system will be available from a web browser on http://localhost:8080.
+
+Note: If you prefer a different locally mounted port, you can specific that via an ENV VAR ``DSA_PORT``, e.g.
+
+    DSA_PORT=8888 docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+Update an Existing System
+-------------------------
+
+From a command prompt in the ``devops/nciseer`` directory, if you are using import and export paths, type::
+
+    git pull
+    docker-compose pull
+    docker-compose down
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+or without the import and export paths, type::
+
+    git pull
+    docker-compose pull
+    docker-compose down
+    docker-compose up -d
+
+
+This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
 
 
 .. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield
