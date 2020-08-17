@@ -29,7 +29,7 @@ If you want to import and export data from your local filesystem into the Pilot,
           - c:\seer\ingest:/import
           - c:\seer\export:/export
 
-where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\ingest/import`` specifies that the local filesystem directory ``c:\seer\ingest`` is mounted into the Pilot as the ``import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
+where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\ingest/import`` specifies that the local filesystem directory ``c:\seer\ingest`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
@@ -53,7 +53,7 @@ This will download some necessary files (pre-built docker images) and start the 
 
 The system will be available from a web browser on http://localhost:8080.
 
-Note: If you prefer a different locally mounted port, you can specific that via an ENV VAR ``DSA_PORT``, e.g.
+Note: If you prefer a different locally mounted port, you can specific that via an ENV VAR ``DSA_PORT``, e.g.::
 
     DSA_PORT=8888 docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
