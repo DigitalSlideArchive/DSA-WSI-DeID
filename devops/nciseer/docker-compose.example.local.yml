@@ -1,0 +1,7 @@
+---
+version: '3'
+services:
+  girder:
+    volumes:
+      - c:\seer\ingest:/import
+      - c:\seer\export:/export

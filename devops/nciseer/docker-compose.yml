@@ -23,10 +23,8 @@ services:
       # - ./logs:/logs
       # Location of girder.local.conf and provision.py
       - .:/conf
-      # Needed to mount remote assetstores as if they were filesystems (i.e.,
-      # to work fully with S3)
-      # - /etc/passwd:/etc/passwd:ro
-      # Add for import and export location
+      # Add for import and export location.  This can also be done with a
+      # docker-compose.local.yml file.  See the example.
       # - <some local path>:/import
       # - <some local path>:/export
     depends_on:
