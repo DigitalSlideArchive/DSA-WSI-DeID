@@ -10,7 +10,9 @@ Installation
 Prerequisites
 -------------
 
-At a minimum, you need `Docker <https://docs.docker.com/install/>`_ and `docker-compose <https://docs.docker.com/compose/install/>`_.  You also need a copy of this repository, either obtained via ``git`` or downloaded directly.
+At a minimum, you need `Docker <https://docs.docker.com/install/>`_ and `docker-compose <https://docs.docker.com/compose/install/>`_.  You also need a copy of this repository, either obtained via ``git`` or downloaded directly.  If you have ``git`` installed, this can be::
+
+    git clone https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.git
 
 Install commands need to be run from the ``devops/nciseer`` directory.  Examples are given via a command prompt, but a desktop version of Docker will work as well.
 
@@ -24,16 +26,19 @@ From a command prompt in the ``devops/nciseer`` directory, type::
 
 This will download some necessary files and start the system.  The database, local files, and some logs are stored in docker volumes.
 
-The system will be available from a web browser on `http://localhost:8080`_.
+The system will be available from a web browser on http://localhost:8080.
 
 Update an Existing System
 -------------------------
 
 From a command prompt in the ``devops/nciseer`` directory, type::
 
+    git pull
     docker-compose pull
     docker-compose down
     docker-compose up -d
+
+This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
 
 Import and Export Paths
 -----------------------
