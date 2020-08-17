@@ -43,7 +43,19 @@ This uses ``git`` to update the repository, fetches the latest build from docker
 Import and Export Paths
 -----------------------
 
-TODO
+It is useful to mount specific directories for import (ingest) and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory.  For instance, create a file called ``docker-compose.local.yml`` which contains::
+
+    ---
+    version: '3'
+    services:
+      girder:
+        volumes:
+          - c:\seer\ingest:/import
+          - c:\seer\export:/export
+
+where the first part of the last two lines are paths on the local system that should be mounted.  To use this file, instead of doing ``docker-compose up -d``, type::
+
+    docker-compose -f docker-compose.yml -f docker-composer.local.yml up -d
 
 
 .. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield

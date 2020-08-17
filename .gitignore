@@ -50,3 +50,6 @@ venv/
 ENV/
 
 node_modules/
+
+# Ignore a local docker-compose yaml file
+docker-compose.local.yml
