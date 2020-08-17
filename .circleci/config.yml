@@ -96,7 +96,7 @@ workflows:
             branches:
               only:
                 - master
-  nightly:
+  periodic:
     triggers:
       - schedule:
           cron: "0 6 * * *"
