@@ -29,6 +29,15 @@ def validateSettingsFolder(doc):
         Folder().load(doc['value'], force=True, exc=True)
 
 
+@setting_utilities.validator({
+    PluginSettings.NCISEER_IMPORT_PATH,
+    PluginSettings.NCISEER_EXPORT_PATH,
+})
+def validateSettingsImportExport(doc):
+    if not doc.get('value', None):
+        doc['value'] = None
+
+
 class GirderPlugin(plugin.GirderPlugin):
     DISPLAY_NAME = 'NCI SEER Pediatic WSI Pilot'
     CLIENT_SOURCE_PATH = 'web_client'
