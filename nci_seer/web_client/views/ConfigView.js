@@ -25,8 +25,9 @@ var ConfigView = View.extend({
                     key,
                     value: element.val() || null
                 };
-                // change if we have non-folder settings
-                result.value = result.value ? result.value.split(' ')[0] : '';
+                if (key.match(/_folder$/)) {
+                    result.value = result.value ? result.value.split(' ')[0] : '';
+                }
                 return result;
             });
             this._saveSettings(settings);
@@ -48,7 +49,9 @@ var ConfigView = View.extend({
             'histomicsui.processed_folder': { name: 'Processed', id: 'g-hui-processed-folder' },
             'histomicsui.rejected_folder': { name: 'Rejected', id: 'g-hui-rejected-folder' },
             'histomicsui.original_folder': { name: 'Original', id: 'g-hui-original-folder' },
-            'histomicsui.finished_folder': { name: 'Finished', id: 'g-hui-finished-folder' }
+            'histomicsui.finished_folder': { name: 'Finished', id: 'g-hui-finished-folder' },
+            'nciseer.import_path': { name: 'Internal Import Path', id: 'g-nciseer-import-path' },
+            'nciseer.export_path': { name: 'Internal Export Path', id: 'g-nciseer-export-path' }
         };
         this._browserWidgetView = {};
         $.when(
@@ -76,13 +79,15 @@ var ConfigView = View.extend({
             this.render();
 
             for (const [key, value] of Object.entries(this.settingsKeys)) {
-                if (this.settings[key]) {
-                    let folder = new FolderModel();
-                    folder.set({ _id: this.settings[key] }).once('g:fetched', () => {
-                        this._createBrowserWidget(key, value, folder);
-                    }).fetch();
-                } else {
-                    this._createBrowserWidget(key, value);
+                if (key.match(/_folder$/)) {
+                    if (this.settings[key]) {
+                        let folder = new FolderModel();
+                        folder.set({ _id: this.settings[key] }).once('g:fetched', () => {
+                            this._createBrowserWidget(key, value, folder);
+                        }).fetch();
+                    } else {
+                        this._createBrowserWidget(key, value);
+                    }
                 }
             }
         });

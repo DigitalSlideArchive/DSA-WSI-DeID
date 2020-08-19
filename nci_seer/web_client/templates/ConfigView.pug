@@ -1,6 +1,7 @@
 .g-config-breadcrumb-container
 p.g-hui-description
   | Provides a workflow for redacting metadata and images.
+form#g-nicseer-form(role="form")
   .form-group
     label(for="g-hui-ingest-folder") Imported Folder
     p.g-hui-description
@@ -67,6 +68,22 @@ p.g-hui-description
       .input-group-btn
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
+  .form-group
+    label(for="g-nciseer-import-path") Internal Import Path
+    p.g-hui-description
+      | The Import function searches this path for new and changed files.
+    input#g-nciseer-import-path.form-control.input-sm(
+        type="text", value=settings['nciseer.import_path'] || '',
+        title="The internal path used for importing files.",
+        spellcheck="false")
+  .form-group
+    label(for="g-nciseer-export-path") Internal Export Path
+    p.g-hui-description
+      | The Export function copies files to this location.
+    input#g-nciseer-export-path.form-control.input-sm(
+        type="text", value=settings['nciseer.export_path'] || '',
+        title="The internal path used for exporting files.",
+        spellcheck="false")
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save
