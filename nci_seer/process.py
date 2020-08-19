@@ -169,27 +169,27 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         libtiff_ctypes.COMPRESSION_PACKBITS,
         libtiff_ctypes.COMPRESSION_DEFLATE,
     }
-    # TODO: if isCommonCompression, don't use vips
-    print(isCommonCompression)  # ##DWM:: remove
     associatedImages = tileSource.getAssociatedImagesList()
     if mainImageDir != [d + (1 if d and 'thumbnail' in associatedImages else 0)
                         for d in range(len(mainImageDir))]:
         raise Exception('Aperio TIFF directories are not in the expected order.')
-    sourcePath = tileSource._getLargeImagePath()
+    sourcePath = pyramidPath = tileSource._getLargeImagePath()
     outputPath = os.path.join(tempdir, 'aperio.svs')
-    vipsPath = os.path.join(tempdir, 'vips_pyramid.tiff')
-    commandList = [
-        ['vips', 'tiffsave', '--bigtiff', '--pyramid', '--tile',
-         '--tile-width', str(tileSource.tileWidth),
-         '--tile-height', str(tileSource.tileHeight),
-         # Unfortunately, we have to ask tiffcp to compress, so don't do it
-         # here.  This uses more disk space, but is faster and avoids some
-         # potential artifacts.
-         # '--compression', 'jpeg', '--Q', str(quality),
-         sourcePath, vipsPath]
-    ]
+    commandList = []
+    tiffcpCompression = ['-c', 'jpeg:r:%d' % quality]
+    if not isCommonCompression:
+        pyramidPath = os.path.join(tempdir, 'vips_pyramid.tiff')
+        commandList.append([
+            'vips', 'tiffsave', '--bigtiff', '--pyramid', '--tile',
+            '--tile-width', str(tileSource.tileWidth),
+            '--tile-height', str(tileSource.tileHeight),
+            # Unfortunately, we have to ask tiffcp to compress, so don't do it
+            # here.  This uses more disk space, but is faster and avoids some
+            # potential artifacts.
+            # '--compression', 'jpeg', '--Q', str(quality),
+            sourcePath, pyramidPath])
     commandList.extend([
-        ['tiffcp', '-8', '-L', '-c', 'jpeg:r:%d' % quality, vipsPath + ',0', outputPath],
+        ['tiffcp', '-8', '-L'] + tiffcpCompression + [pyramidPath + ',0', outputPath],
         ['tiffset', '-d', '0', '-s', '270', imageDescription, outputPath],
     ])
     tiffFile = libtiff_ctypes.TIFF.open(sourcePath.encode('utf8'))
@@ -205,15 +205,17 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         nextDir += 1
     for dirPos in range(len(tiffSource._tiffDirectories) - 2, -1, -1):
         if tiffSource._tiffDirectories[dirPos]:
-            dir = tiffSource._tiffDirectories[dirPos]._directoryNum
-            vipsdir = len(tiffSource._tiffDirectories) - 1 - dirPos
+            dir = pyramiddir = tiffSource._tiffDirectories[dirPos]._directoryNum
+            if not isCommonCompression:
+                pyramiddir = len(tiffSource._tiffDirectories) - 1 - dirPos
             tiffFile.SetDirectory(dir)
             subDescription = tiffFile.GetField('imagedescription').decode('utf8')
-            commandList.extend([
-                ['tiffcp', '-8', '-L', '-a', '-c', 'jpeg:r:%d' % quality,
-                 vipsPath + ',%d' % vipsdir, outputPath],
-                ['tiffset', '-d', str(nextDir), '-s', '270', subDescription, outputPath],
-            ])
+            commandList.append([
+                'tiffcp', '-8', '-L', '-a'] + tiffcpCompression + [
+                    '%s,%d' % (pyramidPath, pyramiddir), outputPath])
+            if not isCommonCompression:
+                commandList.append([
+                    'tiffset', '-d', str(nextDir), '-s', '270', subDescription, outputPath])
             nextDir += 1
     labelPath = os.path.join(tempdir, 'label.tiff')
     labelImage.save(labelPath, format='tiff', compression='jpeg', quality=quality)
@@ -235,7 +237,6 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
                 ['tiffcp', '-8', '-L', '-a', sourcePath + ',%d' % readDir, outputPath])
         readDir += 1
     execute_command_list(commandList, tempdir)
-    print(outputPath)
     return outputPath, 'image/tiff'
 
 
