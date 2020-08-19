@@ -41,6 +41,7 @@ setup(
     install_requires=[
         'histomicsui',
         'large_image[tiff,openslide,memcached]',
+        'pyvips',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
