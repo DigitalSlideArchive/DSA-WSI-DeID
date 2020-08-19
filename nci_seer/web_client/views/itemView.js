@@ -108,7 +108,6 @@ wrap(ItemView, 'render', function (render) {
                 title: 'Toggle redacting this image'
             }));
         });
-        // For other folders, do we want other workflow buttons?
         this.events['click .g-hui-redact'] = flagRedaction;
         this.delegateEvents();
     };
@@ -119,16 +118,20 @@ wrap(ItemView, 'render', function (render) {
         const actions = {
             quarantine: { done: 'Item quarantined.', fail: 'Failed to quarantine item.' },
             unquarantine: { done: 'Item unquarantined.', fail: 'Failed to unquarantine item.' },
-            processed: { done: 'Item processed.', fail: 'Failed to process item.' },
-            rejected: { done: 'Item rejected.', fail: 'Failed to reject item.' },
-            finished: { done: 'Item move to approved folder.', fail: 'Failed to finish item.' }
+            process: { done: 'Item processed.', fail: 'Failed to process item.' },
+            reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
+            finish: { done: 'Item move to approved folder.', fail: 'Failed to finish item.' }
         };
-        // TODO: block the UI until this returns
+        $('body').append(
+            '<div class="g-hui-loading-overlay"><div>' +
+            '<i class="icon-spin4 animate-spin"></i>' +
+            '</div></div>');
         restRequest({
             type: 'PUT',
             url: 'nciseer/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
+            $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
                 text: actions[action].done,
@@ -138,11 +141,16 @@ wrap(ItemView, 'render', function (render) {
             delete this.model.parent;
             this.model.fetch({ success: () => this.render() });
         }).fail((resp) => {
+            $('.g-hui-loading-overlay').remove();
+            let text = actions[action].fail;
+            if (resp.responseJSON && resp.responseJSON.message) {
+                text += ' ' + resp.responseJSON.message;
+            }
             events.trigger('g:alert', {
                 icon: 'cancel',
-                text: actions[action].fail,
+                text: text,
                 type: 'danger',
-                timeout: 4000
+                timeout: 5000
             });
         });
     };
