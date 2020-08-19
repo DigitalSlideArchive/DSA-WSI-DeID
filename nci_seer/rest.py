@@ -142,7 +142,7 @@ class NCISeerResource(Resource):
     def itemAction(self, item, action):
         user = self.getCurrentUser()
         actionmap = {
-            'quarantine': (quarantine_item, (user, item)),
+            'quarantine': (quarantine_item, (item, user, False)),
             'unquarantine': (restore_quarantine_item, (item, )),
             'reject': (move_item, (item, PluginSettings.HUI_REJECTED_FOLDER)),
             'finish': (move_item, (item, PluginSettings.HUI_FINISHED_FOLDER)),
