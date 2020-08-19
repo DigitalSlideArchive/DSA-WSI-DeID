@@ -62,10 +62,10 @@ for settingKey, (folderName, public) in folders.items():
             public=public, creator=adminUser)
         Setting().set(settingKey, str(folder['_id']))
 # Set default import/export paths
-if not Setting.get(PluginSettings.NCISEER_IMPORT_PATH):
-    Setting.set(PluginSettings.NCISEER_IMPORT_PATH, '/import')
-if not Setting.get(PluginSettings.NCISEER_EXPORT_PATH):
-    Setting.set(PluginSettings.NCISEER_EXPORT_PATH, '/export')
+if not Setting().get(PluginSettings.NCISEER_IMPORT_PATH):
+    Setting().set(PluginSettings.NCISEER_IMPORT_PATH, '/import')
+if not Setting().get(PluginSettings.NCISEER_EXPORT_PATH):
+    Setting().set(PluginSettings.NCISEER_EXPORT_PATH, '/export')
 # Show label and macro images, plus tile and internal metadata for all users
 Setting().set(liSettings.LARGE_IMAGE_SHOW_EXTRA_ADMIN, '{"images": ["label", "macro"]}')
 Setting().set(liSettings.LARGE_IMAGE_SHOW_EXTRA, '{"images": ["label", "macro"]}')
