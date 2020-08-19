@@ -2,13 +2,13 @@
 p.g-hui-description
   | Provides a workflow for redacting metadata and images.
   .form-group
-    label(for="g-hui-ingest-folder") Ingest Folder
+    label(for="g-hui-ingest-folder") Imported Folder
     p.g-hui-description
       | The location where new image files can first be processed.
     .input-group.input-group-sm
       input#g-hui-ingest-folder.form-control.input-sm(
           type="text", value=settings['histomicsui.ingest_folder'] || '',
-          title="A folder to store ingested items.")
+          title="A folder to store imported items.")
       .input-group-btn
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
@@ -24,7 +24,7 @@ p.g-hui-description
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
   .form-group
-    label(for="g-hui-processed-folder") Audited Folder
+    label(for="g-hui-processed-folder") Processed Folder
     p.g-hui-description
       | This is the location that redacted files are moved to upon approval.  They should still be reviewed before release.
     .input-group.input-group-sm

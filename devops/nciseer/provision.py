@@ -48,9 +48,9 @@ if Collection().findOne({'name': 'SEER'}) is None:
 seerCollection = Collection().findOne({'name': 'SEER'})
 # Create default folders.  Set the settings to those folders
 folders = {
-    PluginSettings.HUI_INGEST_FOLDER: ('Ingest', False),
+    PluginSettings.HUI_INGEST_FOLDER: ('Imported', False),
     PluginSettings.HUI_QUARANTINE_FOLDER: ('Quarantine', False),
-    PluginSettings.HUI_PROCESSED_FOLDER: ('Audited', False),
+    PluginSettings.HUI_PROCESSED_FOLDER: ('Processed', False),
     PluginSettings.HUI_REJECTED_FOLDER: ('Rejected', False),
     PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', False),
     PluginSettings.HUI_FINISHED_FOLDER: ('Finished', True),
