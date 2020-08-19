@@ -11,7 +11,7 @@
     process: {name: 'Process', title: 'Keep a copy of the original image, redact marked fields, and move the result to the processed folder'},
     reject: {name: 'Reject', title: 'Select this if redaction is insufficient.  The image will be moved to the rejected folder'},
     quarantine: {name: 'Quarantine', title: 'Move this image to the quarantine folder for redaction'},
-    unquarantine: {name: 'Undo Quarantine', title: 'Move this image back to its location before quarantining'},
+    unquarantine: {name: 'Undo Quarantine', title: 'Move this image back to its previous location before it was quarantined'},
     finish: {name: 'Finish', title: 'Move this image to the finished folder'},
   };
   var buttonList = folderButtonList[project_folder] || ['quarantine']
