@@ -2,6 +2,7 @@ import datetime
 import os
 import tempfile
 
+from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
@@ -66,6 +67,7 @@ def process_item(item, user=None):
         try:
             filepath, mimetype = process.redact_item(item, tempdir)
         except Exception as e:
+            logger.exception('Failed to redact item')
             raise RestException(e.args[0])
         origItem = Item().copyItem(item, creator, folder=origFolder)
         origItem = Item().setMetadata(origItem, {
