@@ -69,7 +69,7 @@ def execute_command_list(commandList, tempdir=None):
             subprocess.check_call(cmd, env=env)
         except Exception:
             logger.exception('Failed to process command')
-            raise Exception('Failed to generated redacted file')
+            raise Exception('Failed to generate redacted file')
 
 
 def redact_item(item, tempdir):
