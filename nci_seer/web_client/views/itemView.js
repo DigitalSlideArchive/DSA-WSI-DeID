@@ -64,7 +64,10 @@ wrap(ItemView, 'render', function (render) {
         return false;
     };
 
-    const addRedactionControls = () => {
+    const addRedactionControls = (showControls) => {
+        /* if showControls is false, the tabs are still adjusted and some
+         * fields may be hidden, but the actual redaction controls aren't
+         * shown. */
         // default to showing the last metadata tab
         this.$el.find('.li-metadata-tabs .nav-tabs li').removeClass('active');
         this.$el.find('.li-metadata-tabs .nav-tabs li').last().addClass('active');
@@ -79,37 +82,41 @@ wrap(ItemView, 'render', function (render) {
             if (!keyname || ['internal;tilesource'].indexOf(keyname) >= 0) {
                 return;
             }
-            let isRedacted = redactList.metadata[keyname] !== undefined;
             elem.find('.g-hui-redact').remove();
-            if (redactList.metadata[keyname]) {
-                elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname]));
-            }
-            if (showRedactButton(keyname)) {
-                elem.append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
-                    keyname: keyname,
-                    category: 'metadata',
-                    title: 'Toggle redacting this metadata'
-                }));
+            if (showControls) {
+                let isRedacted = redactList.metadata[keyname] !== undefined;
+                if (redactList.metadata[keyname]) {
+                    elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname]));
+                }
+                if (showRedactButton(keyname)) {
+                    elem.append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
+                        keyname: keyname,
+                        category: 'metadata',
+                        title: 'Toggle redacting this metadata'
+                    }));
+                }
+                elem.toggleClass('redacted', isRedacted);
             }
             if (hideField(keyname)) {
                 elem.closest('tr').css('display', 'none');
             }
-            elem.toggleClass('redacted', isRedacted);
         });
         // Add redaction controls to images
-        this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
-            elem = $(elem);
-            let keyname = elem.attr('auximage');
-            let isRedacted = redactList.images[keyname] !== undefined;
-            elem.find('.g-hui-redact').remove();
-            elem.find('.g-widget-auximage-title').append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
-                keyname: keyname,
-                category: 'images',
-                title: 'Toggle redacting this image'
-            }));
-        });
-        this.events['click .g-hui-redact'] = flagRedaction;
-        this.delegateEvents();
+        if (showControls) {
+            this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
+                elem = $(elem);
+                let keyname = elem.attr('auximage');
+                let isRedacted = redactList.images[keyname] !== undefined;
+                elem.find('.g-hui-redact').remove();
+                elem.find('.g-widget-auximage-title').append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
+                    keyname: keyname,
+                    category: 'images',
+                    title: 'Toggle redacting this image'
+                }));
+            });
+            this.events['click .g-hui-redact'] = flagRedaction;
+            this.delegateEvents();
+        }
     };
 
     const workflowButton = (event) => {
@@ -161,10 +168,8 @@ wrap(ItemView, 'render', function (render) {
                 url: `nciseer/project_folder/${this.model.get('folderId')}`,
                 error: null
             }).done((resp) => {
-                if (resp === 'ingest' || resp === 'quarantine') {
-                    addRedactionControls();
-                }
                 if (resp) {
+                    addRedactionControls(resp === 'ingest' || resp === 'quarantine');
                     this.$el.append(itemViewWidget({
                         project_folder: resp
                     }));
