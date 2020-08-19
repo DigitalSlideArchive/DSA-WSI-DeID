@@ -19,17 +19,17 @@ Install commands need to be run from the ``devops/nciseer`` directory.  Examples
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import (ingest) and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory, named ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory, named ``docker-compose.local.yml`` which contains::
 
     ---
     version: '3'
     services:
       girder:
         volumes:
-          - c:\seer\ingest:/import
+          - c:\seer\import:/import
           - c:\seer\export:/export
 
-where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\ingest/import`` specifies that the local filesystem directory ``c:\seer\ingest`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
+where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\import:/import`` specifies that the local filesystem directory ``c:\seer\import`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
