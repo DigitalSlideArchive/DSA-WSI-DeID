@@ -14,6 +14,7 @@ from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
+from girder.utility.progress import setResponseTimeLimit
 
 from girder_large_image.models.image_item import ImageItem
 from histomicsui.rest.hui_resource import quarantine_item, restore_quarantine_item
@@ -142,6 +143,7 @@ class NCISeerResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def itemAction(self, item, action):
+        setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         actionmap = {
             'quarantine': (quarantine_item, (item, user, False)),
