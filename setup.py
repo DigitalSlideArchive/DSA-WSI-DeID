@@ -53,7 +53,10 @@ setup(
     zip_safe=False,
     entry_points={
         'girder.plugin': [
-            'nci_seer = nci_seer:GirderPlugin'
-        ]
-    }
+            'nci_seer = nci_seer:GirderPlugin',
+        ],
+    },
+    scripts=[
+        'scripts/tiffconcat.py',
+    ],
 )
