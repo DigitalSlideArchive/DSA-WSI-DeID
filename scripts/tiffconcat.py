@@ -73,7 +73,7 @@ def read_ifd(tiff, info, ifdOffset, ifdList):
         ifd['entries'] = struct.unpack(endianMark + 'Q', tiff.read(8))[0]
     else:
         ifd['entries'] = struct.unpack(endianMark + 'H', tiff.read(2))[0]
-    for entry in range(ifd['entries']):
+    for _entry in range(ifd['entries']):
         if info['bigtiff']:
             tag, datatype, count, data = struct.unpack(endianMark + 'HHQQ', tiff.read(20))
             datalen = 8
@@ -139,7 +139,7 @@ def tiff_concat(args):  # noqa
         toAdd.append(nextInfo)
     endianMark = '>' if mainInfo['bigEndian'] else '<'
     output = args.source
-    if getattr(args, 'output'):
+    if getattr(args, 'output', None):
         if args.verbose >= 1:
             print('Copying to %s' % args.output)
         shutil.copy2(args.source, args.output)
