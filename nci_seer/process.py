@@ -176,7 +176,10 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     sourcePath = pyramidPath = tileSource._getLargeImagePath()
     outputPath = os.path.join(tempdir, 'aperio.svs')
     commandList = []
-    tiffcpCompression = ['-c', 'jpeg:r:%d' % quality]
+    tiffcpCompression = [
+        '-c', 'jpeg:r:%d' % quality,
+        '-t', '-w', str(tileSource.tileWidth), '-l', str(tileSource.tileHeight)
+    ]
     if not isCommonCompression:
         pyramidPath = os.path.join(tempdir, 'vips_pyramid.tiff')
         commandList.append([
