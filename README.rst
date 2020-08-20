@@ -86,3 +86,61 @@ This uses ``git`` to update the repository, fetches the latest build from docker
     :target: https://raw.githubusercontent.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/master/LICENSE
     :alt: License
 
+
+Workflow States and Transitions
+===============================
+
+There are several states an image can be in, including:
+
+ - imported
+ - quarantine
+ - processed
+ - rejected
+ - original
+ - finished
+
+Which correspond to named folders, i.e., an image will be in the ``imported`` state at the time it lives in the ``imported`` folder, as long as users move images between states using the DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
+
+The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantine`` state in the ``quarantine`` folder, but the image's workflow history indicates that it had previously been in the ``imported`` state before the ``quarantine`` state.
+
+Import
+------
+
+When an image is first brought into the system, through the usual mechanism of putting the image plus metadata into an import filesystem folder and running an import script, the image is deposited into the ``import`` folder and is in the ``import`` state.
+
+TODO: describe structure for file/folder layout and csv file, which should go into import folder for data ingest
+
+Quarantine
+----------
+
+The ``quarantine`` state is for holding images that may hold PHI and should be inspected. This state provides controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
+
+Generally a user would first quarantine an image after import, which moves the image to the ``quarantine`` folder (for the remainder of this discussion, assume that the name of the folder corresponds to the name of the state). The user should then inspect the image and metadata for PHI, can mark individual metadata fields for redaction, and can indicate if any of the non-primary images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will move the data to the ``processed`` state and TODO:move it elsewhere also??. As part of moving the data to the ``processed`` state, the metadata fields and non-primary images marked for redaction will be deleted. TODO: deleted or overwritten or changed??
+
+TODO: better wording than non-primary images
+
+TODO: can images be quarantined from any state?
+
+Processed
+---------
+
+Images in the ``processed`` state have gone through the redaction process, but should be inspected to determine if they still contain PHI or are fully cleared and ready for release. Once the images have been fully cleared for release, the ``Finish`` button should be pressed, moving the images to the ``finished`` state.
+
+Rejected
+--------
+
+The ``rejected`` state is available at any time. If an image is determined to be too difficult to confirm that PHI has been removed, or if so much data would be removed to de-identify the image that the image data would be useless for research purposes, then the image can be sent to the ``rejected`` state by clicking on the ``rejected`` button.
+
+TODO: should we add a reason textbox so that users can indicate why an image was rejected?
+
+Original
+--------
+
+TODO: When does this come into play ??
+
+Finished
+--------
+
+When an image has been de-identified and is cleared for release, it will be in the `finished` state. From the ``finished`` state the user can export images by clicking on the ``export`` button, which will copy images from the ``finished`` folder in DSA to the ``export`` folder on the host filesystem.
+
+TODO: What happens after export? Do images get removed from the finished folder?
