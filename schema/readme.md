@@ -14,8 +14,10 @@ This should end in one of the known extensions (i.e. svs or ndpi )
 
 ## TokenID
 Alphanumeric	2-digit numeric code for registry + 8-character alphanumeric code for subject + 2-digit numeric Tumor_Rec_Number	Will come prepopulated by IMS. This ID should be used when communicating with IMS, in the Subject Manifest and Transfer Log, and in the file names for the pathology reports and the WSIs.	1234AB567001
-## Proc_Seq	Numeric	01, 02, 03, 04	Sequence number of the procedure for the subject	01
-C	Proc_Type	Categorical	Biopsy	Indicates the procedure type for the slides (i.e. biopsy, cytology cell block, resection, etc.)	Biospy
+## Proc_Seq
+Numeric	01, 02, 03, 04	Sequence number of the procedure for the subject	
+##Proc_Type
+Categorical	Biopsy	Indicates the procedure type for the slides (i.e. biopsy, cytology cell block, resection, etc.)	Biospy
 			Cytology Cell Block		
 			Resection		
 ##	Spec_Site	
