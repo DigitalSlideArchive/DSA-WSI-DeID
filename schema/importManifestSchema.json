@@ -1,0 +1,101 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://example.com/example.json",
+    "type": "object",
+    "title": "The root schema",
+    "description": "The root schema comprises the entire JSON document.",
+    "default": {},
+    "examples": [
+        {
+            "imageFilename": "meh.svs",
+            "TokenID": "1234AB567001",
+            "Proc_Seq": "01",
+            "Spec_Site": "C44.7",
+            "Slide_ID": "02",
+            "ImageID": "1234AB567001_01_01 Proc_Seq_ Slide_ID",
+            "PostDSAStatus": "Quarantined"
+        }
+    ],
+    "required": [
+        "imageFilename",
+        "TokenID",
+        "Proc_Seq",
+        "Spec_Site",
+        "Slide_ID",
+        "ImageID",
+        "PostDSAStatus"
+    ],
+    "properties": {
+        "imageFilename": {
+            "$id": "#/properties/imageFilename",
+            "type": "string",
+            "title": "The imageFilename schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "meh.svs"
+            ]
+        },
+        "TokenID": {
+            "$id": "#/properties/TokenID",
+            "type": "string",
+            "title": "The TokenID schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "1234AB567001"
+            ]
+        },
+        "Proc_Seq": {
+            "$id": "#/properties/Proc_Seq",
+            "type": "string",
+            "title": "The Proc_Seq schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "01"
+            ]
+        },
+        "Spec_Site": {
+            "$id": "#/properties/Spec_Site",
+            "type": "string",
+            "title": "The Spec_Site schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "C44.7"
+            ]
+        },
+        "Slide_ID": {
+            "$id": "#/properties/Slide_ID",
+            "type": "string",
+            "title": "The Slide_ID schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "02"
+            ]
+        },
+        "ImageID": {
+            "$id": "#/properties/ImageID",
+            "type": "string",
+            "title": "The ImageID schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "1234AB567001_01_01 Proc_Seq_ Slide_ID"
+            ]
+        },
+        "PostDSAStatus": {
+            "$id": "#/properties/PostDSAStatus",
+            "type": "string",
+            "title": "The PostDSAStatus schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "Quarantined"
+            ]
+        }
+    },
+    "additionalProperties": true
+}
