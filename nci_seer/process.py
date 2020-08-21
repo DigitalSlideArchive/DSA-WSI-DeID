@@ -11,6 +11,8 @@ from girder import logger
 from girder_large_image.models.image_item import ImageItem
 import large_image_source_tiff.girder_source
 
+from . import tifftools
+
 
 def get_redact_list(item):
     """
@@ -36,7 +38,7 @@ def get_generated_title(item):
     """
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
-    for key in ('aperio.Title', ):
+    for key in ('aperio.Title', 'hamamatsu.Reference'):
         if redactList['metadata'].get(key):
             return redactList['metadata'].get(key)
     # TODO: Pull from appropriate 'meta' if not otherwise present
@@ -46,8 +48,8 @@ def get_generated_title(item):
 def determine_format(tileSource):
     metadata = tileSource.getInternalMetadata() or {}
     if tileSource.name == 'openslide':
-        if 'aperio' in metadata.get('openslide', {}).get('openslide.comment', '').lower():
-            return 'aperio'
+        if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
+            return metadata['openslide']['openslide.vendor']
     return None
 
 
@@ -155,8 +157,7 @@ def split_name(base, number):
 
 def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     """
-    Redact aperio files.  If the file is compressed with a propriety
-    compression, this recompresses it with JPEG compression via vips.
+    Redact aperio files.
 
     :param item: the item to redact.
     :param tempdir: a directory for work files and the final result.
@@ -239,6 +240,82 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     return outputPath, 'image/tiff'
 
 
+def redact_tiff_tags(ifds, redactList, title):
+    """
+    Redact any tags of the form *;tiff.<tiff name name> from all IFDs.
+
+    :param ifds: a list of ifd info records.  Tags may be removed or modified.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.  If any of a list of title tags
+        exist, they are replaced with this value.
+    """
+    redactedTags = {}
+    for key, value in redactList['metadata'].items():
+        tag = tifftools.name_to_tag(key.rsplit(';tiff.', 1)[-1])
+        if tag:
+            redactedTags[tag] = value
+    for titleKey in {'NDPI_REFERENCE', }:
+        redactedTags[tifftools.name_to_tag(titleKey)] = title
+    for ifd in ifds:
+        # convert to a list since we may mutage the tag dictionary
+        for tag, taginfo in list(ifd['tags'].items()):
+            if tag in redactedTags:
+                if redactedTags[tag] is None:
+                    del ifd['tags'][tag]
+                else:
+                    taginfo['type'] = tifftools.name_to_datatype('ASCII')
+                    taginfo['data'] = redactedTags[tag]
+
+
+def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
+    """
+    Redact hamamatsu files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    tileSource = ImageItem().tileSource(item)
+    sourcePath = tileSource._getLargeImagePath()
+    tiffinfo = tifftools.read_tiff(sourcePath)
+    ifds = tiffinfo['ifds']
+    sourceLensTag = tifftools.name_to_tag('NDPI_SOURCELENS')
+    if 'macro' in redactList['images']:
+        ifds = [ifd for ifd in ifds
+                if sourceLensTag not in ifd['tags'] or
+                ifd['tags'][sourceLensTag]['data'][0] > 0]
+    redact_tiff_tags(ifds, redactList, title)
+    propertyTag = tifftools.name_to_tag('NDPI_PROPERTY_MAP')
+    propertyList = ifds[0]['tags'][propertyTag]['data'].replace('\r', '\n').split('\n')
+    ndpiProperties = {p.split('=')[0]: p.split('=', 1)[1] for p in propertyList if '=' in p}
+    for fullkey, value in redactList['metadata'].items():
+        if fullkey.startswith('internal;openslide;hamamatsu.'):
+            key = fullkey.split('internal;openslide;hamamatsu.', 1)[1]
+            if key in ndpiProperties:
+                if value is None:
+                    del ndpiProperties[key]
+                else:
+                    ndpiProperties[key] = value
+    propertyList = ['%s=%s\r\n' % (k, v) for k, v in ndpiProperties.items()]
+    propertyMap = ''.join(propertyList)
+    for ifd in ifds:
+        ifd['tags'][tifftools.name_to_tag('NDPI_REFERENCE')] = {
+            'type': tifftools.name_to_datatype('ASCII'),
+            'data': title,
+        }
+        ifd['tags'][propertyTag] = {
+            'type': tifftools.name_to_datatype('ASCII'),
+            'data': propertyMap,
+        }
+    outputPath = os.path.join(tempdir, 'hamamatsu.ndpi')
+    tifftools.tiff_write(ifds, outputPath)
+    return outputPath, 'image/tiff'
+
+
 def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
                        background='#000000', textColor='#ffffff'):
     """
@@ -297,3 +374,32 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         fill=textColor,
         font=imageDrawFont)
     return newImage
+
+
+# Hamamatsu custom tags
+# ff8c        Format Flag
+# ff8d FLOAT  SourceLens (magnification of this level, -1 for macro, -2 for half res macro)
+# ff8e SLONG  XOffsetFromSlideCenter
+# ff8f SLONG  YOffsetFromSlideCenter
+# ff90        Focal Plane
+# ff92        MCU Starts (need to be adjusted when concating)
+# ff93        Reference
+# ff94
+# ff9f
+# ffa0
+# ffa2 ASCII (NDP.S/N)
+# ffa5
+# ffa6
+# ffa9 ASCII - main block (property map)
+
+# Copy npdi file.  Find ffa9 fields and replace with our text.
+#   title -> Reference
+#   Created/Updated are YYYY/MM/DD
+#   drop fields that don't fit
+# Common TIFF Fields:
+#   Software
+#   DateTime
+#   Make
+#   Model
+# if redacting macro, find ff8d == -1 or -2 and replace strip offset location
+# with smallest possible jpeg

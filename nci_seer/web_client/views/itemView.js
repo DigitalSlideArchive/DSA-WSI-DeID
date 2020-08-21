@@ -50,7 +50,7 @@ wrap(ItemView, 'render', function (render) {
         if (keyname.match(/^internal;openslide;openslide\.(?!comment$)/)) {
             return false;
         }
-        if (keyname.match(/^internal;openslide;tiff.ResolutionUnit$/)) {
+        if (keyname.match(/^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$/)) {
             return false;
         }
         return true;
