@@ -57,7 +57,7 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const hideField = (keyname) => {
-        const isAperio = this.$el.find('.large_image_metadata_value[keyname="internal;openslide;aperio.Title"]').length > 0;
+        const isAperio = this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;aperio."]').length > 0;
         if (isAperio && keyname.match(/^internal;openslide;(openslide.comment|tiff.ImageDescription)$/)) {
             return true;
         }
