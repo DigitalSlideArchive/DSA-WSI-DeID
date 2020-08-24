@@ -1,3 +1,5 @@
+import base64
+import copy
 from io import BytesIO
 from libtiff import libtiff_ctypes
 import math
@@ -6,9 +8,11 @@ import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 import subprocess
+import xml.etree.ElementTree
 
 from girder import logger
 from girder_large_image.models.image_item import ImageItem
+from large_image.tilesource import dictToEtree
 import large_image_source_tiff.girder_source
 
 from . import tifftools
@@ -38,7 +42,9 @@ def get_generated_title(item):
     """
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
-    for key in ('aperio.Title', 'hamamatsu.Reference'):
+    for key in {
+            'aperio.Title', 'hamamatsu.Reference',
+            'PIIM_DP_SCANNER_OPERATOR_ID', 'PIM_DP_UFS_BARCODE'}:
         if redactList['metadata'].get(key):
             return redactList['metadata'].get(key)
     # TODO: Pull from appropriate 'meta' if not otherwise present
@@ -50,6 +56,8 @@ def determine_format(tileSource):
     if tileSource.name == 'openslide':
         if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
             return metadata['openslide']['openslide.vendor']
+    if 'xml' in metadata and any(k.startswith('PIM_DP_') for k in metadata['xml']):
+        return 'philips'
     return None
 
 
@@ -312,6 +320,144 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
             'data': propertyMap,
         }
     outputPath = os.path.join(tempdir, 'hamamatsu.ndpi')
+    tifftools.tiff_write(ifds, outputPath)
+    return outputPath, 'image/tiff'
+
+
+PhilipsTagElements = {  # Group, Element
+    'DICOM_ACQUISITION_DATETIME': ('0x0008', '0x002A'),
+    'DICOM_DATE_OF_LAST_CALIBRATION': ('0x0018', '0x1200'),
+    'DICOM_DEVICE_SERIAL_NUMBER': ('0x0018', '0x1000'),
+    'DICOM_MANUFACTURER': ('0x0008', '0x0070'),
+    'DICOM_MANUFACTURERS_MODEL_NAME': ('0x0008', '0x1090'),
+    'DICOM_SOFTWARE_VERSIONS': ('0x0018', '0x1020'),
+    'DICOM_TIME_OF_LAST_CALIBRATION': ('0x0018', '0x1201'),
+    'PIIM_DP_SCANNER_CALIBRATION_STATUS': ('0x101D', '0x100A'),
+    'PIIM_DP_SCANNER_OPERATOR_ID': ('0x101D', '0x1009'),
+    'PIIM_DP_SCANNER_RACK_NUMBER': ('0x101D', '0x1007'),
+    'PIIM_DP_SCANNER_SLOT_NUMBER': ('0x101D', '0x1008'),
+    'PIM_DP_SCANNER_RACK_PRIORITY': ('0x301D', '0x1010'),
+    'PIM_DP_UFS_BARCODE': ('0x301D', '0x1002'),
+    'PIM_DP_UFS_INTERFACE_VERSION': ('0x301D', '0x1001'),
+}
+
+
+def philips_tag(dict, key, value=None, subkey=None, subvalue=None):
+    dobjs = dict['DataObject']
+    if not isinstance(dobjs, list):
+        dobjs = [dobjs]
+    for didx, dobj in enumerate(dobjs):
+        taglist = dobj['Attribute']
+        if not isinstance(taglist, list):
+            taglist = [taglist]
+        for tidx, entry in enumerate(taglist):
+            if entry['Name'] == key:
+                if subkey is None and (value is None or entry['text'] == value):
+                    return dobjs, didx, taglist, tidx, entry
+                elif 'Array' in entry:
+                    subtag = philips_tag(entry['Array'], subkey, subvalue)
+                    if subtag is not None:
+                        return dobjs, didx, taglist, tidx, subtag
+    return None
+
+
+def redact_format_philips(item, tempdir, redactList, title, labelImage):
+    """
+    Redact philips files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    tileSource = ImageItem().tileSource(item)
+    sourcePath = tileSource._getLargeImagePath()
+    tiffinfo = tifftools.read_tiff(sourcePath)
+    xmldict = tileSource._tiffDirectories[-1]._description_record
+    ifds = tiffinfo['ifds']
+    # redact images from xmldict
+    images = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
+    for key, pkey in [('macro', 'MACROIMAGE'), ('label', 'LABELIMAGE')]:
+        if key in redactList['images'] and images:
+            tag = philips_tag(
+                xmldict, 'PIM_DP_SCANNED_IMAGES', None, 'PIM_DP_IMAGE_TYPE', pkey)
+            if tag:
+                tag[-1][0].pop(tag[-1][1])
+    # redact images from ifds
+    ifds = [ifd for ifd in ifds
+            if ifd['tags'].get(tifftools.name_to_tag('IMAGEDESCRIPTION'), {}).get(
+                'data', '').split()[0].lower() not in redactList['images']]
+
+    redactList = copy.copy(redactList)
+    redactList['metadata']['internal;xml;PIIM_DP_SCANNER_OPERATOR_ID'] = title
+    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = title
+    # redact general tiff tags
+    redact_tiff_tags(ifds, redactList, title)
+    # remove redacted philips tags
+    for key in redactList['metadata']:
+        if not key.startswith('internal;xml;'):
+            continue
+        key = key.split(';', 2)[-1]
+        parts = key.split('|') + [None]
+        tag = philips_tag(xmldict, parts[0], None, parts[1])
+        if tag:
+            if parts[1] is not None:
+                tag[-1][2].pop(tag[-1][3])
+            else:
+                tag[2].pop(tag[3])
+    # Add back philips tags with values
+    for key, value in redactList['metadata'].items():
+        if not key.startswith('internal;xml;'):
+            continue
+        key = key.split(';', 2)[-1]
+        if value is not None and '|' not in key and key in PhilipsTagElements:
+            plist = xmldict['DataObject']['Attribute']
+            pelem = PhilipsTagElements[key]
+            entry = {
+                'Name': key,
+                'Group': pelem[0],
+                'Element': pelem[1],
+                'PMSVR': 'IString',
+                'text': value,
+            }
+            plist.insert(0, entry)
+    # Insert label image
+    labelPath = os.path.join(tempdir, 'label.tiff')
+    labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
+    labelinfo = tifftools.read_tiff(labelPath)
+    labelinfo['ifds'][0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
+        'type': tifftools.name_to_datatype('ASCII'),
+        'data': 'Label'
+    }
+    ifds.extend(labelinfo['ifds'])
+    jpeg = BytesIO()
+    labelImage.save(jpeg, format='jpeg', quality=90)
+    tag = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
+    tag[2][tag[3]]['Array']['DataObject'].append({
+        'Attribute': [{
+            'Name': 'PIM_DP_IMAGE_TYPE',
+            'Group': '0x301D',
+            'Element': '0x1004',
+            'PMSVR': 'IString',
+            'text': 'LABELIMAGE',
+        }, {
+            'Name': 'PIM_DP_IMAGE_DATA',
+            'Group': '0x301D',
+            'Element': '0x1005',
+            'PMSVR': 'IString',
+            'text': base64.b64encode(jpeg.getvalue()).decode(),
+        }],
+        'ObjectType': 'DPScannedImage',
+    })
+    ifds[0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
+        'type': tifftools.name_to_datatype('ASCII'),
+        'data': xml.etree.ElementTree.tostring(
+            dictToEtree(xmldict), encoding='utf8', method='xml').decode(),
+    }
+    outputPath = os.path.join(tempdir, 'philips.tiff')
     tifftools.tiff_write(ifds, outputPath)
     return outputPath, 'image/tiff'
 
