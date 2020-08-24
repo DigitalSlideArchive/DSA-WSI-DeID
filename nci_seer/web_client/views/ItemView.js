@@ -6,8 +6,8 @@ import events from '@girder/core/events';
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import ItemView from '@girder/core/views/body/ItemView';
 
-import itemViewWidget from '../templates/itemView.pug';
-import '../stylesheets/itemView.styl';
+import ItemViewTemplate from '../templates/ItemView.pug';
+import '../stylesheets/ItemView.styl';
 
 wrap(ItemView, 'render', function (render) {
     const getRedactList = () => {
@@ -170,7 +170,7 @@ wrap(ItemView, 'render', function (render) {
             }).done((resp) => {
                 if (resp) {
                     addRedactionControls(resp === 'ingest' || resp === 'quarantine');
-                    this.$el.append(itemViewWidget({
+                    this.$el.append(ItemViewTemplate({
                         project_folder: resp
                     }));
                     this.events['click .g-workflow-button'] = workflowButton;
