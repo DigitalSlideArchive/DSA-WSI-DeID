@@ -8,9 +8,9 @@ import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 
 function performAction(action) {
     const actions = {
-        ingest: {done: 'Started import process', fail: 'Failed to start import process.'},
-        export: {done: 'Started recent export process', fail: 'Failed to start recent export process.'},
-        exportall: {done: 'Started export all process', fail: 'Failed to start export all process.'}
+        ingest: { done: 'Started import process', fail: 'Failed to start import process.' },
+        export: { done: 'Started recent export process', fail: 'Failed to start recent export process.' },
+        exportall: { done: 'Started export all process', fail: 'Failed to start export all process.' }
     };
 
     restRequest({

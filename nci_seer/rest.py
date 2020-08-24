@@ -14,13 +14,14 @@ from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
-from girder.utility.progress import setResponseTimeLimit
+from girder.utility.progress import setResponseTimeLimit, ProgressContext
 
 from girder_large_image.models.image_item import ImageItem
 from histomicsui.rest.hui_resource import quarantine_item, restore_quarantine_item
 
 from .constants import PluginSettings
 from . import process
+from . import import_export
 
 
 def move_item(item, settingkey):
@@ -105,6 +106,7 @@ class NCISeerResource(Resource):
         self.resourceName = 'nciseer'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
+        self.route('PUT', ('action', 'ingest'), self.ingest)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -154,3 +156,14 @@ class NCISeerResource(Resource):
         }
         actionfunc, actionargs = actionmap[action]
         return actionfunc(*actionargs)
+
+    @autoDescribeRoute(
+        Description('Ingest data from the import folder asynchronously.')
+        .errorResponse()
+    )
+    @access.user
+    def ingest(self):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        with ProgressContext(True, user=user, title='Importing data') as ctx:
+            import_export.ingestData(ctx, user)
