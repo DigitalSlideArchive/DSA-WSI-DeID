@@ -56,7 +56,4 @@ setup(
             'nci_seer = nci_seer:GirderPlugin',
         ],
     },
-    scripts=[
-        'scripts/tiffconcat.py',
-    ],
 )
