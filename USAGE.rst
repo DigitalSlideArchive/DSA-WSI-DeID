@@ -31,11 +31,9 @@ Redaction
 
 Many of the workflow states provide controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
 
-The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction, and can indicate if any of the non-primary images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the``original`` state, ond will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and non-primary images marked for redaction will be deleted.
+The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``imported`` or ``quarantine`` state, and can indicate if any of the non-primary images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the ``original`` state, ond will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and associated images marked for redaction will be deleted.
 
-TODO: from which states do the redaction controls exist?
 TODO: deleted or overwritten or changed??
-TODO: better name for non-primary images?
 
 
 Workflow States and Transitions
@@ -50,7 +48,7 @@ There are several states an image can be in, including:
  - original
  - finished
 
-Which correspond to named folders, i.e., an image will be in the ``imported`` state at the time it lives in the ``imported`` folder, as long as users move images between states using the DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
+These states correspond to named folders, i.e., an image will be in the ``imported`` state at the time it lives in the ``imported`` folder, as long as users move images between states using the DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
 
 The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantine`` state in the ``quarantine`` folder, but the image's workflow history indicates that it had previously been in the ``imported`` state before the ``quarantine`` state.
 
@@ -105,6 +103,6 @@ TODO: From the ``finished`` state the user can export images by clicking on the 
 Quarantine
 ----------
 
-The ``quarantine`` state is for holding images that may hold PHI and should be inspected, and can be reached from any other state. It would generally be used if an image has been redacted already but more redaction is necessary. This state provides controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
+The ``quarantine`` state is for holding images that may hold PHI and should be inspected and reprocessed, and can be reached from any other state. It would generally be used if an image has been redacted already but more redaction is necessary. This state provides controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
 
-TODO: can images be quarantined from any state?
+Images be quarantined from any state.  If PHI or ptential PHI is seen in an item that is somewhere other than the ``imported`` folder, it should be quarantined for reprocessing.
