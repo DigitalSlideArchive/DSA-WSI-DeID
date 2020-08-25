@@ -8,13 +8,13 @@ import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 function performAction(action) {
     const actions = {
         ingest: { done: 'Import complete.', fail: 'Failed to import.' },
-        export: { done: 'Recent export complete', fail: 'Failed to export recent items.' },
-        exportall: { done: 'Export all complete', fail: 'Failed to export all item.' }
+        export: { done: 'Recent export complete.', fail: 'Failed to export recent items.' },
+        exportall: { done: 'Export all complete.', fail: 'Failed to export all item.' }
     };
 
     restRequest({
         type: 'PUT',
-        url: 'nciseer/action/ingest',
+        url: `nciseer/action/${action}`,
         error: null
     }).done((resp) => {
         let text = actions[action].done;
@@ -27,7 +27,18 @@ function performAction(action) {
                 ['present', 'already present']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
-                    text += '  ' + resp[key] + ' image' + (resp[key] > 1 ? 's' : '') + ' ' + desc + '.';
+                    text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                }
+            });
+        }
+        if (resp.action === 'export' || resp.action === 'exportall') {
+            [
+                ['export', 'exported'],
+                ['different', 'are different from those already present'],
+                ['present', 'already exported']
+            ].forEach(([key, desc]) => {
+                if (resp[key]) {
+                    text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
                 }
             });
         }
@@ -37,7 +48,9 @@ function performAction(action) {
             type: 'success',
             timeout: 10000
         });
-        router.navigate('folder/' + this.parentModel.id + '?_=' + Date.now(), { trigger: true });
+        if (resp.action === 'ingest') {
+            router.navigate('folder/' + this.parentModel.id + '?_=' + Date.now(), { trigger: true });
+        }
     }).fail((resp) => {
         let text = actions[action].fail;
         if (resp.responseJSON && resp.responseJSON.message) {

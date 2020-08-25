@@ -1,11 +1,15 @@
+import datetime
 import os
 import pandas as pd
+import shutil
 
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+
+from girder_large_image.models.image_item import ImageItem
 
 from . import process
 from .constants import PluginSettings
@@ -158,8 +162,60 @@ def ingestData(ctx, user=None):  # noqa
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
     # TODO: emit a report
+    return reportSummary(report)
+
+
+def reportSummary(report):
     result = {}
     for entry in report:
         result.setdefault(entry['status'], 0)
         result[entry['status']] += 1
     return result
+
+
+def exportItems(ctx, user=None, all=False):
+    """
+    Export all or all recent items in the Finished directory.  Mark each
+    exported item as having been exported.
+
+    :param ctx: a progress context.
+    :param user: the user triggering this.
+    :param all: True to export all items.  False to only export items that have
+        not been previously exported.
+    """
+    exportPath = Setting().get(PluginSettings.NCISEER_EXPORT_PATH)
+    exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
+    if not exportPath or not exportFolderId:
+        raise Exception('Export path and/or finished folder not specified.')
+    exportFolder = Folder().load(exportFolderId, force=True, exc=True)
+    report = []
+    for filepath, file in Folder().fileList(exportFolder, user, data=False):
+        item = Item().load(file['itemId'], force=True, exc=True)
+        try:
+            tileSource = ImageItem().tileSource(item)
+        except Exception:
+            continue
+        sourcePath = tileSource._getLargeImagePath()
+        if not all and item.get('meta', {}).get('nciseerExported'):
+            continue
+        filepath = filepath.split(os.path.sep, 1)[1]
+        ctx.update(message='Exporting %s' % filepath)
+        destPath = os.path.join(exportPath, filepath)
+        destFolder = os.path.dirname(destPath)
+        if os.path.exists(destPath):
+            if os.path.getsize(destPath) == file['size']:
+                report.append({'item': item, 'status': 'present'})
+            else:
+                report.append({'item': item, 'status': 'different'})
+        else:
+            os.makedirs(destFolder, exist_ok=True)
+            shutil.copy2(sourcePath, destPath)
+            exportedRecord = item.get('meta', {}).get('nciseerExported', [])
+            exportedRecord.append({
+                'time': datetime.datetime.utcnow().isoformat(),
+                'user': str(user['_id']) if user else None,
+            })
+            item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
+            report.append({'item': item, 'status': 'export'})
+    # TODO: emit a report
+    return reportSummary(report)
