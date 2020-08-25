@@ -166,4 +166,6 @@ class NCISeerResource(Resource):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         with ProgressContext(True, user=user, title='Importing data') as ctx:
-            import_export.ingestData(ctx, user)
+            result = import_export.ingestData(ctx, user)
+        result['action'] = 'ingest'
+        return result

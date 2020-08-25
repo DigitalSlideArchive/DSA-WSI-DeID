@@ -7,6 +7,7 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 
+from . import process
 from .constants import PluginSettings
 
 
@@ -48,6 +49,8 @@ def readExcelFiles(filelist, ctx):
         timestamp = os.path.getmtime(filepath)
         for row in df.itertuples():
             name = row.ScannedFileName
+            if not name or not row.ImageID or not row.TokenID:
+                continue
             if name not in manifest or timestamp > manifest[name]['timestamp']:
                 manifest[name] = {
                     'timestamp': timestamp,
@@ -60,15 +63,17 @@ def readExcelFiles(filelist, ctx):
 
 
 def ingestOneItem(importFolder, imagePath, record, ctx, user):
+    status = 'added'
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
     if existing:
         if existing['size'] == stat.st_size:
-            return
+            return 'present'
         item = Item().load(existing['itemId'], force=True)
         # TODO: move item somewhere; for now, delete it
         ctx.update(message='Removing existing %s since the size has changed' % imagePath)
         Item().remove(item)
+        status = 'replaced'
     parentFolder = Folder().findOne({'name': record['TokenID'], 'parentId': importFolder['_id']})
     if not parentFolder:
         parentFolder = Folder().createFolder(importFolder, record['TokenID'], creator=user)
@@ -86,11 +91,15 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     file['mtime'] = stat.st_mtime
     file['imported'] = True
     file = File().save(file)
-    # TODO: set item metadata / default redact data
+    # Reload the item as it will have changed
+    item = Item().load(item['_id'], force=True)
+    redactList = process.get_standard_redactions(item, record['ImageID'])
+    item = Item().setMetadata(item, {'redactList': redactList})
     ctx.update(message='Imported %s' % name)
+    return status
 
 
-def ingestData(ctx, user=None):
+def ingestData(ctx, user=None):  # noqa
     """
     Scan the import folder for image and excel files.  For each excel file,
     extract the appropriate data.  For each file listed in an excel file,
@@ -127,6 +136,7 @@ def ingestData(ctx, user=None):
         raise Exception('Failed to find any image files in import directory.')
     manifest = readExcelFiles(excelFiles, ctx)
     missingImages = []
+    report = []
     for record in manifest.values():
         imagePath = os.path.join(os.path.dirname(record['excel']), record['name'])
         if imagePath not in imageFiles:
@@ -137,9 +147,19 @@ def ingestData(ctx, user=None):
                     break
         if imagePath is None:
             missingImages.append(record)
+            status = 'missing'
+            report.append({'record': record, 'status': status})
             continue
         imageFiles.remove(imagePath)
-        ingestOneItem(importFolder, imagePath, record, ctx, user)
+        status = ingestOneItem(importFolder, imagePath, record, ctx, user)
+        report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
-    # missingFiles are images listed in the manifest that are not present
+    for image in imageFiles:
+        status = 'unlisted'
+        report.append({'record': None, 'status': status, 'path': image})
     # TODO: emit a report
+    result = {}
+    for entry in report:
+        result.setdefault(entry['status'], 0)
+        result[entry['status']] += 1
+    return result

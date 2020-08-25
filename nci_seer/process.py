@@ -58,6 +58,105 @@ def determine_format(tileSource):
     return None
 
 
+def get_standard_redactions(item, title):
+    """
+    Produce a standardize redaction list based on format.
+
+    :param item: a Girder item.
+    :param title: the new title of the image.
+    :returns: a redactList.
+    """
+    tileSource = ImageItem().tileSource(item)
+    sourcePath = tileSource._getLargeImagePath()
+    tiffinfo = tifftools.read_tiff(sourcePath)
+    ifds = tiffinfo['ifds']
+    func = None
+    format = determine_format(tileSource)
+    if format is not None:
+        func = globals().get('get_standard_redactions_format_' + format)
+    if func:
+        redactList = func(item, tileSource, tiffinfo, title)
+    else:
+        redactList = {
+            'images': {},
+            'metadata': {},
+        }
+    for key in {'DateTime'}:
+        tag = tifftools.name_to_tag(key)
+        if tag in ifds[0]['tags']:
+            value = ifds[0]['tags'][tag]['data']
+            if len(value) >= 10:
+                value = value[:5] + '01:01' + value[10:]
+            else:
+                value = None
+            redactList['metadata']['internal;openslide;tiff.%s' % key] = value
+    # Make, Model, Software?
+    for key in {'Copyright', 'HostComputer'}:
+        tag = tifftools.name_to_tag(key)
+        if tag in ifds[0]['tags']:
+            redactList['metadata']['internal;openslide;tiff.%s' % key] = None
+    return redactList
+
+
+def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+            'internal;openslide;aperio.Filename': title,
+            'internal;openslide;aperio.Title': title,
+        },
+    }
+    if metadata['openslide'].get('aperio.Date'):
+        redactList['metadata']['internal;openslide;aperio.Date'] = \
+            '01/01/' + metadata['openslide']['aperio.Date'][6:]
+    return redactList
+
+
+def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+            'internal;openslide;aperio.Filename': title,
+            'internal;openslide;aperio.Title': title,
+        },
+    }
+    for key in {'Created', 'Updated'}:
+        if metadata['openslide'].get('hamamatsu.%s' % key):
+            redactList['metadata']['internal;openslide;hamamatsu.%s' % key] = \
+                metadata['openslide']['hamamatsu.%s' % key][:4] + '/01/01'
+    return redactList
+
+
+def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': title,
+            'internal;xml;PIM_DP_UFS_BARCODE': title,
+        },
+    }
+    for key in {'DICOM_DATE_OF_LAST_CALIBRATION'}:
+        if metadata['xml'].get(key):
+            value = metadata['xml'][key].strip('"')
+            if len(value) < 8:
+                value = None
+            else:
+                value = value[:4] + '0101'
+            redactList['metadata']['internal;xml;%s' % key] = value
+    for key in {'DICOM_ACQUISITION_DATETIME'}:
+        if metadata['xml'].get(key):
+            value = metadata['xml'][key].strip('"')
+            if len(value) < 8:
+                value = None
+            else:
+                value = value[:4] + '0101' + value[8:]
+            redactList['metadata']['internal;xml;%s' % key] = value
+    return redactList
+
+
 def redact_item(item, tempdir):
     """
     Redact a Girder iitem.  Based on the redact metadata, determine what
