@@ -17,18 +17,60 @@ from girder.models.user import User
 from girder.utility.progress import setResponseTimeLimit, ProgressContext
 
 from girder_large_image.models.image_item import ImageItem
-from histomicsui.rest.hui_resource import quarantine_item, restore_quarantine_item
+import histomicsui.handlers
 
 from .constants import PluginSettings
 from . import process
 from . import import_export
 
 
-def move_item(item, settingkey):
+ProjectFolders = {
+    'ingest': PluginSettings.HUI_INGEST_FOLDER,
+    'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
+    'processed': PluginSettings.HUI_PROCESSED_FOLDER,
+    'rejected': PluginSettings.HUI_REJECTED_FOLDER,
+    'original': PluginSettings.HUI_ORIGINAL_FOLDER,
+    'finished': PluginSettings.HUI_FINISHED_FOLDER,
+}
+
+
+def create_folder_hierarchy(item, user, folder):
+    """
+    Create a folder hierarchy that matches the original if the original is
+    under a project folder.
+
+    :param item: the item that will be moved or copied.
+    :param user: the user that will own the created folders.
+    :param folder: the destination project folder.
+    :returns: a destination folder that is either the folder passed to this
+        routine or a folder beneath it.
+    """
+    # Mirror the folder structure in the destination.  Remove empty folders in
+    # the original location.
+    projFolderIds = [Setting().get(ProjectFolders[key]) for key in ProjectFolders]
+    origPath = []
+    origFolders = []
+    itemFolder = Folder().load(item['folderId'], force=True)
+    while itemFolder and str(itemFolder['_id']) not in projFolderIds:
+        origPath.insert(0, itemFolder['name'])
+        origFolders.insert(0, itemFolder)
+        if itemFolder['parentCollection'] != 'folder':
+            origPath = origFolders = []
+            itemFolder = None
+        else:
+            itemFolder = Folder().load(itemFolder['parentId'], force=True)
+    # create new folder structre
+    for name in origPath:
+        folder = Folder().createFolder(folder, name=name, creator=user, reuseExisting=True)
+    return folder, origFolders
+
+
+def move_item(item, user, settingkey):
     """
     Move an item to one of the folders specified by a setting.
 
     :param item: the item model to move.
+    :param user: a user for folder creation.
     :param settingkey: one of the PluginSettings values.
     :returns: the item after move.
     """
@@ -40,9 +82,37 @@ def move_item(item, settingkey):
         raise RestException('The appropriate folder does not exist.')
     if str(folder['_id']) == str(item['folderId']):
         raise RestException('The item is already in the appropriate folder.')
-    # Do we want to mirror the location in the destination that we are in a
-    # current folder (do we need to move to a specific subfolder)?
-    return Item().move(item, folder)
+    folder, origFolders = create_folder_hierarchy(item, user, folder)
+    if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
+        quarantineInfo = {
+            'originalFolderId': item['folderId'],
+            'originalBaseParentType': item['baseParentType'],
+            'originalBaseParentId': item['baseParentId'],
+            'originalUpdated': item['updated'],
+            'quarantineUserId': user['_id'],
+            'quarantineTime': datetime.datetime.utcnow()
+        }
+    # move the item
+    item = Item().move(item, folder)
+    if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
+        # When quarantining, add metadata and don't prune folders
+        item = Item().setMetadata(item, {'quarantine': quarantineInfo})
+    else:
+        # Prune empty folders
+        for origFolder in origFolders[::-1]:
+            if Folder().findOne({'parentId': origFolder['_id'], 'parentCollection': 'folder'}):
+                break
+            if Item().findOne({'folderId': origFolder['_id']}):
+                break
+            Folder().remove(origFolder)
+    return item
+
+
+def quarantine_item(item, user, *args, **kwargs):
+    return move_item(item, user, PluginSettings.HUI_QUARANTINE_FOLDER)
+
+
+histomicsui.handlers.quarantine_item = quarantine_item
 
 
 def process_item(item, user=None):
@@ -71,6 +141,7 @@ def process_item(item, user=None):
         except Exception as e:
             logger.exception('Failed to redact item')
             raise RestException(e.args[0])
+        origFolder, _ = create_folder_hierarchy(item, user, origFolder)
         origItem = Item().copyItem(item, creator, folder=origFolder)
         origItem = Item().setMetadata(origItem, {
             'nciseerProcessed': {
@@ -97,7 +168,7 @@ def process_item(item, user=None):
         'time': datetime.datetime.utcnow().isoformat(),
     })
     item['meta'].pop('quarantine', None)
-    item = Item().move(item, procFolder)
+    item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item
 
 
@@ -119,17 +190,9 @@ class NCISeerResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
-        project_folders = {
-            'ingest': PluginSettings.HUI_INGEST_FOLDER,
-            'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
-            'processed': PluginSettings.HUI_PROCESSED_FOLDER,
-            'rejected': PluginSettings.HUI_REJECTED_FOLDER,
-            'original': PluginSettings.HUI_ORIGINAL_FOLDER,
-            'finished': PluginSettings.HUI_FINISHED_FOLDER,
-        }
         while folder:
-            for key in project_folders:
-                projFolderId = Setting().get(project_folders[key])
+            for key in ProjectFolders:
+                projFolderId = Setting().get(ProjectFolders[key])
                 if str(folder['_id']) == projFolderId:
                     return key
             if folder['parentCollection'] != 'folder':
@@ -151,10 +214,10 @@ class NCISeerResource(Resource):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         actionmap = {
-            'quarantine': (quarantine_item, (item, user, False)),
-            'unquarantine': (restore_quarantine_item, (item, )),
-            'reject': (move_item, (item, PluginSettings.HUI_REJECTED_FOLDER)),
-            'finish': (move_item, (item, PluginSettings.HUI_FINISHED_FOLDER)),
+            'quarantine': (histomicsui.handlers.quarantine_item, (item, user, False)),
+            'unquarantine': (histomicsui.handlers.restore_quarantine_item, (item, user)),
+            'reject': (move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER)),
+            'finish': (move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER)),
             'process': (process_item, (item, user)),
         }
         actionfunc, actionargs = actionmap[action]
