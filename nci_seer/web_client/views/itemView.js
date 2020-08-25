@@ -47,6 +47,9 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const showRedactButton = (keyname) => {
+        if (keyname.match(/^internal;aperio_version$/)) {
+            return false;
+        }
         if (keyname.match(/^internal;openslide;openslide\.(?!comment$)/)) {
             return false;
         }
