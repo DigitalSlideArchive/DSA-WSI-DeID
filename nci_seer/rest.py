@@ -168,6 +168,7 @@ def process_item(item, user=None):
         'time': datetime.datetime.utcnow().isoformat(),
     })
     item['meta'].pop('quarantine', None)
+    item['updated'] = datetime.datetime.utcnow()
     item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item
 
