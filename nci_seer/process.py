@@ -118,8 +118,6 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
     redactList = {
         'images': {},
         'metadata': {
-            'internal;openslide;aperio.Filename': title,
-            'internal;openslide;aperio.Title': title,
         },
     }
     for key in {'Created', 'Updated'}:
