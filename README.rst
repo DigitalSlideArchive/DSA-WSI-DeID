@@ -86,3 +86,8 @@ This uses ``git`` to update the repository, fetches the latest build from docker
     :target: https://raw.githubusercontent.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/master/LICENSE
     :alt: License
 
+
+Usage
+=====
+
+See USAGE.rst for usage information.
