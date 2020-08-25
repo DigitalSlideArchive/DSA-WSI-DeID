@@ -76,6 +76,7 @@ def process_item(item, user=None):
             'nciseerProcessed': {
                 'itemId': str(item['_id']),
                 'time': datetime.datetime.utcnow().isoformat(),
+                'user': str(user['_id']) if user else None,
             },
         })
         ImageItem().delete(item)
@@ -107,6 +108,8 @@ class NCISeerResource(Resource):
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('action', 'ingest'), self.ingest)
+        self.route('PUT', ('action', 'export'), self.export)
+        self.route('PUT', ('action', 'exportall'), self.exportAll)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -168,4 +171,30 @@ class NCISeerResource(Resource):
         with ProgressContext(True, user=user, title='Importing data') as ctx:
             result = import_export.ingestData(ctx, user)
         result['action'] = 'ingest'
+        return result
+
+    @autoDescribeRoute(
+        Description('Export recently finished items to the export folder asynchronously.')
+        .errorResponse()
+    )
+    @access.user
+    def export(self):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        with ProgressContext(True, user=user, title='Exporting recent finished items') as ctx:
+            result = import_export.exportItems(ctx, user)
+        result['action'] = 'export'
+        return result
+
+    @autoDescribeRoute(
+        Description('Export all finished items to the export folder asynchronously.')
+        .errorResponse()
+    )
+    @access.user
+    def exportAll(self):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        with ProgressContext(True, user=user, title='Exporting all finished items') as ctx:
+            result = import_export.exportItems(ctx, user, True)
+        result['action'] = 'exportall'
         return result
