@@ -7,13 +7,34 @@ See README.rst for installation.
 Importing Data
 ==============
 
-TODO Post-Beta: clean this up when the process is worked out
+The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration.
 
-- Add image files and the metadata excel file to the import directory on the local filesystem
-- Run the import process
-- TODO Post-Beta: describe structure for file/folder layout and csv file, which should go into import folder for data ingest
-- TODO Post-Beta: describe the file renaming
-- The imported files will now appear in the DSA in the ``SEER`` collection, in the ``Imported`` folder
+Imported Files and Folders
+--------------------------
+
+Files are copied from the local import directory to the ``Imported`` folder in the ``SEER`` collection in the DSA. Files can have any folder structure and that folder structure will be reflected in the ``Imported`` folder in the DSA. Excel files (identified by ending in .xls or .xlsx) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process--this list can be easily changed.
+
+Import Process
+--------------
+
+From the ``Imported`` folder (or any sub folder) in the DSA, click on the ``Import`` button.
+
+A background process starts that scans through the mounted import directory, and does the following:
+
+- Each excel file is parsed for a header row that has TokenID, ImageID, and ScannedFileName.
+- If there are any excel files that do not have a header row, an error is thrown and no import is performed.
+- If the same ScannedFileName is listed in multiple excel files, the newest file is used by preference.
+- The ScannedFileName is expected to be just the file name (e.g., no folder path).
+
+After the image names and information in the metadata file are reconciled, the DSA will classify images as one of the following:
+
+- ``present``: The image is listed in an excel file and is already in the DSA based on file path and matching file size. No action is performed.
+- ``added``: The image is listed in an excel file and is not in the DSA. It is added in the ``Imported`` directory in the a folder named TokenID with a filename ImageID.<extension>.
+- ``replaced``: The image is listed in an excel file, is in the DSA, but has a different file size from the image in the DSA. The existing file is removed from the DSA and re-added.
+- ``missing``: The image is listed in an excel file but is not in the import directory. No action is performed.
+- ``unlisted``: The image is not listed in an excel file but is in the import directory. No action is performed.
+
+After all images and excel metadata files have been processed, a message is displayed summarizing what images were in each of the five states above (e.g., "Import complete. 19 files added. 1 file missing from import folder"), and then UI is then refreshed.
 
 
 Exporting Data
