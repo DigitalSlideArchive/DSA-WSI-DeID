@@ -64,6 +64,12 @@ wrap(ItemView, 'render', function (render) {
         if (isAperio && keyname.match(/^internal;openslide;(openslide.comment|tiff.ImageDescription)$/)) {
             return true;
         }
+        if (keyname.match(/^internal;openslide;openslide.level\[/)) {
+            return true;
+        }
+        if (keyname.match(/^internal;openslide;hamamatsu.(AHEX|MHLN)\[/)) {
+            return true;
+        }
         return false;
     };
 
