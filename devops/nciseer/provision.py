@@ -48,11 +48,11 @@ if Collection().findOne({'name': 'SEER'}) is None:
 seerCollection = Collection().findOne({'name': 'SEER'})
 # Create default folders.  Set the settings to those folders
 folders = {
-    PluginSettings.HUI_INGEST_FOLDER: ('Imported', False),
-    PluginSettings.HUI_QUARANTINE_FOLDER: ('Quarantine', False),
-    PluginSettings.HUI_PROCESSED_FOLDER: ('Processed', False),
-    PluginSettings.HUI_REJECTED_FOLDER: ('Rejected', False),
-    PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', False),
+    PluginSettings.HUI_INGEST_FOLDER: ('Imported', True),
+    PluginSettings.HUI_QUARANTINE_FOLDER: ('Quarantine', True),
+    PluginSettings.HUI_PROCESSED_FOLDER: ('Processed', True),
+    PluginSettings.HUI_REJECTED_FOLDER: ('Rejected', True),
+    PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', True),
     PluginSettings.HUI_FINISHED_FOLDER: ('Finished', True),
 }
 for settingKey, (folderName, public) in folders.items():
@@ -61,6 +61,13 @@ for settingKey, (folderName, public) in folders.items():
             seerCollection, folderName, parentType='collection',
             public=public, creator=adminUser)
         Setting().set(settingKey, str(folder['_id']))
+    else:
+        folderId = Setting().get(settingKey)
+        folder = Folder().load(folderId, force=True)
+        if folder['name'] != folderName or folder['public'] != public:
+            folder['name'] = folderName
+            folder['public'] = public
+            Folder().save(folder)
 # Set default import/export paths
 if not Setting().get(PluginSettings.NCISEER_IMPORT_PATH):
     Setting().set(PluginSettings.NCISEER_IMPORT_PATH, '/import')
