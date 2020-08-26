@@ -124,6 +124,8 @@ def process_item(item, user=None):
     :param user: the user performing the processing.
     :returns: the item after move.
     """
+    from . import __version__
+
     origFolderId = Setting().get(PluginSettings.HUI_ORIGINAL_FOLDER)
     procFolderId = Setting().get(PluginSettings.HUI_PROCESSED_FOLDER)
     if not origFolderId or not procFolderId:
@@ -166,8 +168,13 @@ def process_item(item, user=None):
     item['meta']['redacted'].append({
         'user': str(user['_id']) if user else None,
         'time': datetime.datetime.utcnow().isoformat(),
+        'redactList': item['meta'].get('redactList'),
+        'version': __version__,
     })
     item['meta'].pop('quarantine', None)
+    if 'nciseerExported' in item['meta']:
+        item['meta']['redacted'][-1]['previousExports'] = item['meta']['nciseerExported']
+    item['meta'].pop('nciseerExported', None)
     item['updated'] = datetime.datetime.utcnow()
     item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item

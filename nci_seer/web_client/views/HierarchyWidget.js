@@ -34,7 +34,7 @@ function performAction(action) {
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
                 ['export', 'exported'],
-                ['different', 'are different from those already present'],
+                ['different', 'already present but different'],
                 ['present', 'already exported']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
