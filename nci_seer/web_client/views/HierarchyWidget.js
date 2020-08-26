@@ -1,5 +1,5 @@
-import { AccessType } from '@girder/core/constants';
 import events from '@girder/core/events';
+import { getCurrentUser } from '@girder/core/auth';
 import { restRequest } from '@girder/core/rest';
 import router from '@girder/core/router';
 import { wrap } from '@girder/core/utilities/PluginUtils';
@@ -86,8 +86,7 @@ function addExportControls() {
 wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
 
-    if (this.parentModel.resourceName === 'folder' &&
-            this.parentModel.getAccessLevel() >= AccessType.WRITE) {
+    if (this.parentModel.resourceName === 'folder' && getCurrentUser()) {
         restRequest({
             url: `nciseer/project_folder/${this.parentModel.id}`,
             error: null
