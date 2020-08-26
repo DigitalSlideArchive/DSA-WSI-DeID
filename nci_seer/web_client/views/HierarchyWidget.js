@@ -48,7 +48,7 @@ function performAction(action) {
             type: 'success',
             timeout: 10000
         });
-        if (resp.action === 'ingest') {
+        if (resp.action === 'ingest' && this.parentModel.get('_modelType') === 'folder') {
             router.navigate('folder/' + this.parentModel.id + '?_=' + Date.now(), { trigger: true });
         }
     }).fail((resp) => {
