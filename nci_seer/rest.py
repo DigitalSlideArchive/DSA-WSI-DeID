@@ -6,7 +6,7 @@ from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
-from girder.constants import AccessType, TokenScope
+from girder.constants import AccessType, SortDir, TokenScope
 from girder.exceptions import RestException
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -173,11 +173,29 @@ def process_item(item, user=None):
     return item
 
 
+def get_first_item(folder, user):
+    """
+    Get the first item in a folder or any subfolder of that folder.  The items
+    are sorted aalphabetically.
+
+    :param folder: the folder to search
+    :returns: an item or None.
+    """
+    for item in Folder().childItems(folder, limit=1, sort=[('lowerName', SortDir.ASCENDING)]):
+        return item
+    for subfolder in Folder().childFolders(
+            folder, 'folder', user=user, sort=[('lowerName', SortDir.ASCENDING)]):
+        item = get_first_item(subfolder, user)
+        if item is not None:
+            return item
+
+
 class NCISeerResource(Resource):
     def __init__(self):
         super(NCISeerResource, self).__init__()
         self.resourceName = 'nciseer'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
+        self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
@@ -262,3 +280,16 @@ class NCISeerResource(Resource):
             result = import_export.exportItems(ctx, user, True)
         result['action'] = 'exportall'
         return result
+
+    @autoDescribeRoute(
+        Description('Get the ID of the next unprocessed item.')
+        .errorResponse()
+    )
+    @access.public(scope=TokenScope.DATA_READ)
+    def nextUnprocessedItem(self):
+        user = self.getCurrentUser()
+        for settingKey in {PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER}:
+            folder = Folder().load(Setting().get(settingKey), user=user)
+            item = get_first_item(folder, user)
+            if item is not None:
+                return str(item['_id'])

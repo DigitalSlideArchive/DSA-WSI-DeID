@@ -1,13 +1,37 @@
 import $ from 'jquery';
 
 import { AccessType } from '@girder/core/constants';
-import { restRequest } from '@girder/core/rest';
 import events from '@girder/core/events';
-import { wrap } from '@girder/core/utilities/PluginUtils';
 import ItemView from '@girder/core/views/body/ItemView';
+import router from '@girder/core/router';
+import { restRequest } from '@girder/core/rest';
+import { wrap } from '@girder/core/utilities/PluginUtils';
 
 import ItemViewTemplate from '../templates/ItemView.pug';
 import '../stylesheets/ItemView.styl';
+
+function goToNextUnprocessedItem() {
+    restRequest({
+        url: 'nciseer/next_unprocessed_item',
+        error: null
+    }).done((resp) => {
+        if (resp) {
+            events.trigger('g:alert', {
+                icon: 'right-big',
+                text: 'Switching to next unprocessed item',
+                timeout: 4000
+            });
+            router.navigate('item/' + resp, { trigger: true });
+        } else {
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: 'All items are processed',
+                type: 'success',
+                timeout: 4000
+            });
+        }
+    });
+}
 
 wrap(ItemView, 'render', function (render) {
     const getRedactList = () => {
@@ -156,6 +180,9 @@ wrap(ItemView, 'render', function (render) {
             });
             delete this.model.parent;
             this.model.fetch({ success: () => this.render() });
+            if (action === 'finish') {
+                goToNextUnprocessedItem();
+            }
         }).fail((resp) => {
             $('.g-hui-loading-overlay').remove();
             let text = actions[action].fail;
