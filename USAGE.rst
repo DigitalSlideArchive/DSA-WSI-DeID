@@ -21,7 +21,7 @@ Exporting Data
 
 When images are in the ``SEER`` collection, in the ``Finished`` folder, they can be exported. 
 
-In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``. Clicking either copies files from the ``Finished`` folder to the mounted export folder, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Finished`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``. Clicking either copies files from the ``Finished`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Finished`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
 
 Recent exports are any items in the Finished folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
