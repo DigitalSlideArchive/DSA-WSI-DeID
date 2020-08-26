@@ -87,7 +87,7 @@ wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
 
     if (this.parentModel.resourceName === 'folder' &&
-            this.parentModel.getAccessLevel() >= AccessType.WRITE) {
+            this.parentModel.getAccessLevel() >= AccessType.READ) {
         restRequest({
             url: `nciseer/project_folder/${this.parentModel.id}`,
             error: null
