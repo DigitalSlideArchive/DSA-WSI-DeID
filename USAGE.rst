@@ -12,7 +12,7 @@ The import process assumes that the system has been configured with a mounted im
 Imported Files and Folders
 --------------------------
 
-Files are copied from the local import directory to the ``Imported`` folder in the ``SEER`` collection in the DSA. Files can have any folder structure and that folder structure will be reflected in the ``Imported`` folder in the DSA. Excel files (identified by ending in .xls or .xlsx) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process--this list can be easily changed.
+Files are copied from the local import directory to the ``Imported`` folder in the ``SEER`` collection in the DSA. Files can have any folder structure; the folder structure is not significant in the import process. Excel files (identified by ending in .xls or .xlsx) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process -- this list can be easily changed.
 
 Import Process
 --------------
