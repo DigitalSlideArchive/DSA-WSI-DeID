@@ -2,7 +2,7 @@ import events from '@girder/core/events';
 import router from '@girder/core/router';
 import { restRequest } from '@girder/core/rest';
 
-function goToNextUnprocessedItem() {
+function goToNextUnprocessedItem(callback) {
     restRequest({
         url: 'nciseer/next_unprocessed_item',
         error: null
@@ -21,6 +21,9 @@ function goToNextUnprocessedItem() {
                 type: 'success',
                 timeout: 4000
             });
+        }
+        if (callback) {
+            callback(resp);
         }
     });
     return false;

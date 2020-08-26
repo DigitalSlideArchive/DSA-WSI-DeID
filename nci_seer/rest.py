@@ -295,7 +295,7 @@ class NCISeerResource(Resource):
     @access.public(scope=TokenScope.DATA_READ)
     def nextUnprocessedItem(self):
         user = self.getCurrentUser()
-        for settingKey in {PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER}:
+        for settingKey in (PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER):
             folder = Folder().load(Setting().get(settingKey), user=user)
             item = get_first_item(folder, user)
             if item is not None:
