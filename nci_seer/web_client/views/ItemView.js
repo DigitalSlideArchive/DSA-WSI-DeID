@@ -130,7 +130,7 @@ wrap(ItemView, 'render', function (render) {
             unquarantine: { done: 'Item unquarantined.', fail: 'Failed to unquarantine item.' },
             process: { done: 'Item processed.', fail: 'Failed to process item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
-            finish: { done: 'Item move to approved folder.', fail: 'Failed to finish item.' }
+            finish: { done: 'Item moved to finished folder.', fail: 'Failed to finish item.' }
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
