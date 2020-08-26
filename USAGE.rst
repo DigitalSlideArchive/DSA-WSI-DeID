@@ -144,7 +144,7 @@ An image is copied into the ``original`` state before it will be redacted and go
 Finished
 --------
 
-When an image has been de-identified and is cleared for release, it will be in the `finished` state. Export will copy finished files to the export location using NCI's specified folder structure. 
+When an image has been de-identified and is cleared for release, it will be in the `finished` state. Export will copy finished files to the export location using NCI's specified folder structure.
 
 In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images. See the ``Exporting Data`` section above for details.
 
