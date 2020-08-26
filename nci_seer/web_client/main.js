@@ -7,6 +7,7 @@ import { exposePluginConfig } from '@girder/core/utilities/PluginUtils';
 import * as NCISeer from './index';
 
 // import modules for side effects
+import './views/GlobalNavView';
 import './views/HierarchyWidget';
 import './views/ItemView';
 
