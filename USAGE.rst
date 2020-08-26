@@ -49,6 +49,20 @@ The user can inspect the image and metadata for PHI, can mark individual metadat
 All of the files the DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
 
 
+Example Walkthrough
+===================
+
+There are multiple paths through the system, to see the details of each state and the transitions between them see the ``Workflow States and Transitions`` section below. This section will describe one simple path through the system as an example to pull the pieces together.
+
+Start out by putting images and a metadata excel file in the import directory on the local filesystem, then run the ``Import`` command in the DSA, from the ``Imported`` folder in the ``SEER`` collection. The images will now appear in the ``Imported`` folder in the DSA.
+
+Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the non-primary images that should be redacted. Then click the ``Process`` button at the bottom of the page.
+
+At this point, a copy of the original image without any redaction will appear in the ``Original`` folder, so that a pre-redaction record is kept. The redacted image will be moved to the ``Processed`` folder, and any pieces of metadata that were redacted will now be deleted. Any non-primary images that were redacted will also be deleted.
+
+Click on the ``Finish`` button at the bottom of the page, and the image will be moved to the ``Finished`` folder. Click on the folder view of the ``Finished`` folder, and then click ``Export Recent`` to export this redacted image, which will then be copied to the export directory on the local filesystem.
+
+
 Workflow States and Transitions
 ===============================
 
@@ -117,3 +131,4 @@ Quarantine
 The ``quarantine`` state can be reached from any other state, and is for holding images that may hold PHI and thus should be inspected and potentially reprocessed. It would generally be used if an image has been redacted already but more redaction is necessary. This state provides controls to allow the user to mark the PHI that should be redacted, staging that PHI for processing.
 
 Images be quarantined from any state.  If PHI or potential PHI is seen in an item that is somewhere other than the ``imported`` folder, it should be quarantined for reprocessing.
+
