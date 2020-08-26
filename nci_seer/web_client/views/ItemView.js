@@ -156,9 +156,14 @@ wrap(ItemView, 'render', function (render) {
                 timeout: 4000
             });
             delete this.model.parent;
-            this.model.fetch({ success: () => this.render() });
             if (action === 'finish') {
-                goToNextUnprocessedItem();
+                goToNextUnprocessedItem((resp) => {
+                    if (!resp) {
+                        this.model.fetch({ success: () => this.render() });
+                    }
+                });
+            } else {
+                this.model.fetch({ success: () => this.render() });
             }
         }).fail((resp) => {
             $('.g-hui-loading-overlay').remove();
