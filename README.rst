@@ -4,6 +4,8 @@ NCI SEER Pediatic WSI Pilot |build-status| |license-badge|
 
 This builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), and Philips WSI files.
 
+Developed by Kitware, Inc. with funding from The National Cancer Institute.
+
 Installation
 ============
 
