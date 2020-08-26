@@ -4,6 +4,19 @@ NCI SEER Pediatic WSI Pilot Usage
 
 See README.rst for installation.
 
+
+Reporting Bugs
+==============
+
+If you have found a bug, open an issue on GitHub at https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will look like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``.
+
+
+Creating Users and User Types
+=============================
+
+When you first create an installation of the software, e.g. through ``docker-compose``, you will need to create a user for that web application by clicking on ``Register``. The first user of a DSA system will be an admin user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+
+
 Importing Data
 ==============
 
