@@ -146,7 +146,7 @@ Finished
 
 When an image has been de-identified and is cleared for release, it will be in the `finished` state. Export will copy finished files to the export location using NCI's specified folder structure.
 
-TODO Post-Beta: (implement this and clarify how it works in these docs) From the ``finished`` state the user can export images by clicking on the ``export`` button, which will copy images from the ``finished`` folder in DSA to the ``export`` folder on the host filesystem.
+In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images. See the ``Exporting Data`` section above for details.
 
 Quarantine
 ----------
