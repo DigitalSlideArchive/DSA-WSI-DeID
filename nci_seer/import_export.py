@@ -183,6 +183,8 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
+    from . import __version__
+
     exportPath = Setting().get(PluginSettings.NCISEER_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     if not exportPath or not exportFolderId:
@@ -214,6 +216,7 @@ def exportItems(ctx, user=None, all=False):
             exportedRecord.append({
                 'time': datetime.datetime.utcnow().isoformat(),
                 'user': str(user['_id']) if user else None,
+                'version': __version__,
             })
             item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
             report.append({'item': item, 'status': 'export'})
