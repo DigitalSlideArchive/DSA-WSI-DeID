@@ -121,6 +121,7 @@ After the image names and information in the metadata file are reconciled, the D
 - ``replaced``: The image is listed in an excel file, is in the DSA, but has a different file size from the image in the DSA. The existing file is removed from the DSA and re-added.
 - ``missing``: The image is listed in an excel file but is not in the import directory. No action is performed.
 - ``unlisted``: The image is not listed in an excel file but is in the import directory. No action is performed.
+- ``failed``: The listed file cannot be read as an image file.
 
 After all images and excel metadata files have been processed, a message is displayed summarizing what images were in each of the five states above (e.g., "Import complete. 19 files added. 1 file missing from import folder"), and then UI is then refreshed.
 

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import shutil
 
+from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -97,7 +98,13 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     file = File().save(file)
     # Reload the item as it will have changed
     item = Item().load(item['_id'], force=True)
-    redactList = process.get_standard_redactions(item, record['ImageID'])
+    try:
+        redactList = process.get_standard_redactions(item, record['ImageID'])
+    except Exception:
+        logger.exception('Failed to import %s' % name)
+        Item().remove(item)
+        ctx.update(message='Failed to import %s' % name)
+        return 'failed'
     item = Item().setMetadata(item, {'redactList': redactList})
     ctx.update(message='Imported %s' % name)
     return status
