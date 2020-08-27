@@ -1,4 +1,5 @@
 import datetime
+import magic
 import os
 import pandas as pd
 import shutil
@@ -48,14 +49,27 @@ def readExcelFiles(filelist, ctx):
         path from the excel file), and timestamp (the mtime of the excel file).
     """
     manifest = {}
+    report = []
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
+        mimetype = magic.from_file(filepath, mime=True)
+        if 'excel' not in mimetype and 'openxmlformats' not in mimetype:
+            report.append({
+                'path': filepath,
+                'status': 'notexcel',
+            })
+            message = 'Cannot read %s; it is not an Excel file' % os.path.basename(filepath)
+            ctx.update(message=message)
+            logger.info(message)
+            continue
         df = readExcelData(filepath)
         timestamp = os.path.getmtime(filepath)
+        count = 0
         for row in df.itertuples():
             name = row.ScannedFileName
             if not name or not row.ImageID or not row.TokenID:
                 continue
+            count += 1
             if name not in manifest or timestamp > manifest[name]['timestamp']:
                 manifest[name] = {
                     'timestamp': timestamp,
@@ -64,7 +78,13 @@ def readExcelFiles(filelist, ctx):
                     'name': name,
                     'excel': filepath,
                 }
-    return manifest
+        report.append({
+            'path': filepath,
+            'status': 'parsed',
+            'count': count,
+        })
+        logger.info('Read %s; parsed %d rows' % (filepath, count))
+    return manifest, report
 
 
 def ingestOneItem(importFolder, imagePath, record, ctx, user):
@@ -145,7 +165,7 @@ def ingestData(ctx, user=None):  # noqa
         raise Exception('Failed to find any excel files in import directory.')
     if not len(imageFiles):
         raise Exception('Failed to find any image files in import directory.')
-    manifest = readExcelFiles(excelFiles, ctx)
+    manifest, excelReport = readExcelFiles(excelFiles, ctx)
     missingImages = []
     report = []
     for record in manifest.values():
@@ -169,14 +189,15 @@ def ingestData(ctx, user=None):  # noqa
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
     # TODO: emit a report
-    return reportSummary(report)
+    return reportSummary(report, excelReport)
 
 
-def reportSummary(report):
+def reportSummary(*args):
     result = {}
-    for entry in report:
-        result.setdefault(entry['status'], 0)
-        result[entry['status']] += 1
+    for report in args:
+        for entry in report:
+            result.setdefault(entry['status'], 0)
+            result[entry['status']] += 1
     return result
 
 

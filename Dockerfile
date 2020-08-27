@@ -10,6 +10,7 @@ RUN apt-get update && \
     software-properties-common \
     gpg-agent \
     fonts-dejavu \
+    libmagic-dev \
     git \
     # libldap2-dev \
     # libsasl2-dev \

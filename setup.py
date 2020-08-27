@@ -42,6 +42,7 @@ setup(
         'histomicsui',
         'large_image[tiff,openslide,memcached]',
         'pandas',
+        'python-magic',
         'pyvips',
         'xlrd',
     ],

@@ -31,6 +31,14 @@ function performAction(action) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
                 }
             });
+            [
+                ['parsed', 'parsed'],
+                ['notexcel', 'could not be read']
+            ].forEach(([key, desc]) => {
+                if (resp[key]) {
+                    text += `  ${resp[key]} Excel file${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                }
+            });
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
@@ -47,7 +55,7 @@ function performAction(action) {
             icon: 'ok',
             text: text,
             type: 'success',
-            timeout: 10000
+            timeout: 0
         });
         if (resp.action === 'ingest' && this.parentModel.get('_modelType') === 'folder') {
             router.navigate('folder/' + this.parentModel.id + '?_=' + Date.now(), { trigger: true });
@@ -61,7 +69,7 @@ function performAction(action) {
             icon: 'cancel',
             text: text,
             type: 'danger',
-            timeout: 5000
+            timeout: 0
         });
     });
 }
