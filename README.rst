@@ -79,6 +79,22 @@ or without the import and export paths, type::
 
 This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
 
+Debugging
+---------
+
+You can access logs of specific docker containers via::
+
+    docker-compose logs
+
+There are more detailed logs for the main container that can be viewed via::
+
+    docker-compose exec girder cat /logs/info.log
+
+You can follow the logs and see them update as they change::
+
+    docker-compose logs -f
+    docker-compose exec girder tail -F /logs/info.log
+
 
 .. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield
     :target: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot
