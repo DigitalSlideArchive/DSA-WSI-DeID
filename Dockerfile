@@ -1,21 +1,44 @@
-FROM nikolaik/python-nodejs:python3.7-nodejs12
+FROM ubuntu:18.04
 LABEL maintainer="Kitware, Inc. <kitware@kitware.com>"
 
 # See logs faster; don't write pyc or pyo files
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Yarn breaks their deployment once a year.  We don't use yarn.  Just remove it.
-RUN rm /etc/apt/sources.list.d/yarn.list
-
 RUN apt-get update && \
-    apt-get install -y \
-    # Install libfuse.  This allows better access to files on S3 \
+    apt-get install --no-install-recommends --yes \
+    software-properties-common \
+    gpg-agent \
+    fonts-dejavu \
+    git \
+    # libldap2-dev \
+    # libsasl2-dev \
+    curl \
+    ca-certificates \
     fuse \
-    # Install tini for quicker shutdown \
-    tini \
-    && \
-    rm -rf /var/lib/apt/lists/*
+    vim && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \
+    chmod +x /usr/bin/tini
+
+RUN add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install --no-install-recommends --yes \
+    python3.7 \
+    python3.7-distutils && \
+    curl --silent https://bootstrap.pypa.io/get-pip.py -O && \
+    python3.7 get-pip.py && \
+    rm get-pip.py && \
+    rm /usr/bin/python3 && \
+    ln -s /usr/bin/python3.7 /usr/bin/python3 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
+    apt-get update && \
+    apt-get install --no-install-recommends --yes \
+    nodejs && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # add a directory for girder mount
 RUN mkdir -p /fuse --mode=a+rwx
@@ -47,4 +70,4 @@ RUN girder build && \
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD python /conf/provision.py && (girder mount /fuse || true) && girder serve
+CMD python3 /conf/provision.py && (girder mount /fuse || true) && girder serve
