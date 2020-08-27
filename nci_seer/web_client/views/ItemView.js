@@ -135,9 +135,9 @@ wrap(ItemView, 'render', function (render) {
         const actions = {
             quarantine: { done: 'Item quarantined.', fail: 'Failed to quarantine item.' },
             unquarantine: { done: 'Item unquarantined.', fail: 'Failed to unquarantine item.' },
-            process: { done: 'Item processed.', fail: 'Failed to process item.' },
+            process: { done: 'Item redacted.', fail: 'Failed to redact item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
-            finish: { done: 'Item moved to finished folder.', fail: 'Failed to finish item.' }
+            finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' }
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
