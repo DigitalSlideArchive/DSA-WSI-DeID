@@ -38,6 +38,53 @@ If no user is logged in, you are said to be browsing the DSA as the ``anonymous`
    :height: 100
    :width: 200
    :alt: register or log in
+   
+   
+Navigating the SEER DSA
+=======================
+
+Navigating By Folder
+--------------------
+
+From the home page, click on the ``Collections`` link on the left menu and then click on the ``SEER`` collection link, which is shown in the below screenshot.
+
+.. image:: screenshots/seer_collection_link.png
+   :height: 100
+   :width: 200
+   :alt: seer collection link
+
+After clicking on the ``SEER`` collection link, you will be in the ``SEER`` collection and should see the ``SEER`` specific folders corresponding to workflow states described in the ``Workflow States and Transitions`` section below and as shown in the below screenshot.
+  
+.. image:: screenshots/seer_collection_folders.png
+   :height: 100
+   :width: 200
+   :alt: seer collection folders
+   
+From this folder listing, you can navigate to any folder you wish by clicking on the folder name link. For example, if you want to import data, go to the ``Imported`` folder, or if you want to export data, go to the ``Finished`` folder.
+
+Next Item Action
+----------------
+
+Clicking on the ``Next Item`` link on the left menu will bring you to view the first image in the ``Imported`` folder, or else the first image in the ``Quarantine`` folder if there are no images in the ``Imported`` folder.
+
+Folder Versus Item Views
+------------------------
+
+The DSA is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the DSA documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
+
+A folder in Girder may contain items, and an item always has to be in a folder. When looking at the DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``Original`` folder. In this case, the folder has zero children folders and three items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``3`` in the screenshot.
+
+.. image:: screenshots/original_folder_view.png
+   :height: 100
+   :width: 200
+   :alt: original folder view
+   
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
+
+.. image:: screenshots/01asvs_item_view.png
+   :height: 100
+   :width: 200
+   :alt: 01-A.svs item view
 
 
 Importing Data
