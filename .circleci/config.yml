@@ -58,6 +58,10 @@ jobs:
             - ./nciseer_girder.tar
       - store_artifacts:
           path: ./nciseer_girder.tar
+      - run:
+          name: Report nci_seer version
+          command: |
+            docker run dsarchive/nciseer bash -c 'python3 -c "import nci_seer;print(nci_seer.__version__)" 2>/dev/null'
   publish-docker:
     working_directory: ~/project
     machine: true
