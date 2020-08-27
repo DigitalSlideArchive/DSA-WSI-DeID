@@ -137,7 +137,7 @@ Redaction
 
 Many of the workflow states provide controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
 
-The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``imported`` or ``quarantine`` state, and can indicate if any of the non-primary images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and associated images marked for redaction will be deleted.
+The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``imported`` or ``quarantine`` state, and can indicate if any of the associated images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and associated images marked for redaction will be deleted.
 
 All of the files the DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
 
@@ -149,9 +149,9 @@ There are multiple paths through the system, to see the details of each state an
 
 Start out by putting images and a metadata excel file in the import directory on the local filesystem, then run the ``Import`` command in the DSA, from the ``Imported`` folder in the ``SEER`` collection. The images will now appear in the ``Imported`` folder in the DSA.
 
-Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the non-primary images that should be redacted. Then click the ``Process`` button at the bottom of the page.
+Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the associated images that should be redacted. Then click the ``Process`` button at the bottom of the page.
 
-At this point, a copy of the original image without any redaction will appear in the ``Original`` folder, so that a pre-redaction record is kept. The redacted image will be moved to the ``Processed`` folder, and any pieces of metadata that were redacted will now be deleted. Any non-primary images that were redacted will also be deleted.
+At this point, a copy of the original image without any redaction will appear in the ``Original`` folder, so that a pre-redaction record is kept. The redacted image will be moved to the ``Processed`` folder, and any pieces of metadata that were redacted will now be deleted. Any associated images that were redacted will also be deleted.
 
 Click on the ``Finish`` button at the bottom of the page, and the image will be moved to the ``Finished`` folder. Click on the folder view of the ``Finished`` folder, and then click ``Export Recent`` to export this redacted image, which will then be copied to the export directory on the local filesystem.
 
