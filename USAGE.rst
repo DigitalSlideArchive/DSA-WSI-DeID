@@ -8,7 +8,7 @@ See README.rst for installation.
 Reporting Bugs
 ==============
 
-If you have found a bug, open an issue on GitHub at https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will look like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``.
+If you have found a bug, open a `GitHub issue <https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues>`_ and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will look like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``.
 
 
 Creating Users and User Types
