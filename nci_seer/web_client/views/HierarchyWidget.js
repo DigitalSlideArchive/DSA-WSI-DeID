@@ -24,7 +24,8 @@ function performAction(action) {
                 ['replaced', 'replaced'],
                 ['missing', 'missing from import folder'],
                 ['unlisted', 'missing from manifests'],
-                ['present', 'already present']
+                ['present', 'already present'],
+                ['failed', 'failed to import']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
