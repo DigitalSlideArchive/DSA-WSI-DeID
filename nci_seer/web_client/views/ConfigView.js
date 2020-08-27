@@ -44,12 +44,12 @@ var ConfigView = View.extend({
         });
 
         this.settingsKeys = {
-            'histomicsui.ingest_folder': { name: 'Imported', id: 'g-hui-ingest-folder' },
-            'histomicsui.quarantine_folder': { name: 'Quarantine', id: 'g-hui-quarantine-folder' },
-            'histomicsui.processed_folder': { name: 'Processed', id: 'g-hui-processed-folder' },
+            'histomicsui.ingest_folder': { name: 'AvailableToProcess', id: 'g-hui-ingest-folder' },
+            'histomicsui.quarantine_folder': { name: 'Quarantined', id: 'g-hui-quarantine-folder' },
+            'histomicsui.processed_folder': { name: 'Redacted', id: 'g-hui-processed-folder' },
             'histomicsui.rejected_folder': { name: 'Rejected', id: 'g-hui-rejected-folder' },
             'histomicsui.original_folder': { name: 'Original', id: 'g-hui-original-folder' },
-            'histomicsui.finished_folder': { name: 'Finished', id: 'g-hui-finished-folder' },
+            'histomicsui.finished_folder': { name: 'Approved', id: 'g-hui-finished-folder' },
             'nciseer.import_path': { name: 'Internal Import Path', id: 'g-nciseer-import-path' },
             'nciseer.export_path': { name: 'Internal Export Path', id: 'g-nciseer-export-path' }
         };
