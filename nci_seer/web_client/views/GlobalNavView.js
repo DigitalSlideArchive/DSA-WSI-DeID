@@ -17,7 +17,7 @@ wrap(LayoutGlobalNavView, 'render', function (render) {
             '    <i class="icon-right-big"></i><span>Next Item</span>' +
             '  </a>' +
             '</li>'));
-        this.events['click .g-nav-next-unprocessed'] = goToNextUnprocessedItem;
+        this.events['click .g-nav-next-unprocessed'] = () => goToNextUnprocessedItem();
         this.delegateEvents();
     }
     return this;
