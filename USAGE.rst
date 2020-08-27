@@ -11,10 +11,33 @@ Reporting Bugs
 If you have found a bug, open a `GitHub issue <https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues>`_ and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will look like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``.
 
 
-Creating Users and User Types
-=============================
+User Management
+===============
 
-When you first create an installation of the software, e.g. through ``docker-compose``, you will need to create a user for that web application by clicking on ``Register``. The first user of a DSA system will be an admin user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+User Registration and Logins
+----------------------------
+
+When you first create an installation of the software, e.g. through ``docker-compose up``, you will need to create a user for that web application by clicking on ``Register``. After registration, you may use the user credentials you created to ``Login`` to the DSA.
+
+If you are logged into the DSA, your username will appear in the upper right hand corner of the screen, like for the user named ``test`` in the below screenshot.
+
+.. image:: screenshots/test_user.png
+   :height: 100
+   :width: 200
+   :alt: test user logged in
+  
+
+User Types and Permissions
+--------------------------
+
+The first registed user of a DSA system will be an ``admin`` user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+
+If no user is logged in, you are said to be browsing the DSA as the ``anonymous`` user. The ``anonymous`` user may browse data in the DSA, but cannot take any actions that redact data or change the state of data. When you are browsing as the ``anonymous`` user you will see the option to ``Register or Log In`` as in the below screenshot.
+
+.. image:: screenshots/register_or_login.png
+   :height: 100
+   :width: 200
+   :alt: register or log in
 
 
 Importing Data
