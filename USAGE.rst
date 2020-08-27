@@ -8,13 +8,83 @@ See README.rst for installation.
 Reporting Bugs
 ==============
 
-If you have found a bug, open an issue on GitHub at https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will look like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``.
+If you have found a bug, open a `GitHub issue <https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues>`_ and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will be in the section that looks like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``. In this example the version string is ``1.0.0.dev63+g85b49b4.d20200825``, but you should expect a different version string for your DSA instance.
 
 
-Creating Users and User Types
-=============================
+User Management
+===============
 
-When you first create an installation of the software, e.g. through ``docker-compose``, you will need to create a user for that web application by clicking on ``Register``. The first user of a DSA system will be an admin user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+User Registration and Logins
+----------------------------
+
+When you first create an installation of the software, e.g. through ``docker-compose up``, you will need to create a user for that web application by clicking on ``Register``. After registration, you may use the user credentials you created to ``Login`` to the DSA.
+
+If you are logged into the DSA, your username will appear in the upper right hand corner of the screen, like for the user named ``test`` in the below screenshot.
+
+.. image:: screenshots/test_user.png
+   :height: 100
+   :width: 200
+   :alt: test user logged in
+  
+
+User Types and Permissions
+--------------------------
+
+The first registed user of a DSA system will be an ``admin`` user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+
+If no user is logged in, you are said to be browsing the DSA as the ``anonymous`` user. The ``anonymous`` user may browse data in the DSA, but cannot take any actions that redact data or change the state of data. When you are browsing as the ``anonymous`` user you will see the option to ``Register or Log In`` as in the below screenshot.
+
+.. image:: screenshots/register_or_login.png
+   :height: 100
+   :width: 200
+   :alt: register or log in
+   
+   
+Navigating the SEER DSA
+=======================
+
+Navigating By Folder
+--------------------
+
+From the home page, click on the ``Collections`` link on the left menu and then click on the ``SEER`` collection link, which is shown in the below screenshot.
+
+.. image:: screenshots/seer_collection_link.png
+   :height: 100
+   :width: 200
+   :alt: seer collection link
+
+After clicking on the ``SEER`` collection link, you will be in the ``SEER`` collection and should see the ``SEER`` specific folders corresponding to workflow states described in the ``Workflow States and Transitions`` section below and as shown in the below screenshot.
+  
+.. image:: screenshots/seer_collection_folders.png
+   :height: 100
+   :width: 200
+   :alt: seer collection folders
+   
+From this folder listing, you can navigate to any folder you wish by clicking on the folder name link. For example, if you want to import data, go to the ``Imported`` folder, or if you want to export data, go to the ``Finished`` folder.
+
+Next Item Action
+----------------
+
+Clicking on the ``Next Item`` link on the left menu will bring you to view the first image in the ``Imported`` folder, or else the first image in the ``Quarantine`` folder if there are no images in the ``Imported`` folder.
+
+Folder Versus Item Views
+------------------------
+
+The DSA is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the DSA documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
+
+A folder in Girder may contain items, and an item always has to be in a folder. When looking at the DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``Original`` folder. In this case, the folder has zero children folders and three items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``3`` in the screenshot.
+
+.. image:: screenshots/original_folder_view.png
+   :height: 100
+   :width: 200
+   :alt: original folder view
+   
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
+
+.. image:: screenshots/01asvs_item_view.png
+   :height: 100
+   :width: 200
+   :alt: 01-A.svs item view
 
 
 Importing Data
@@ -30,7 +100,12 @@ Files are copied from the local import directory to the ``Imported`` folder in t
 Import Process
 --------------
 
-From the ``Imported`` folder (or any sub folder) in the DSA, click on the ``Import`` button.
+From the ``Imported`` folder (or any sub folder) in the DSA, click on the ``Import`` button, as shown in the below screenshot.
+
+.. image:: screenshots/import_button.png
+   :height: 100
+   :width: 200
+   :alt: import button
 
 A background process starts that scans through the mounted import directory, and does the following:
 
@@ -55,7 +130,12 @@ Exporting Data
 
 When images are in the ``SEER`` collection, in the ``Finished`` folder, they can be exported. 
 
-In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``. Clicking either copies files from the ``Finished`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Finished`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+In the Finished folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the below screenshot. Clicking either copies files from the ``Finished`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Finished`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+
+.. image:: screenshots/export_buttons.png
+   :height: 100
+   :width: 200
+   :alt: export buttons
 
 Recent exports are any items in the Finished folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
@@ -67,7 +147,7 @@ Redaction
 
 Many of the workflow states provide controls to allow the user to indicate PHI that should be redacted, staging that PHI for processing.
 
-The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``imported`` or ``quarantine`` state, and can indicate if any of the non-primary images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and associated images marked for redaction will be deleted.
+The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``imported`` or ``quarantine`` state, and can indicate if any of the associated images should be redacted. When all PHI has been staged for redaction, the user can click the ``Process`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``processed`` state. As part of moving the data to the ``processed`` state, the metadata fields and associated images marked for redaction will be deleted.
 
 All of the files the DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
 
@@ -79,9 +159,9 @@ There are multiple paths through the system, to see the details of each state an
 
 Start out by putting images and a metadata excel file in the import directory on the local filesystem, then run the ``Import`` command in the DSA, from the ``Imported`` folder in the ``SEER`` collection. The images will now appear in the ``Imported`` folder in the DSA.
 
-Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the non-primary images that should be redacted. Then click the ``Process`` button at the bottom of the page.
+Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the associated images that should be redacted. Then click the ``Process`` button at the bottom of the page.
 
-At this point, a copy of the original image without any redaction will appear in the ``Original`` folder, so that a pre-redaction record is kept. The redacted image will be moved to the ``Processed`` folder, and any pieces of metadata that were redacted will now be deleted. Any non-primary images that were redacted will also be deleted.
+At this point, a copy of the original image without any redaction will appear in the ``Original`` folder, so that a pre-redaction record is kept. The redacted image will be moved to the ``Processed`` folder, and any pieces of metadata that were redacted will now be deleted. Any associated images that were redacted will also be deleted.
 
 Click on the ``Finish`` button at the bottom of the page, and the image will be moved to the ``Finished`` folder. Click on the folder view of the ``Finished`` folder, and then click ``Export Recent`` to export this redacted image, which will then be copied to the export directory on the local filesystem.
 
@@ -124,7 +204,7 @@ Images in the ``processed`` state have gone through the redaction process, but s
 
 Once an image is in the ``processed`` state, the user can click:
 
-- "Finish" to approve it, once it has been fully cleared for release
+- "Finish" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Finished`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu. 
 - "Reject" to mark that it is impossible to fix
 - "Quarantine" for more reprocessing
 
