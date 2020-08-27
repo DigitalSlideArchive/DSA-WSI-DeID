@@ -56,18 +56,19 @@ folders = {
     PluginSettings.HUI_FINISHED_FOLDER: ('Finished', True),
 }
 for settingKey, (folderName, public) in folders.items():
-    if not Setting().get(settingKey):
+    folder = None
+    folderId = Setting().get(settingKey)
+    if folderId:
+        folder = Folder().load(folderId, force=True)
+    if not folder:
         folder = Folder().createFolder(
             seerCollection, folderName, parentType='collection',
-            public=public, creator=adminUser)
+            public=public, creator=adminUser, reuseExisting=True)
         Setting().set(settingKey, str(folder['_id']))
-    else:
-        folderId = Setting().get(settingKey)
-        folder = Folder().load(folderId, force=True)
-        if folder['name'] != folderName or folder['public'] != public:
-            folder['name'] = folderName
-            folder['public'] = public
-            Folder().save(folder)
+    elif folder['name'] != folderName or folder['public'] != public:
+        folder['name'] = folderName
+        folder['public'] = public
+        Folder().save(folder)
 # Set default import/export paths
 if not Setting().get(PluginSettings.NCISEER_IMPORT_PATH):
     Setting().set(PluginSettings.NCISEER_IMPORT_PATH, '/import')

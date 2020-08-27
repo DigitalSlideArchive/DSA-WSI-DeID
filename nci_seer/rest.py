@@ -210,7 +210,7 @@ class NCISeerResource(Resource):
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
-        .modelParam('id', model=Folder, level=AccessType.WRITE)
+        .modelParam('id', model=Folder, level=AccessType.READ)
         .errorResponse()
         .errorResponse('Write access was denied on the folder.', 403)
     )
@@ -292,11 +292,12 @@ class NCISeerResource(Resource):
         Description('Get the ID of the next unprocessed item.')
         .errorResponse()
     )
-    @access.public(scope=TokenScope.DATA_READ)
+    @access.user
     def nextUnprocessedItem(self):
         user = self.getCurrentUser()
-        for settingKey in (PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER):
-            folder = Folder().load(Setting().get(settingKey), user=user)
+        for settingKey in (
+                PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER):
+            folder = Folder().load(Setting().get(settingKey), user=user, level=AccessType.READ)
             item = get_first_item(folder, user)
             if item is not None:
                 return str(item['_id'])
