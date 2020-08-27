@@ -24,13 +24,13 @@ if User().findOne() is None:
 adminUser = User().findOne({'admin': True})
 
 # Set branding
-Setting().set('core.brand_name', 'Digital Slide Archive')
+Setting().set('core.brand_name', 'SEER DSA')
 Setting().set('homepage.markdown', """
-# Digital Slide Archive
+# SEER Digital Slide Archive
 ---
 ## NCI SEER Pediatic WSI Pilot
 
-Welcome to the **Digital Slide Archive**.
+Welcome to the **SEER Digital Slide Archive**.
 
 Developers who want to use the Girder REST API should check out the
 [interactive web API docs](api/v1).
