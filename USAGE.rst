@@ -204,7 +204,7 @@ Images in the ``processed`` state have gone through the redaction process, but s
 
 Once an image is in the ``processed`` state, the user can click:
 
-- "Finish" to approve it, once it has been fully cleared for release
+- "Finish" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Finished`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu. 
 - "Reject" to mark that it is impossible to fix
 - "Quarantine" for more reprocessing
 
