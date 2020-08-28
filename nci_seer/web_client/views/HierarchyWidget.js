@@ -23,7 +23,7 @@ function performAction(action) {
                 ['added', 'added'],
                 ['replaced', 'replaced'],
                 ['missing', 'missing from import folder'],
-                ['unlisted', 'missing from manifests'],
+                ['unlisted', 'missing from DeID Upload files'],
                 ['present', 'already present'],
                 ['failed', 'failed to import']
             ].forEach(([key, desc]) => {
