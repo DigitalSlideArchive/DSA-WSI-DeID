@@ -1,7 +1,8 @@
 import $ from 'jquery';
 
-import { AccessType } from '@girder/core/constants';
+// import { AccessType } from '@girder/core/constants';
 import events from '@girder/core/events';
+import { getCurrentUser } from '@girder/core/auth';
 import ItemView from '@girder/core/views/body/ItemView';
 import { restRequest } from '@girder/core/rest';
 import { wrap } from '@girder/core/utilities/PluginUtils';
@@ -31,7 +32,13 @@ wrap(ItemView, 'render', function (render) {
         } else if (!isRedacted && !undo) {
             redactList[category][keyname] = null;
         }
-        this.model.editMetadata('redactList', 'redactList', redactList);
+        restRequest({
+            method: 'PUT',
+            url: 'nciseer/item/' + this.model.id + '/redactList',
+            contentType: 'application/json',
+            data: JSON.stringify(redactList),
+            error: null
+        });
         if (this.model.get('meta') === undefined) {
             this.model.set('meta', {});
         }
@@ -142,7 +149,7 @@ wrap(ItemView, 'render', function (render) {
             '<i class="icon-spin4 animate-spin"></i>' +
             '</div></div>');
         restRequest({
-            type: 'PUT',
+            method: 'PUT',
             url: 'nciseer/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
@@ -179,7 +186,8 @@ wrap(ItemView, 'render', function (render) {
     };
 
     this.once('g:largeImageItemViewRendered', function () {
-        if (this.model.get('largeImage') && this.model.get('largeImage').fileId && this.accessLevel >= AccessType.WRITE) {
+        // if (this.model.get('largeImage') && this.model.get('largeImage').fileId && this.accessLevel >= AccessType.WRITE) {
+        if (this.model.get('largeImage') && this.model.get('largeImage').fileId && getCurrentUser()) {
             restRequest({
                 url: `nciseer/project_folder/${this.model.get('folderId')}`,
                 error: null

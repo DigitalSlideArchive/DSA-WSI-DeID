@@ -13,7 +13,7 @@ function performAction(action) {
     };
 
     restRequest({
-        type: 'PUT',
+        method: 'PUT',
         url: `nciseer/action/${action}`,
         error: null
     }).done((resp) => {
