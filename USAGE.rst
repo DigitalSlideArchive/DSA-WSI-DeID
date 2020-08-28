@@ -154,6 +154,19 @@ The user can inspect the image and metadata for PHI, can mark individual metadat
 
 All of the files the SEER DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
 
+Below is a screenshot of image PHI redaction controls for metadata, with the ``aperio.AppMag`` and ``aperio.Date`` fields staged for redaction.
+
+.. image:: screenshots/redact_metadata.png
+   :height: 100
+   :width: 200
+   :alt: redact metadata controls
+   
+Below is a screenshot of image PHI redaction controls for Associated Images, with the ``Thumbnail`` image staged for redaction.
+
+.. image:: screenshots/redact_images.png
+   :height: 100
+   :width: 200
+   :alt: redact images controls
 
 Example Walkthrough
 ===================
