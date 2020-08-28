@@ -133,14 +133,14 @@ Exporting Data
 
 When images are in the ``SEER`` collection, in the ``Approved`` folder, they can be exported. 
 
-In the Approved folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the below screenshot. Clicking either copies files from the ``Approved`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the below screenshot. Clicking either copies files from the ``Approved`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
 
 .. image:: screenshots/export_buttons.png
    :height: 100
    :width: 200
    :alt: export buttons
 
-Recent exports are any items in the Approved folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
+Recent exports are any items in the ``Approved`` folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
 After export, a message is shown indicating how many files were exported, how many were already present (based on having the same name) and the same size, and how many were already present and differed in size.
 
@@ -229,7 +229,7 @@ Approved
 
 When an image has been de-identified and is cleared for release, it will be in the ``approved`` state. Export will copy approved files to the export location using NCI's specified folder structure.
 
-In the Approved folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images. See the ``Exporting Data`` section above for details.
+In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images. See the ``Exporting Data`` section above for details.
 
 Quarantined
 -----------
