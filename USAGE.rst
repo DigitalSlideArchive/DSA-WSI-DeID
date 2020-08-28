@@ -221,7 +221,7 @@ The ``rejected`` state is available at any time. If an image is determined to be
 Original
 --------
 
-An image is copied into the ``original`` state before it will be redacted and go into the ``redacted`` state, so that a pre-redaction copy of the image is stored with the full provenance record of what steps the image went through up until the time of processing.
+An image is copied into the ``original`` state before it will be redacted and will go into the ``redacted`` state, so that a pre-redaction copy of the image is stored with the full provenance record of what steps the image went through up until the time of processing.
 
 
 Approved
