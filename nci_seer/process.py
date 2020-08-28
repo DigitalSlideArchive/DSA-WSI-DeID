@@ -118,6 +118,7 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
     redactList = {
         'images': {},
         'metadata': {
+            'internal;openslide;hamamatsu.Reference': title,
         },
     }
     for key in {'Created', 'Updated'}:

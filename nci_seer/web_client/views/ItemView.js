@@ -15,10 +15,6 @@ wrap(ItemView, 'render', function (render) {
         let redactList = (this.model.get('meta') || {}).redactList || {};
         redactList.metadata = redactList.metadata || {};
         redactList.images = redactList.images || {};
-        // TODO: If appropriate metadata is populated with replacement title,
-        // date, etc., populate the redaction list per file format
-        // appropriately.  Alternately, we may want an endpoint which is
-        // "default redaction list" so that all the code is in Python.
         return redactList;
     };
 
@@ -95,10 +91,12 @@ wrap(ItemView, 'render', function (render) {
             elem.find('.g-hui-redact').remove();
             if (showControls) {
                 let isRedacted = redactList.metadata[keyname] !== undefined;
+                let redactButtonAllowed = true;
                 if (redactList.metadata[keyname]) {
                     elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname]));
+                    redactButtonAllowed = false;
                 }
-                if (showRedactButton(keyname)) {
+                if (showRedactButton(keyname) && redactButtonAllowed) {
                     elem.append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
                         keyname: keyname,
                         category: 'metadata',
