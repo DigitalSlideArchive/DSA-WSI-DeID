@@ -227,7 +227,7 @@ An image is copied into the ``original`` state before it will be redacted and wi
 Approved
 --------
 
-When an image has been de-identified and is cleared for release, it will be in the ``approved`` state. Export will copy approved files to the export location using NCI's specified folder structure.
+When an image has been de-identified and is cleared for release, it will be in the ``approved`` state. The export process will copy approved files to the export location using NCI's specified folder structure.
 
 In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images. See the ``Exporting Data`` section above for details.
 
