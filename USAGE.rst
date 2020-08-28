@@ -188,8 +188,8 @@ The reason that there are named states that are separate from named folders is s
 For the remainder of this discussion, assume that the name of the folder corresponds to the name of the current state of the image, e.g., when an image is in the ``available to process`` state it will also be in the ``AvailableToProcess`` folder.
 
 
-Import
-------
+Available To Process
+--------------------
 
 When an image is first imported into the SEER DSA from the host filesystem, it will be renamed according to the import process and will be in the ``available to process`` state.
 
