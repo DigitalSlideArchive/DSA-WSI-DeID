@@ -183,7 +183,7 @@ There are several states an image can be in, including:
 
 These states correspond to named folders, i.e., an image will be in the ``available to process`` state at the time it lives in the ``AvailableToProcess`` folder, as long as users move images between states using the SEER DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
 
-The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantined`` state in the ``quarantined`` folder, but the image's workflow history indicates that it had previously been in the ``available to process`` state before the ``quarantined`` state.
+The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantined`` state in the ``Quarantined`` folder, but the image's workflow history indicates that it had previously been in the ``available to process`` state before the ``quarantined`` state.
 
 For the remainder of this discussion, assume that the name of the folder corresponds to the name of the current state of the image, e.g., when an image is in the ``available to process`` state it will also be in the ``AvailableToProcess`` folder.
 
