@@ -88,6 +88,12 @@ To see an item view of an image, click on the image/item's row in the folder vie
    :width: 200
    :alt: image item view
 
+Below is a screenshot of the action buttons available in the ``SEER Workflow`` section of the ``AvailableToProcess`` folder. Different folders will present different combinations of buttons, depending on the particular transitions out of that workflow state.
+  
+ .. image:: screenshots/seer_workflow_buttons.png
+   :height: 100
+   :width: 200
+   :alt: seer workflow buttons
 
 Importing Data
 ==============
