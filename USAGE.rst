@@ -74,12 +74,12 @@ Folder Versus Item Views
 
 The SEER DSA is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the SEER DSA documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
 
-A folder in Girder may contain items, and an item always has to be in a folder. When looking at the SEER DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``Original`` folder. In this case, the folder has zero children folders and three items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``3`` in the screenshot.
+A folder in Girder may contain items, and an item always has to be in a folder. When looking at the SEER DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``AvailableToProcess`` folder. In this case, the folder has zero children folders and one item within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``1`` in the screenshot.
 
-.. image:: screenshots/original_folder_view.png
+.. image:: screenshots/image_folder_view.png
    :height: 100
    :width: 200
-   :alt: original folder view
+   :alt: image folder view
    
 To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and SEER DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
 
