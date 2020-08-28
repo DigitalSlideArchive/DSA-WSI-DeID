@@ -206,6 +206,7 @@ class NCISeerResource(Resource):
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
+        self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
@@ -230,14 +231,15 @@ class NCISeerResource(Resource):
 
     @autoDescribeRoute(
         Description('Perform an action on an item.')
-        .modelParam('id', model=Item, level=AccessType.WRITE)
+        # Allow all users to do redaction actions; change to WRITE otherwise
+        .modelParam('id', model=Item, level=AccessType.READ)
         .param('action', 'Action to perform on the item.  One of process, '
                'reject, quarantine, unquarantine, finish.', paramType='path',
                enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish'])
         .errorResponse()
         .errorResponse('Write access was denied on the item.', 403)
     )
-    @access.public(scope=TokenScope.DATA_READ)
+    @access.user
     def itemAction(self, item, action):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
@@ -250,6 +252,19 @@ class NCISeerResource(Resource):
         }
         actionfunc, actionargs = actionmap[action]
         return actionfunc(*actionargs)
+
+    @autoDescribeRoute(
+        Description('Set the redactList meta value on an item.')
+        .responseClass('Item')
+        # we allow all users to do this; change to WRITE to do otherwise.
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .jsonParam('redactList', 'A JSON object containing the redactList to set',
+                   paramType='body', requireObject=True)
+        .errorResponse()
+    )
+    @access.user
+    def setRedactList(self, item, redactList):
+        return Item().setMetadata(item, {'redactList': redactList})
 
     @autoDescribeRoute(
         Description('Ingest data from the import folder asynchronously.')
