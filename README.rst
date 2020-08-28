@@ -94,6 +94,16 @@ You can follow the logs and see them update as they change::
 
     docker-compose logs -f
     docker-compose exec girder tail -F /logs/info.log
+    
+Fixing Common Problems
+----------------------
+
+If you accidentally delete one of the ``SEER`` collection folders, simply restart the system with::
+
+    docker-compose down
+    docker-compose up
+    
+substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``SEER`` collection folders that are tied to specific workflow states.
 
 
 .. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield
