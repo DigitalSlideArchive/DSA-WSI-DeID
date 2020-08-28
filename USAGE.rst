@@ -81,12 +81,12 @@ A folder in Girder may contain items, and an item always has to be in a folder. 
    :width: 200
    :alt: image folder view
    
-To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and SEER DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel you can see some metadata such as the image size and SEER DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
 
-.. image:: screenshots/01asvs_item_view.png
+.. image:: screenshots/image_item_view.png
    :height: 100
    :width: 200
-   :alt: 01-A.svs item view
+   :alt: image item view
 
 
 Importing Data
