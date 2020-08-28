@@ -200,6 +200,13 @@ There are several states an image can be in, including:
 - original
 - approved
 
+The workflow states and transitions are depicted in the overall workflow diagram in the below screenshot.
+
+.. image:: screenshots/workflow_diagram.png
+   :height: 100
+   :width: 200
+   :alt: workflow diagram
+
 These states correspond to named folders, i.e., an image will be in the ``available to process`` state at the time it lives in the ``AvailableToProcess`` folder, as long as users move images between states using the SEER DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
 
 The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantined`` state in the ``Quarantined`` folder, but the image's workflow history indicates that it had previously been in the ``available to process`` state before the ``quarantined`` state.
