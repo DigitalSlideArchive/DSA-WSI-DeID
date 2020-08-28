@@ -155,7 +155,9 @@ def process_item(item, user=None):
         ImageItem().delete(item)
         for childFile in Item().childFiles(item):
             File().remove(childFile)
-        newName = os.path.splitext(item['name'])[0] + os.path.splitext(filepath)[1]
+        newName = item['name']
+        if len(os.path.splitext(newName)[1]) <= 1:
+            newName = os.path.splitext(item['name'])[0] + os.path.splitext(filepath)[1]
         with open(filepath, 'rb') as f:
             Upload().uploadFromFile(
                 f, size=os.path.getsize(filepath), name=newName,
