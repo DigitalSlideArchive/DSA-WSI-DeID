@@ -26,15 +26,19 @@ def readExcelData(filepath):
     :returns: a pandas dataframe of the excel data rows.
     """
     potential_header = 0
-    df = pd.read_excel(filepath, header=potential_header)
+    reader = pd.read_csv
+    mimetype = magic.from_file(filepath, mime=True)
+    if 'excel' in mimetype or 'openxmlformats' in mimetype:
+        reader = pd.read_excel
+    df = reader(filepath, header=potential_header)
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
         if all(key in df.columns for key in {'TokenID', 'ImageID', 'ScannedFileName'}):
             return df
         potential_header += 1
-        df = pd.read_excel(filepath, header=potential_header)
-    raise ValueError(f'Samples excel file {filepath} lacks a header row')
+        df = reader(filepath, header=potential_header)
+    raise ValueError(f'Excel file {filepath} lacks a header row')
 
 
 def readExcelFiles(filelist, ctx):
@@ -52,17 +56,22 @@ def readExcelFiles(filelist, ctx):
     report = []
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
-        mimetype = magic.from_file(filepath, mime=True)
-        if 'excel' not in mimetype and 'openxmlformats' not in mimetype:
+        try:
+            df = readExcelData(filepath)
+        except Exception as exc:
             report.append({
                 'path': filepath,
                 'status': 'notexcel',
             })
-            message = 'Cannot read %s; it is not an Excel file' % os.path.basename(filepath)
+            if isinstance(exc, ValueError):
+                message = 'Cannot read %s; it is not formatted correctly' % (
+                    os.path.basename(filepath), )
+            else:
+                message = 'Cannot read %s; it is not an Excel file' % (
+                    os.path.basename(filepath), )
             ctx.update(message=message)
             logger.info(message)
             continue
-        df = readExcelData(filepath)
         timestamp = os.path.getmtime(filepath)
         count = 0
         for row in df.itertuples():
@@ -156,7 +165,7 @@ def ingestData(ctx, user=None):  # noqa
         for file in files:
             filePath = os.path.join(importPath, base, file)
             _, ext = os.path.splitext(file)
-            if ext.lower() in {'.xls', '.xlsx'}:
+            if ext.lower() in {'.xls', '.xlsx', '.csv'}:
                 excelFiles.append(filePath)
             # ignore some extensions
             elif ext.lower() not in {'.zip', '.txt', '.xml'}:
