@@ -133,6 +133,12 @@ After the image names and information in the metadata file are reconciled, the S
 
 After all images and excel metadata files have been processed, a message is displayed summarizing what images were in each of the five states above (e.g., "Import complete. 19 files added. 1 file missing from import folder"), and then UI is then refreshed.
 
+Below is a screenshot of a message presented to the user after an import.
+
+.. image:: screenshots/import_message.png
+   :height: 100
+   :width: 200
+   :alt: import message
 
 Exporting Data
 ==============
@@ -158,9 +164,9 @@ Many of the workflow states provide controls to allow the user to indicate PHI t
 
 The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``available to process`` or ``quarantined`` state, and can indicate if any of the associated images should be redacted. When all PHI has been staged for redaction, the user can click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``redacted`` state. As part of moving the data to the ``redacted`` state, the metadata fields and associated images marked for redaction will be deleted.
 
-All of the files the SEER DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
+All of the files the SEER DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it, the original value is completely replaced with the new value--this will be done by the system automatically for certain fields including titles and dates that are specific to each scanner manufacturer upon ingest. When a field or image is redacted completely, it is removed.
 
-Below is a screenshot of image PHI redaction controls for metadata, with the ``aperio.AppMag`` and ``aperio.Date`` fields staged for redaction.
+Below is a screenshot of image PHI redaction controls for metadata. The ``aperio.Date`` field has been pre-redacted to ``01/01/18`` and the ``aperio.Filename`` field has been pre-redacted to the ImageID name taken from the import metadata spreadsheet. The ``aperio.AppMag`` field has been staged for redaction.
 
 .. image:: screenshots/redact_metadata.png
    :height: 100
@@ -173,6 +179,14 @@ Below is a screenshot of image PHI redaction controls for Associated Images, wit
    :height: 100
    :width: 200
    :alt: redact images controls
+
+Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID), such as in the below screenshot.
+   
+.. image:: screenshots/redacted_label_image.png
+   :height: 100
+   :width: 200
+   :alt: redacted label image
+   
 
 Example Walkthrough
 ===================
