@@ -2,13 +2,15 @@
 NCI SEER Pediatic WSI Pilot Usage
 =================================
 
-See README.rst for installation.
+See README.rst for installation and debugging instructions.
+
+This document describes how to use the SEER DSA system, built to support the NCI SEER Pediatric WSI Pilot, with the major use case of de-identifying Whole Slide Images (WSIs).
 
 
 Reporting Bugs
 ==============
 
-If you have found a bug, open a `GitHub issue <https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues>`_ and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will be in the section that looks like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``. In this example the version string is ``1.0.0.dev63+g85b49b4.d20200825``, but you should expect a different version string for your DSA instance.
+If you have found a bug, open a `GitHub issue <https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/issues>`_ and describe the problem, the expected behavior, and your version of the software. The software version can be found on the front page of the web application, and will be in the section that looks like ``NCI SEER Version: 1.0.0.dev63+g85b49b4.d20200825``. In this example the version string is ``1.0.0.dev63+g85b49b4.d20200825``, but you should expect a different version string for your SEER DSA instance.
 
 
 User Management
@@ -17,9 +19,9 @@ User Management
 User Registration and Logins
 ----------------------------
 
-When you first create an installation of the software, e.g. through ``docker-compose up``, you will need to create a user for that web application by clicking on ``Register``. After registration, you may use the user credentials you created to ``Login`` to the DSA.
+When you first create an installation of the software, e.g. through ``docker-compose up``, you will need to create a user for that web application by clicking on ``Register``. After registration, you may use the user credentials you created to ``Login`` to the SEER DSA.
 
-If you are logged into the DSA, your username will appear in the upper right hand corner of the screen, like for the user named ``test`` in the below screenshot.
+If you are logged into the SEER DSA, your username will appear in the upper right hand corner of the screen, like for the user named ``test`` in the below screenshot.
 
 .. image:: screenshots/test_user.png
    :height: 100
@@ -30,9 +32,9 @@ If you are logged into the DSA, your username will appear in the upper right han
 User Types and Permissions
 --------------------------
 
-The first registed user of a DSA system will be an ``admin`` user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+The first registed user of a SEER DSA system will be an ``admin`` user and have super-user privileges, meaning that user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
 
-If no user is logged in, you are said to be browsing the DSA as the ``anonymous`` user. The ``anonymous`` user may browse data in the DSA, but cannot take any actions that redact data or change the state of data. When you are browsing as the ``anonymous`` user you will see the option to ``Register or Log In`` as in the below screenshot.
+If no user is logged in, you are said to be browsing the SEER DSA as the ``anonymous`` user. The ``anonymous`` user may browse data in the SEER DSA, but cannot take any actions that redact data or change the state of data. When you are browsing as the ``anonymous`` user you will see the option to ``Register or Log In`` as in the below screenshot.
 
 .. image:: screenshots/register_or_login.png
    :height: 100
@@ -70,16 +72,16 @@ Clicking on the ``Next Item`` link on the left menu will bring you to view the f
 Folder Versus Item Views
 ------------------------
 
-The DSA is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the DSA documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
+The SEER DSA is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the SEER DSA documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
 
-A folder in Girder may contain items, and an item always has to be in a folder. When looking at the DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``Original`` folder. In this case, the folder has zero children folders and three items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``3`` in the screenshot.
+A folder in Girder may contain items, and an item always has to be in a folder. When looking at the SEER DSA, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``Original`` folder. In this case, the folder has zero children folders and three items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``3`` in the screenshot.
 
 .. image:: screenshots/original_folder_view.png
    :height: 100
    :width: 200
    :alt: original folder view
    
-To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``01-A.svs`` that is located in the ``Original`` folder. In the info panel you can see some metadata such as the image size and SEER DSA creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``SEER Workflow`` actions.
 
 .. image:: screenshots/01asvs_item_view.png
    :height: 100
@@ -95,12 +97,12 @@ The import process assumes that the system has been configured with a mounted im
 Imported Files and Folders
 --------------------------
 
-Files are copied from the local import directory to the ``AvailableToProcess`` folder in the ``SEER`` collection in the DSA. Files can have any folder structure; the folder structure is not significant in the import process. Excel files (identified by ending in .xls or .xlsx) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process -- this list can be easily changed.
+Files are copied from the local import directory to the ``AvailableToProcess`` folder in the ``SEER`` collection in the SEER DSA. Files can have any folder structure; the folder structure is not significant in the import process. Excel files (identified by ending in .xls or .xlsx) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process -- this list can be easily changed.
 
 Import Process
 --------------
 
-From the ``AvailableToProcess`` folder (or any sub folder) in the DSA, click on the ``Import`` button, as shown in the below screenshot.
+From the ``AvailableToProcess`` folder (or any sub folder) in the SEER DSA, click on the ``Import`` button, as shown in the below screenshot.
 
 .. image:: screenshots/import_button.png
    :height: 100
@@ -114,11 +116,11 @@ A background process starts that scans through the mounted import directory, and
 - If the same ScannedFileName is listed in multiple excel files, the newest file is used by preference.
 - The ScannedFileName is expected to be just the file name (e.g., no folder path).
 
-After the image names and information in the metadata file are reconciled, the DSA will classify images as one of the following:
+After the image names and information in the metadata file are reconciled, the SEER DSA will classify images as one of the following:
 
-- ``present``: The image is listed in an excel file and is already in the DSA based on file path and matching file size. No action is performed.
-- ``added``: The image is listed in an excel file and is not in the DSA. It is added in the ``AvailableToProcess`` directory in the a folder named TokenID with a filename ImageID.<extension>.
-- ``replaced``: The image is listed in an excel file, is in the DSA, but has a different file size from the image in the DSA. The existing file is removed from the DSA and re-added.
+- ``present``: The image is listed in an excel file and is already in the SEER DSA based on file path and matching file size. No action is performed.
+- ``added``: The image is listed in an excel file and is not in the SEER DSA. It is added in the ``AvailableToProcess`` directory in the a folder named TokenID with a filename ImageID.<extension>.
+- ``replaced``: The image is listed in an excel file, is in the SEER DSA, but has a different file size from the image in the SEER DSA. The existing file is removed from the SEER DSA and re-added.
 - ``missing``: The image is listed in an excel file but is not in the import directory. No action is performed.
 - ``unlisted``: The image is not listed in an excel file but is in the import directory. No action is performed.
 - ``failed``: The listed file cannot be read as an image file.
@@ -150,7 +152,7 @@ Many of the workflow states provide controls to allow the user to indicate PHI t
 
 The user can inspect the image and metadata for PHI, can mark individual metadata fields for redaction from the ``available to process`` or ``quarantined`` state, and can indicate if any of the associated images should be redacted. When all PHI has been staged for redaction, the user can click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``original`` state, and will move the image to the ``redacted`` state. As part of moving the data to the ``redacted`` state, the metadata fields and associated images marked for redaction will be deleted.
 
-All of the files the DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
+All of the files the SEER DSA handles currently are variants of TIFF. When a field is redacted in such a way as to change it (e.g., titles and dates), the original value is completely replaced with the new value. When a field or image is redacted completely (any other field other than titles and dates), it is removed. Label images that are redacted are replaced with a black image that contains text of the item's new name (this will be the ImageID).
 
 
 Example Walkthrough
@@ -158,7 +160,7 @@ Example Walkthrough
 
 There are multiple paths through the system, to see the details of each state and the transitions between them see the ``Workflow States and Transitions`` section below. This section will describe one simple path through the system as an example to pull the pieces together.
 
-Start out by putting images and a metadata excel file in the import directory on the local filesystem, then run the ``Import`` command in the DSA, from the ``AvailableToProcess`` folder in the ``SEER`` collection. The images will now appear in the ``AvailableToProcess`` folder in the DSA.
+Start out by putting images and a metadata excel file in the import directory on the local filesystem, then run the ``Import`` command in the SEER DSA, from the ``AvailableToProcess`` folder in the ``SEER`` collection. The images will now appear in the ``AvailableToProcess`` folder in the SEER DSA.
 
 Click on an individual image (an item view of the image) to view the redaction controls. Click on the ``Redact`` controls for any pieces of textual metadata and any of the associated images that should be redacted. Then click the ``Redact Image`` button at the bottom of the page.
 
@@ -179,7 +181,7 @@ There are several states an image can be in, including:
 - original
 - approved
 
-These states correspond to named folders, i.e., an image will be in the ``available to process`` state at the time it lives in the ``available to process`` folder, as long as users move images between states using the DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
+These states correspond to named folders, i.e., an image will be in the ``available to process`` state at the time it lives in the ``available to process`` folder, as long as users move images between states using the SEER DSA UI tools. By using other Girder admin tools, it is possible to break the correspondence between the state and the folder name, but that should be an exceptional and unusual case.
 
 The reason that there are named states that are separate from named folders is so that workflow provenance can be tracked. An image may currently be in the ``quarantined`` state in the ``quarantined`` folder, but the image's workflow history indicates that it had previously been in the ``available to process`` state before the ``quarantined`` state.
 
@@ -189,7 +191,7 @@ For the remainder of this discussion, assume that the name of the folder corresp
 Import
 ------
 
-When an image is first imported into the DSA from the host filesystem, it will be renamed according to the import process and will be in the ``available to process`` state.
+When an image is first imported into the SEER DSA from the host filesystem, it will be renamed according to the import process and will be in the ``available to process`` state.
 
 Once an image is in the ``available to process`` state, the user can click:
 
