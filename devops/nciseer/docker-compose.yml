@@ -2,8 +2,7 @@
 version: '3'
 services:
   girder:
-    build: ../..
-    image: dsarchive/nciseer
+    image: dsarchive/nciseer:stable
     privileged: true
     # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)
     # so that local file assetstores and logs are owned by yourself.
@@ -21,8 +20,9 @@ services:
       # Change for local files:
       # - ./assetstore:/assetstore
       # - ./logs:/logs
-      # Location of girder.local.conf and provision.py
-      - .:/conf
+      # Location of girder.local.conf and provision.py; add to use local
+      # versions
+      # - .:/conf
       # Add for import and export location.  This can also be done with a
       # docker-compose.local.yml file.  See the example.
       # - <some local path>:/import

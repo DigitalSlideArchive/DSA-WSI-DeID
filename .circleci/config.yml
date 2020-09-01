@@ -37,12 +37,16 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Run docker-compose build
-          command: bash -c 'docker-compose build'
+          name: Run docker build
+          command: bash -c 'docker build --force-rm -t dsarchive/nciseer .'
+          working_directory: .
+      - run:
+          name: Make a local config file.
+          command: bash -c 'cp docker-compose.example.local.yml docker-compose.local.yml && sed -i "s/:stable//g" docker-compose.local.yml && sed -i "s/c:\\\\seer\\\\/\\/tmp\\/seer\\//g" docker-compose.local.yml && mkdir -p /tmp/seer/import && mkdir -p /tmp/seer/export'
           working_directory: ./devops/nciseer
       - run:
           name: Run docker-compose up
-          command: bash -c 'docker-compose up -d'
+          command: bash -c 'docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d'
           working_directory: ./devops/nciseer
       - run:
           name: Wait for girder to respond and be configured
@@ -76,6 +80,8 @@ jobs:
               if [[ $CIRCLE_TAG =~ ^v.*$ ]]; then
               docker tag dsarchive/nciseer:latest "dsarchive/nciseer:$CIRCLE_TAG"
               docker push "dsarchive/nciseer:$CIRCLE_TAG"
+              docker tag dsarchive/nciseer:latest dsarchive/nciseer:stable
+              docker push dsarchive/nciseer:stable
               fi
 
 workflows:
