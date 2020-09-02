@@ -44,7 +44,8 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
 # add a directory for girder mount
 RUN mkdir -p /fuse --mode=a+rwx
 
-RUN mkdir -p nci_seer
+RUN mkdir -p nci_seer && \
+    mkdir -p /conf
 
 WORKDIR nci_seer
 
@@ -68,6 +69,8 @@ RUN girder build && \
     # Git rid of unnecessary files to keep the docker image smaller \
     find /usr/local/lib/python3.7 -name node_modules -exec rm -rf {} \+ && \
     rm -rf /tmp/npm*
+
+COPY ./devops/nciseer/girder.local.conf ./devops/nciseer/provision.py /conf/
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 

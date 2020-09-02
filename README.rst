@@ -27,6 +27,9 @@ If you want to import and export data from your local filesystem into the Pilot,
     version: '3'
     services:
       girder:
+        # Change "stable" to a version number (e.g., dsarchive/nciseer:v1.0.0)
+        # to use a fixed version
+        image: dsarchive/nciseer:stable
         volumes:
           - c:\seer\import:/import
           - c:\seer\export:/export
@@ -78,6 +81,22 @@ or without the import and export paths, type::
 
 
 This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
+
+Using a Specific Version
+------------------------
+
+By default, `docker-compose up` will use the most recent stable version of the software.  To use a specific version (e.g., `v1.0.0`), make sure you switch to that version from GitHub::
+
+    git checkout v1.0.0
+
+Modify the version in your ``docker-compose.local.yml`` file.  For example, change the line which reads ``image: dsarchive/nciseer:stable`` to ``image: dsarchive/nciseer:v1.0.0``.  Now, when you do::
+    
+    docker-compose pull
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+that version will be pullled and run.
+
+For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/nciseer``).
 
 Debugging
 ---------

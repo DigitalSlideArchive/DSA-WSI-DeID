@@ -2,6 +2,9 @@
 version: '3'
 services:
   girder:
+    # Change "stable" to a version number (e.g., dsarchive/nciseer:v1.0.0) to
+    # to use a fixed version
+    image: dsarchive/nciseer:stable
     volumes:
       - c:\seer\import:/import
       - c:\seer\export:/export
