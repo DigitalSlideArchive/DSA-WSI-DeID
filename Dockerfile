@@ -60,7 +60,7 @@ RUN pip install --pre --no-cache-dir \
     # girder[mount] adds dependencies to show tiles from S3 assets \
     girder[mount] \
     # Add additional girder plugins here \
-    girder-homepage \
+    # girder-homepage \
     # Use prebuilt wheels whenever possible \
     --find-links https://girder.github.io/large_image_wheels
 

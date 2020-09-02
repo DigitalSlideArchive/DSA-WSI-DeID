@@ -29,7 +29,7 @@ setup(
     author='Kitware, Inc.',
     author_email='kitware@kitware.com',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
         'Programming Language :: Python :: 3',
@@ -39,6 +39,7 @@ setup(
     ],
     description='NCI SEER Pediatric WSI Pilot plugin.',
     install_requires=[
+        'girder-homepage',
         'histomicsui',
         'large_image[tiff,openslide,memcached]',
         'pandas',
