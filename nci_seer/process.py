@@ -11,8 +11,7 @@ import xml.etree.ElementTree
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 import large_image_source_tiff.girder_source
-
-from . import tifftools
+import tifftools
 
 
 def get_redact_list(item):
@@ -40,8 +39,10 @@ def get_generated_title(item):
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
     for key in {
-            'aperio.Title', 'hamamatsu.Reference',
-            'PIIM_DP_SCANNER_OPERATOR_ID', 'PIM_DP_UFS_BARCODE'}:
+            'internal;openslide;aperio.Title',
+            'internal;openslide;hamamatsu.Reference',
+            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
+            'internal;xml;PIM_DP_UFS_BARCODE'}:
         if redactList['metadata'].get(key):
             return redactList['metadata'].get(key)
     # TODO: Pull from appropriate 'meta' if not otherwise present
@@ -82,7 +83,7 @@ def get_standard_redactions(item, title):
             'metadata': {},
         }
     for key in {'DateTime'}:
-        tag = tifftools.name_to_tag(key)
+        tag = tifftools.Tag[key].value
         if tag in ifds[0]['tags']:
             value = ifds[0]['tags'][tag]['data']
             if len(value) >= 10:
@@ -92,7 +93,7 @@ def get_standard_redactions(item, title):
             redactList['metadata']['internal;openslide;tiff.%s' % key] = value
     # Make, Model, Software?
     for key in {'Copyright', 'HostComputer'}:
-        tag = tifftools.name_to_tag(key)
+        tag = tifftools.Tag[key].value
         if tag in ifds[0]['tags']:
             redactList['metadata']['internal;openslide;tiff.%s' % key] = None
     return redactList
@@ -266,8 +267,8 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
                         for d in range(len(mainImageDir))]:
         raise Exception('Aperio TIFF directories are not in the expected order.')
     # Set new image description
-    ifds[0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
-        'type': tifftools.name_to_datatype('ASCII'),
+    ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'type': tifftools.Datatype.ASCII,
         'data': imageDescription
     }
     # redact or adjust thumbnail
@@ -275,13 +276,13 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         if 'thumbnail' in redactList['images']:
             ifds.pop(1)
         else:
-            thumbnailComment = ifds[1]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')]['data']
+            thumbnailComment = ifds[1]['tags'][tifftools.Tag.ImageDescription.value]['data']
             thumbnailDescription = '|'.join(thumbnailComment.split('|', 1)[0:1] + aperioValues[1:])
-            ifds[1]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')][
+            ifds[1]['tags'][tifftools.Tag.ImageDescription.value][
                 'data'] = thumbnailDescription
     # redact other images
     for idx in range(len(ifds) - 1, 0, -1):
-        key = ifds[idx]['tags'].get(tifftools.name_to_tag('IMAGEDESCRIPTION'), {}).get(
+        key = ifds[idx]['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
             'data', '').split('\n', 1)[-1].strip().split()
         if len(key) and key[0].lower():
             desc = key[0].lower()
@@ -293,15 +294,15 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     labelinfo = tifftools.read_tiff(labelPath)
     labelDescription = aperioValues[0].split('\n', 1)[1] + '\nlabel %dx%d' % (
         labelImage.width, labelImage.height)
-    labelinfo['ifds'][0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
-        'type': tifftools.name_to_datatype('ASCII'),
+    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'type': tifftools.Datatype.ASCII,
         'data': labelDescription
     }
     ifds.extend(labelinfo['ifds'])
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     outputPath = os.path.join(tempdir, 'aperio.svs')
-    tifftools.tiff_write(ifds, outputPath)
+    tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
 
 
@@ -316,11 +317,12 @@ def redact_tiff_tags(ifds, redactList, title):
     """
     redactedTags = {}
     for key, value in redactList['metadata'].items():
-        tag = tifftools.name_to_tag(key.rsplit(';tiff.', 1)[-1])
-        if tag:
+        tiffkey = key.rsplit(';tiff.', 1)[-1]
+        if hasattr(tifftools.Tag, tiffkey):
+            tag = tifftools.Tag[key.rsplit(';tiff.', 1)[-1]].value
             redactedTags[tag] = value
-    for titleKey in {'NDPI_REFERENCE', }:
-        redactedTags[tifftools.name_to_tag(titleKey)] = title
+    for titleKey in {'DocumentName', 'NDPI_REFERENCE', }:
+        redactedTags[tifftools.Tag[titleKey].value] = title
     for ifd in ifds:
         # convert to a list since we may mutage the tag dictionary
         for tag, taginfo in list(ifd['tags'].items()):
@@ -328,7 +330,7 @@ def redact_tiff_tags(ifds, redactList, title):
                 if redactedTags[tag] is None:
                     del ifd['tags'][tag]
                 else:
-                    taginfo['type'] = tifftools.name_to_datatype('ASCII')
+                    taginfo['type'] = tifftools.Datatype.ASCII
                     taginfo['data'] = redactedTags[tag]
 
 
@@ -348,13 +350,13 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
     sourcePath = tileSource._getLargeImagePath()
     tiffinfo = tifftools.read_tiff(sourcePath)
     ifds = tiffinfo['ifds']
-    sourceLensTag = tifftools.name_to_tag('NDPI_SOURCELENS')
+    sourceLensTag = tifftools.Tag.NDPI_SOURCELENS.value
     if 'macro' in redactList['images']:
         ifds = [ifd for ifd in ifds
                 if sourceLensTag not in ifd['tags'] or
                 ifd['tags'][sourceLensTag]['data'][0] > 0]
     redact_tiff_tags(ifds, redactList, title)
-    propertyTag = tifftools.name_to_tag('NDPI_PROPERTY_MAP')
+    propertyTag = tifftools.Tag.NDPI_PROPERTY_MAP.value
     propertyList = ifds[0]['tags'][propertyTag]['data'].replace('\r', '\n').split('\n')
     ndpiProperties = {p.split('=')[0]: p.split('=', 1)[1] for p in propertyList if '=' in p}
     for fullkey, value in redactList['metadata'].items():
@@ -368,16 +370,16 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
     propertyList = ['%s=%s\r\n' % (k, v) for k, v in ndpiProperties.items()]
     propertyMap = ''.join(propertyList)
     for ifd in ifds:
-        ifd['tags'][tifftools.name_to_tag('NDPI_REFERENCE')] = {
-            'type': tifftools.name_to_datatype('ASCII'),
+        ifd['tags'][tifftools.Tag.NDPI_REFERENCE.value] = {
+            'type': tifftools.Datatype.ASCII,
             'data': title,
         }
         ifd['tags'][propertyTag] = {
-            'type': tifftools.name_to_datatype('ASCII'),
+            'type': tifftools.Datatype.ASCII,
             'data': propertyMap,
         }
     outputPath = os.path.join(tempdir, 'hamamatsu.ndpi')
-    tifftools.tiff_write(ifds, outputPath)
+    tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
 
 
@@ -482,7 +484,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
                 tag[-1][0].pop(tag[-1][1])
     # redact images from ifds
     ifds = [ifd for ifd in ifds
-            if ifd['tags'].get(tifftools.name_to_tag('IMAGEDESCRIPTION'), {}).get(
+            if ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
                 'data', '').split()[0].lower() not in redactList['images']]
 
     redactList = copy.copy(redactList)
@@ -522,8 +524,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     labelPath = os.path.join(tempdir, 'label.tiff')
     labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
     labelinfo = tifftools.read_tiff(labelPath)
-    labelinfo['ifds'][0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
-        'type': tifftools.name_to_datatype('ASCII'),
+    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'type': tifftools.Datatype.ASCII,
         'data': 'Label'
     }
     ifds.extend(labelinfo['ifds'])
@@ -546,13 +548,13 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
         }],
         'ObjectType': 'DPScannedImage',
     })
-    ifds[0]['tags'][tifftools.name_to_tag('IMAGEDESCRIPTION')] = {
-        'type': tifftools.name_to_datatype('ASCII'),
+    ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'type': tifftools.Datatype.ASCII,
         'data': xml.etree.ElementTree.tostring(
             dictToEtree(xmldict), encoding='utf8', method='xml').decode(),
     }
     outputPath = os.path.join(tempdir, 'philips.tiff')
-    tifftools.tiff_write(ifds, outputPath)
+    tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
 
 
