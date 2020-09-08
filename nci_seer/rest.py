@@ -139,7 +139,7 @@ def process_item(item, user=None):
     # else
     with tempfile.TemporaryDirectory(prefix='nciseer') as tempdir:
         try:
-            filepath, mimetype = process.redact_item(item, tempdir)
+            filepath, info = process.redact_item(item, tempdir)
         except Exception as e:
             logger.exception('Failed to redact item')
             raise RestException(e.args[0])
@@ -153,16 +153,19 @@ def process_item(item, user=None):
             },
         })
         ImageItem().delete(item)
+        origSize = 0
         for childFile in Item().childFiles(item):
+            origSize += childFile['size']
             File().remove(childFile)
         newName = item['name']
         if len(os.path.splitext(newName)[1]) <= 1:
             newName = os.path.splitext(item['name'])[0] + os.path.splitext(filepath)[1]
+        newSize = os.path.getsize(filepath)
         with open(filepath, 'rb') as f:
             Upload().uploadFromFile(
                 f, size=os.path.getsize(filepath), name=newName,
                 parentType='item', parent=item, user=creator,
-                mimeType=mimetype)
+                mimeType=info['mimetype'])
         item = Item().load(item['_id'], force=True)
         item['name'] = newName
     item.setdefault('meta', {})
@@ -170,7 +173,10 @@ def process_item(item, user=None):
     item['meta']['redacted'].append({
         'user': str(user['_id']) if user else None,
         'time': datetime.datetime.utcnow().isoformat(),
+        'originalSize': origSize,
+        'redactedSize': newSize,
         'redactList': item['meta'].get('redactList'),
+        'details': info,
         'version': __version__,
     })
     item['meta'].pop('quarantine', None)
