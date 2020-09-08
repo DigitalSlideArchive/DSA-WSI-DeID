@@ -96,7 +96,7 @@ Modify the version in your ``docker-compose.local.yml`` file.  For example, chan
 
 that version will be pullled and run.
 
-For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/nciseer``).
+For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/nciseer``).  You can build the docker image locally by executing ``docker build --force-rm -t dsarchive/nciseer .`` in the top directory of the repository.
 
 Debugging
 ---------
