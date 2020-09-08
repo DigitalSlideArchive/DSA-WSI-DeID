@@ -265,6 +265,103 @@ def exportItems(ctx, user=None, all=False):
                 'version': __version__,
             })
             item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
-            report.append({'item': item, 'status': 'export'})
-    # TODO: emit a report
+            report.append({
+                'item': item,
+                'status': 'finished',
+                'time': exportedRecord[-1]['time'],
+            })
+    exportNoteRejected(report, user, all)
+    exportReport(ctx, exportPath, report)
     return reportSummary(report)
+
+
+def exportNoteRejected(report, user, all):
+    """
+    Note items that are rejected or quarantined, collecting them for a report.
+
+    :param report: a list of items to report.
+    :param user: the user triggering this.
+    :param all: True to export all items.  False to only export items that have
+        not been previously exported.
+    """
+    from . import __version__
+
+    for status, settingkey in [
+            ('rejected', PluginSettings.HUI_REJECTED_FOLDER),
+            ('quarantined', PluginSettings.HUI_QUARANTINE_FOLDER)]:
+        folderId = Setting().get(settingkey)
+        folder = Folder().load(folderId, force=True, exc=True)
+        for _, file in Folder().fileList(folder, user, data=False):
+            item = Item().load(file['itemId'], force=True, exc=True)
+            try:
+                ImageItem().tileSource(item)
+            except Exception:
+                continue
+            if not all and item.get('meta', {}).get('nciseerExported'):
+                continue
+            exportedRecord = item.get('meta', {}).get('nciseerExported', [])
+            exportedRecord.append({
+                'time': datetime.datetime.utcnow().isoformat(),
+                'user': str(user['_id']) if user else None,
+                'version': __version__,
+                'status': status,
+            })
+            item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
+            report.append({
+                'item': item,
+                'status': status,
+                'time': exportedRecord[-1]['time'],
+            })
+
+
+def exportReport(ctx, exportPath, report):
+    """
+    Create an export report.
+
+    :param ctx: a progress context.
+    :param exportPath: directory for exports
+    :param report: a list of files that were exported.
+    """
+    ctx.update(message='Generating report')
+    statusDict = {
+        'finished': 'Approved',
+        'present': 'Approved',
+        'redacted': 'Approved',
+        'quarantined': 'Quarantined',
+        'rejected': 'Rejected',
+    }
+    dataList = []
+    for row in report:
+        print(row)
+        row['item']['meta'].setdefault('deidUpload', {})
+        data = {}
+        data.update(row['item']['meta']['deidUpload'])
+        data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
+        if 'redacted' in row['item']['meta']:
+            try:
+                info = row['item']['meta']['redacted'][-1]
+                data['ScannerMake'] = info['details']['format'].capitalize()
+                data['ScannerModel'] = info['details']['model']
+                data['ByteSize_Input'] = row['item']['meta']['redacted'][0]['originalSize']
+                data['ByteSize_Output'] = info['redactedSize']
+                data['Total_MetadataFields'] = info[
+                    'details']['fieldCount']['metadata']['redactable']
+                data['PHIPII_Presence'] = 'yes' if (
+                    info['details']['redactionCount']['images'] or
+                    info['details']['redactionCount']['metadata']) else 'no'
+            except KeyError:
+                pass
+        dataList.append(data)
+    df = pd.DataFrame(dataList, columns=[
+        'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
+        'InputFileName',
+        'DSAImageStatus',
+        'ScannerMake', 'ScannerModel',
+        'ByteSize_Input', 'ByteSize_Output',
+        'Total_MetadataFields',
+        'PHIPII_Presence',
+    ])
+    exportName = 'DeID Export %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    path = os.path.join(exportPath, exportName)
+    ctx.update(message='Saving report')
+    df.to_excel(path, index=False)
