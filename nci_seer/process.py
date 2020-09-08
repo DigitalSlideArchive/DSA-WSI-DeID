@@ -6,6 +6,7 @@ import os
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
+import re
 import xml.etree.ElementTree
 
 from girder_large_image.models.image_item import ImageItem
@@ -50,6 +51,12 @@ def get_generated_title(item):
 
 
 def determine_format(tileSource):
+    """
+    Given a tile source, return the vendor format.
+
+    :param tileSource: a large_image tile source.
+    :returns: the vendor or None if unknown.
+    """
     metadata = tileSource.getInternalMetadata() or {}
     if tileSource.name == 'openslide':
         if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
@@ -160,6 +167,68 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
     return redactList
 
 
+def metadata_field_count(tileSource, format, redactList):
+    """
+    Count how many metadata fields are likely to be shown to the user and how
+    many could be redacted.
+
+    :param tileSource: a large_image tile source.
+    :param format: the vendor or None if unknown.
+    :param redactList: the list of redactions (see get_redact_list).
+    :returns: the count of shown and redactable fields.
+    """
+    shown = 0
+    redactable = 0
+    preset = 0
+    metadata = tileSource.getInternalMetadata()
+    for mainkey in metadata:
+        if not isinstance(metadata[mainkey], dict):
+            shown += 1
+            if redactList['metadata'].get(mainkey):
+                preset += 1
+            else:
+                redactable += 1
+            continue
+        for subkey in metadata[mainkey]:
+            key = 'internal;%s;%s' % (mainkey, subkey)
+            if format == 'aperio' and re.match(
+                    r'^internal;openslide;(openslide.comment|tiff.ImageDescription)$', key):
+                continue
+            if re.match(r'^internal;openslide;openslide.level\[', key):
+                continue
+            if re.match(r'^internal;openslide;hamamatsu.(AHEX|MHLN)\[', key):
+                continue
+            shown += 1
+            if redactList['metadata'].get(key):
+                preset += 1
+                continue
+            if re.match(r'^internal;aperio_version$', key):
+                continue
+            if re.match(r'^internal;openslide;openslide\.(?!comment$)', key):
+                continue
+            if re.match(r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$', key):
+                continue
+            redactable += 1
+    return {'visible': shown, 'redactable': redactable, 'automatic': preset}
+
+
+def model_information(tileSource, format):
+    """
+    Return the model name or best information we have related to it.
+
+    :param tileSource: a large_image tile source.
+    :param format: the vendor or None if unknown.
+    :returns: a string of model information or None.
+    """
+    metadata = tileSource.getInternalMetadata()
+    for key in ('aperio.ScanScope ID', 'hamamatsu.Product'):
+        if metadata.get('openslide', {}).get(key):
+            return metadata['openslide'][key]
+    for key in ('DICOM_MANUFACTURERS_MODEL_NAME', 'DICOM_DEVICE_SERIAL_NUMBER'):
+        if metadata.get('xml', {}).get(key):
+            return metadata['xml'][key]
+
+
 def redact_item(item, tempdir):
     """
     Redact a Girder iitem.  Based on the redact metadata, determine what
@@ -171,9 +240,9 @@ def redact_item(item, tempdir):
         removed from the system.
     :param tempdir: a temporary directory to put all work files and the final
         result.
-    :returns: (filepath, mimetype): a generated filepath and its mimetype.
-        The filepath should end in the appropriate extension, but its name is
-        not important.
+    :returns: the generated filepath.  The filepath ends in the original
+        extension, its name is not important.
+    :returns: a dictionary of information including 'mimetype'.
     """
     previouslyRedacted = bool(item.get('meta', {}).get('redacted'))
     redactList = get_redact_list(item)
@@ -193,7 +262,19 @@ def redact_item(item, tempdir):
     if func is None:
         raise Exception('Cannot redact this format.')
     file, mimetype = func(item, tempdir, redactList, newTitle, labelImage)
-    return file, mimetype
+    info = {
+        'format': format,
+        'model': model_information(tileSource, format),
+        'mimetype': mimetype,
+        'redactionCount': {
+            key: len([k for k, v in redactList[key].items() if v is None])
+            for key in redactList},
+        'fieldCount': {
+            'metadata': metadata_field_count(tileSource, format, redactList),
+            'images': len(tileSource.getAssociatedImagesList()),
+        },
+    }
+    return file, info
 
 
 def aperio_value_list(item, redactList, title):
