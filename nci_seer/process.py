@@ -106,6 +106,7 @@ def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;openslide;aperio.Filename': title,
             'internal;openslide;aperio.Title': title,
+            'internal;openslide;tiff.Software': get_deid_field(item),
         },
     }
     if metadata['openslide'].get('aperio.Date'):
@@ -120,6 +121,7 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
         'images': {},
         'metadata': {
             'internal;openslide;hamamatsu.Reference': title,
+            'internal;openslide;tiff.Software': get_deid_field(item),
         },
     }
     for key in {'Created', 'Updated'}:
@@ -136,6 +138,7 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': title,
             'internal;xml;PIM_DP_UFS_BARCODE': title,
+            'internal;tiff;software': get_deid_field(item),
         },
     }
     for key in {'DICOM_DATE_OF_LAST_CALIBRATION'}:
@@ -216,6 +219,8 @@ def aperio_value_list(item, redactList, title):
             if value is not None and '|' not in value:
                 key = fullkey.split('.', 1)[1]
                 aperioDict[key] = value
+    # From DeID Upload information
+    aperioDict.update(get_deid_field_dict(item))
     # Required values
     aperioDict.update({
         'Filename': title,
@@ -236,6 +241,82 @@ def split_name(base, number):
     """
     let = 'abcdefghijklmnopqrstuvwxyz'
     return base + let[number // 26 // 26] + let[(number // 26) % 26] + let[number % 26] + '.tif'
+
+
+def redact_tiff_tags(ifds, redactList, title):
+    """
+    Redact any tags of the form *;tiff.<tiff name name> from all IFDs.
+
+    :param ifds: a list of ifd info records.  Tags may be removed or modified.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.  If any of a list of title tags
+        exist, they are replaced with this value.
+    """
+    redactedTags = {}
+    for key, value in redactList['metadata'].items():
+        tiffkey = key.rsplit(';tiff.', 1)[-1]
+        tiffdir = 0
+        if ';tiff;' in key:
+            tiffkey = key.rsplit(';tiff;', 1)[-1]
+        if ':' in tiffkey:
+            tiffkey, tiffdir = tiffkey.rsplit(':', 1)
+            tiffdir = int(tiffdir)
+        if hasattr(tifftools.Tag, tiffkey):
+            tag = tifftools.Tag[tiffkey].value
+            redactedTags.setdefault(tiffdir, {})
+            redactedTags[tiffdir][tag] = value
+    for titleKey in {'DocumentName', 'NDPI_REFERENCE', }:
+        redactedTags[tifftools.Tag[titleKey].value] = title
+    for idx, ifd in enumerate(ifds):
+        # convert to a list since we may mutage the tag dictionary
+        for tag, taginfo in list(ifd['tags'].items()):
+            if tag in redactedTags.get(idx, {}):
+                if redactedTags[idx][tag] is None:
+                    del ifd['tags'][tag]
+                else:
+                    taginfo['type'] = tifftools.Datatype.ASCII
+                    taginfo['data'] = redactedTags[idx][tag]
+
+
+def get_deid_field_dict(item):
+    """
+    Return a dictionary with custom fields from the DeID Upload metadata.
+
+    :param item: the item with data.
+    :returns: a dictionary of key-vlaue pairs.
+    """
+    deid = item.get('meta', {}).get('deidUpload', {})
+    result = {}
+    for k, v in deid.items():
+        result['CustomField.%s' % k] = str(v).replace('|', ' ')
+    return result
+
+
+def get_deid_field(item):
+    """
+    Return a text field with the DeID Upload metadata formatted for storage.
+
+    :param item: the item with data.
+    :returns: the text field.
+    """
+    from . import __version__
+
+    version = 'DSA Redaction %s' % __version__
+    return version + '\n' + '|'.join([
+        '%s = %s' % (k, v) for k, v in sorted(get_deid_field_dict(item).items())])
+
+
+def add_deid_metadata(item, ifds):
+    """
+    Add deid metadata to the Software tag.
+
+    :param item: the item to adjust.
+    :param ifds: a list of ifd info records.  Tags may be added or modified.
+    """
+    ifds[0]['tags'][tifftools.Tag.Software.value] = {
+        'type': tifftools.Datatype.ASCII,
+        'data': get_deid_field(item),
+    }
 
 
 def redact_format_aperio(item, tempdir, redactList, title, labelImage):
@@ -269,7 +350,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     # Set new image description
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
         'type': tifftools.Datatype.ASCII,
-        'data': imageDescription
+        'data': imageDescription,
     }
     # redact or adjust thumbnail
     if 'thumbnail' in associatedImages:
@@ -301,37 +382,10 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     ifds.extend(labelinfo['ifds'])
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
+    add_deid_metadata(item, ifds)
     outputPath = os.path.join(tempdir, 'aperio.svs')
     tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
-
-
-def redact_tiff_tags(ifds, redactList, title):
-    """
-    Redact any tags of the form *;tiff.<tiff name name> from all IFDs.
-
-    :param ifds: a list of ifd info records.  Tags may be removed or modified.
-    :param redactList: the list of redactions (see get_redact_list).
-    :param title: the new title for the item.  If any of a list of title tags
-        exist, they are replaced with this value.
-    """
-    redactedTags = {}
-    for key, value in redactList['metadata'].items():
-        tiffkey = key.rsplit(';tiff.', 1)[-1]
-        if hasattr(tifftools.Tag, tiffkey):
-            tag = tifftools.Tag[key.rsplit(';tiff.', 1)[-1]].value
-            redactedTags[tag] = value
-    for titleKey in {'DocumentName', 'NDPI_REFERENCE', }:
-        redactedTags[tifftools.Tag[titleKey].value] = title
-    for ifd in ifds:
-        # convert to a list since we may mutage the tag dictionary
-        for tag, taginfo in list(ifd['tags'].items()):
-            if tag in redactedTags:
-                if redactedTags[tag] is None:
-                    del ifd['tags'][tag]
-                else:
-                    taginfo['type'] = tifftools.Datatype.ASCII
-                    taginfo['data'] = redactedTags[tag]
 
 
 def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
@@ -356,6 +410,7 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
                 if sourceLensTag not in ifd['tags'] or
                 ifd['tags'][sourceLensTag]['data'][0] > 0]
     redact_tiff_tags(ifds, redactList, title)
+    add_deid_metadata(item, ifds)
     propertyTag = tifftools.Tag.NDPI_PROPERTY_MAP.value
     propertyList = ifds[0]['tags'][propertyTag]['data'].replace('\r', '\n').split('\n')
     ndpiProperties = {p.split('=')[0]: p.split('=', 1)[1] for p in propertyList if '=' in p}
@@ -492,6 +547,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = title
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
+    add_deid_metadata(item, ifds)
     # remove redacted philips tags
     for key in redactList['metadata']:
         if not key.startswith('internal;xml;'):

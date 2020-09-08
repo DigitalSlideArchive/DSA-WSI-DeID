@@ -79,6 +79,9 @@ def readExcelFiles(filelist, ctx):
             if not name or not row.ImageID or not row.TokenID:
                 continue
             count += 1
+            rowAsDict = dict(row._asdict())
+            rowAsDict.pop('Index')
+            rowAsDict.pop('ScannedFileName')
             if name not in manifest or timestamp > manifest[name]['timestamp']:
                 manifest[name] = {
                     'timestamp': timestamp,
@@ -86,6 +89,7 @@ def readExcelFiles(filelist, ctx):
                     'TokenID': row.TokenID,
                     'name': name,
                     'excel': filepath,
+                    'fields': rowAsDict,
                 }
         report.append({
             'path': filepath,
@@ -127,6 +131,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     file = File().save(file)
     # Reload the item as it will have changed
     item = Item().load(item['_id'], force=True)
+    item = Item().setMetadata(item, {'deidUpload': record['fields']})
     try:
         redactList = process.get_standard_redactions(item, record['ImageID'])
     except Exception:
