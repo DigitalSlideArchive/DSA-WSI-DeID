@@ -34,7 +34,10 @@ def readExcelData(filepath):
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
-        if all(key in df.columns for key in {'TokenID', 'ImageID', 'ScannedFileName'}):
+        if (
+                'TokenID' in df.columns and
+                'ImageID' in df.columns and
+                any(key in df.columns for key in {'ScannedFileName', 'InputFileName'})):
             return df
         potential_header += 1
         df = reader(filepath, header=potential_header)
@@ -75,13 +78,14 @@ def readExcelFiles(filelist, ctx):
         timestamp = os.path.getmtime(filepath)
         count = 0
         for row in df.itertuples():
-            name = row.ScannedFileName
+            rowAsDict = dict(row._asdict())
+            rowAsDict.pop('Index')
+            name = None
+            for key in {'ScannedFileName', 'InputFileName'}:
+                name = rowAsDict.pop(key, name)
             if not name or not row.ImageID or not row.TokenID:
                 continue
             count += 1
-            rowAsDict = dict(row._asdict())
-            rowAsDict.pop('Index')
-            rowAsDict.pop('ScannedFileName')
             if name not in manifest or timestamp > manifest[name]['timestamp']:
                 manifest[name] = {
                     'timestamp': timestamp,
