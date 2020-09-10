@@ -18,6 +18,7 @@ function performAction(action) {
         error: null
     }).done((resp) => {
         let text = actions[action].done;
+        let any = false;
         if (resp.action === 'ingest') {
             [
                 ['added', 'added'],
@@ -29,6 +30,7 @@ function performAction(action) {
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    any = true;
                 }
             });
             [
@@ -37,8 +39,12 @@ function performAction(action) {
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} Excel file${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    any = true;
                 }
             });
+            if (!any) {
+                text += '  Nothing to import.';
+            }
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
@@ -48,8 +54,12 @@ function performAction(action) {
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    any = true;
                 }
             });
+            if (!any) {
+                text += '  Nothing to export.';
+            }
         }
         events.trigger('g:alert', {
             icon: 'ok',

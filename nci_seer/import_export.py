@@ -188,9 +188,9 @@ def ingestData(ctx, user=None):  # noqa
             elif ext.lower() not in {'.zip', '.txt', '.xml'}:
                 imageFiles.append(filePath)
     if not len(excelFiles):
-        raise Exception('Failed to find any excel files in import directory.')
+        ctx.update(message='Failed to find any excel files in import directory.')
     if not len(imageFiles):
-        raise Exception('Failed to find any image files in import directory.')
+        ctx.update(message='Failed to find any image files in import directory.')
     manifest, excelReport = readExcelFiles(excelFiles, ctx)
     missingImages = []
     report = []
