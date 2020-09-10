@@ -26,16 +26,16 @@ def provision():
     # Set branding
     Setting().set('core.brand_name', 'SEER DSA')
     Setting().set('homepage.markdown', """
-    # SEER Digital Slide Archive
-    ---
-    ## NCI SEER Pediatic WSI Pilot
+# SEER Digital Slide Archive
+---
+## NCI SEER Pediatic WSI Pilot
 
-    Welcome to the **SEER Digital Slide Archive**.
+Welcome to the **SEER Digital Slide Archive**.
 
-    Developers who want to use the Girder REST API should check out the
-    [interactive web API docs](api/v1).
+Developers who want to use the Girder REST API should check out the
+[interactive web API docs](api/v1).
 
-    NCI SEER Version: %s
+NCI SEER Version: %s
     """ % (nci_seer.__version__))
 
     # Make sure we have an assetstore
