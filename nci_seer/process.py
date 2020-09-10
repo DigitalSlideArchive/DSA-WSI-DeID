@@ -231,7 +231,7 @@ def model_information(tileSource, format):
 
 def redact_item(item, tempdir):
     """
-    Redact a Girder iitem.  Based on the redact metadata, determine what
+    Redact a Girder item.  Based on the redact metadata, determine what
     redactions are necessary and perform them.
 
     :param item: a Girder large_image item.  The file in this item will be
