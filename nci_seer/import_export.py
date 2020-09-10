@@ -205,7 +205,7 @@ def ingestData(ctx, user=None):  # noqa
         if imagePath is None:
             missingImages.append(record)
             status = 'missing'
-            report.append({'record': record, 'status': status})
+            report.append({'record': record, 'status': status, 'path': record['name']})
             continue
         imageFiles.remove(imagePath)
         status = ingestOneItem(importFolder, imagePath, record, ctx, user)
@@ -253,7 +253,7 @@ def importReport(ctx, report, excelReport, user):
         dataList.append(data)
     for row in report:
         data = {
-            'FilePath': row['path'],
+            'FilePath': row.get('path'),
             'Status': statusDict.get(row['status'], row['status']),
         }
         if row.get('record'):
