@@ -50,6 +50,7 @@ var ConfigView = View.extend({
             'histomicsui.rejected_folder': { name: 'Rejected', id: 'g-hui-rejected-folder' },
             'histomicsui.original_folder': { name: 'Original', id: 'g-hui-original-folder' },
             'histomicsui.finished_folder': { name: 'Approved', id: 'g-hui-finished-folder' },
+            'histomicsui.reports_folder': { name: 'Reports', id: 'g-hui-reports-folder' },
             'nciseer.import_path': { name: 'Internal Import Path', id: 'g-nciseer-import-path' },
             'nciseer.export_path': { name: 'Internal Export Path', id: 'g-nciseer-export-path' }
         };

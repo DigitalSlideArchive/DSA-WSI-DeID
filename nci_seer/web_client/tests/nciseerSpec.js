@@ -31,46 +31,7 @@ describe('Test the NCI SEER plugin', function () {
         waitsFor(function () {
             return $('#g-nciseer-form input').length > 0;
         }, 'settings to be shown');
-        /*
-        runs(function () {
-            $('#g-hui-default-draw-styles').val(styleJSON);
-            $('.g-hui-buttons .btn-primary').click();
-        });
-        waitsFor(function () {
-            var resp = girder.rest.restRequest({
-                url: 'system/setting',
-                method: 'GET',
-                data: {
-                    list: JSON.stringify([
-                        'histomicsui.default_draw_styles'
-                    ])
-                },
-                async: false
-            });
-            var settings = resp.responseJSON;
-            var settingsStyles = settings && JSON.parse(settings['histomicsui.default_draw_styles']);
-            return (settingsStyles && settingsStyles.length === 1 &&
-                    settingsStyles[0].lineWidth === styles[0].lineWidth);
-        }, 'HistomicsUI settings to change');
-        girderTest.waitForLoad();
-        runs(function () {
-            $('#g-hui-default-draw-styles').val('not a json list');
-            $('.g-hui-buttons .btn-primary').click();
-        });
-        waitsFor(function () {
-            return $('#g-hui-error-message').text().substr('must be a JSON list') >= 0;
-        });
-        runs(function () {
-            $('#g-hui-brand-color').val('#ffffff');
-            $('#g-hui-brand-default-color').click();
-            expect($('#g-hui-brand-color').val() === '#777777');
-            $('#g-hui-banner-color').val('#ffffff');
-            $('#g-hui-banner-default-color').click();
-            expect($('#g-hui-banner-color').val() === '#f8f8f8');
-        });
-        */
-        /* test the quarantine folder */
-        /*
+        /* test folders folder */
         runs(function () {
             $('.g-open-browser').click();
         });
@@ -91,9 +52,7 @@ describe('Test the NCI SEER plugin', function () {
             $('.g-submit-button').click();
         });
         girderTest.waitForLoad();
-        */
         /* Cancel the changes */
-        /*
         runs(function () {
             $('.g-hui-buttons #g-hui-cancel').click();
         });
@@ -101,6 +60,5 @@ describe('Test the NCI SEER plugin', function () {
             return $('.g-plugin-config-link').length > 0;
         }, 'the plugins page to load');
         girderTest.waitForLoad();
-        */
     });
 });

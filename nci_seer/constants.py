@@ -5,5 +5,6 @@ class PluginSettings(object):
     HUI_REJECTED_FOLDER = 'histomicsui.rejected_folder'
     HUI_ORIGINAL_FOLDER = 'histomicsui.original_folder'
     HUI_FINISHED_FOLDER = 'histomicsui.finished_folder'
+    HUI_REPORTS_FOLDER = 'histomicsui.reports_folder'
     NCISEER_IMPORT_PATH = 'nciseer.import_path'
     NCISEER_EXPORT_PATH = 'nciseer.export_path'

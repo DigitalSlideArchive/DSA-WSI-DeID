@@ -69,6 +69,17 @@ form#g-nciseer-form(role="form")
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
   .form-group
+    label(for="g-hui-reports-folder") Reports Folder
+    p.g-hui-description
+      | This is the location where import and export reports are stored.
+    .input-group.input-group-sm
+      input#g-hui-reports-folder.form-control.input-sm(
+          type="text", value=settings['histomicsui.reports_folder'] || '',
+          title="A folder to store import and export reports.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
     label(for="g-nciseer-import-path") Internal Import Path
     p.g-hui-description
       | The Import function searches this path for new and changed files.
