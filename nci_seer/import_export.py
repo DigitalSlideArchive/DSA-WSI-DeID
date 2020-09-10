@@ -3,6 +3,7 @@ import magic
 import os
 import pandas as pd
 import shutil
+import tempfile
 
 from girder import logger
 from girder.models.assetstore import Assetstore
@@ -10,11 +11,15 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.models.upload import Upload
 
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
 from .constants import PluginSettings
+
+
+XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 
 def readExcelData(filepath):
@@ -62,16 +67,19 @@ def readExcelFiles(filelist, ctx):
         try:
             df = readExcelData(filepath)
         except Exception as exc:
-            report.append({
-                'path': filepath,
-                'status': 'notexcel',
-            })
             if isinstance(exc, ValueError):
                 message = 'Cannot read %s; it is not formatted correctly' % (
                     os.path.basename(filepath), )
+                status = 'badformat'
             else:
                 message = 'Cannot read %s; it is not an Excel file' % (
                     os.path.basename(filepath), )
+                status = 'notexcel'
+            report.append({
+                'path': filepath,
+                'status': status,
+                'reason': message,
+            })
             ctx.update(message=message)
             logger.info(message)
             continue
@@ -206,8 +214,66 @@ def ingestData(ctx, user=None):  # noqa
     for image in imageFiles:
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
-    # TODO: emit a report
+    importReport(ctx, report, excelReport, user)
     return reportSummary(report, excelReport)
+
+
+def importReport(ctx, report, excelReport, user):
+    """
+    Create an import report.
+
+    :param ctx: a progress context.
+    :param report: a list of files that were exported.
+    :param excelReport: a list of excel files that were processed.
+    :param user: the user triggering this.
+    """
+    ctx.update(message='Generating report')
+    excelStatusDict = {
+        'parsed': 'Parsed',
+        'notexcel': 'Not Excel',
+        'badformat': 'Bad Format',
+    }
+    statusDict = {
+        'added': 'Imported',
+        'present': 'Already imported',
+        'replaced': 'Updated',
+        'missing': 'File missing',
+        'unlisted': 'Not in DeID Upload file',
+    }
+    keyToColumns = {
+        'excel': 'ExcelFilePath',
+    }
+    dataList = []
+    for row in excelReport:
+        data = {
+            'ExcelFilePath': row['path'],
+            'Status': excelStatusDict.get(row['status'], row['status']),
+            'FailureReason': row.get('reason'),
+        }
+        dataList.append(data)
+    for row in report:
+        data = {
+            'FilePath': row['path'],
+            'Status': statusDict.get(row['status'], row['status']),
+        }
+        if row.get('record'):
+            fields = row['record'].get('fields')
+            data.update(fields)
+            for k, v in row['record'].items():
+                if k != 'fields':
+                    data[keyToColumns.get(k, k)] = v
+        dataList.append(data)
+    df = pd.DataFrame(dataList, columns=[
+        'ExcelFilePath', 'FilePath', 'Status',
+        'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
+        'FailureReason',
+    ])
+    reportName = 'DeID Import %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    with tempfile.TemporaryDirectory(prefix='nciseer') as tempdir:
+        path = os.path.join(tempdir, reportName)
+        ctx.update(message='Saving report')
+        df.to_excel(path, index=False)
+        saveToReports(path, XLSX_MIMETYPE, user)
 
 
 def reportSummary(*args):
@@ -238,7 +304,7 @@ def exportItems(ctx, user=None, all=False):
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
     for filepath, file in Folder().fileList(exportFolder, user, data=False):
-        item = Item().load(file['itemId'], force=True, exc=True)
+        item = Item().load(file['itemId'], force=True, exc=False)
         try:
             tileSource = ImageItem().tileSource(item)
         except Exception:
@@ -271,7 +337,7 @@ def exportItems(ctx, user=None, all=False):
                 'time': exportedRecord[-1]['time'],
             })
     exportNoteRejected(report, user, all)
-    exportReport(ctx, exportPath, report)
+    exportReport(ctx, exportPath, report, user)
     return reportSummary(report)
 
 
@@ -314,13 +380,14 @@ def exportNoteRejected(report, user, all):
             })
 
 
-def exportReport(ctx, exportPath, report):
+def exportReport(ctx, exportPath, report, user):
     """
     Create an export report.
 
     :param ctx: a progress context.
     :param exportPath: directory for exports
     :param report: a list of files that were exported.
+    :param user: the user triggering this.
     """
     ctx.update(message='Generating report')
     statusDict = {
@@ -332,7 +399,6 @@ def exportReport(ctx, exportPath, report):
     }
     dataList = []
     for row in report:
-        print(row)
         row['item']['meta'].setdefault('deidUpload', {})
         data = {}
         data.update(row['item']['meta']['deidUpload'])
@@ -365,3 +431,23 @@ def exportReport(ctx, exportPath, report):
     path = os.path.join(exportPath, exportName)
     ctx.update(message='Saving report')
     df.to_excel(path, index=False)
+    saveToReports(path, XLSX_MIMETYPE, user)
+
+
+def saveToReports(path, mimetype=None, user=None):
+    """
+    Save a file to the reports folder.
+
+    :param path: path of the file to save.
+    :param mimetype: the mimetype of the file.
+    :param user: the user triggering this.
+    """
+    reportsFolderId = Setting().get(PluginSettings.HUI_REPORTS_FOLDER)
+    reportsFolder = Folder().load(reportsFolderId, force=True, exc=False)
+    if not reportsFolder:
+        raise Exception('Reports folder not specified.')
+    with open(path, 'rb') as f:
+        Upload().uploadFromFile(
+            f, size=os.path.getsize(path), name=os.path.basename(path),
+            parentType='folder', parent=reportsFolder, user=user,
+            mimeType=mimetype)

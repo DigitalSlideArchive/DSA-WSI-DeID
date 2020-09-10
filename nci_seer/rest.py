@@ -205,6 +205,30 @@ def get_first_item(folder, user):
             return item
 
 
+def ingestData(user=None, progress=True):
+    """
+    Ingest data from the import folder.
+
+    :param user: the user that started this.
+    """
+    with ProgressContext(progress, user=user, title='Importing data') as ctx:
+        result = import_export.ingestData(ctx, user)
+    result['action'] = 'ingest'
+    return result
+
+
+def exportData(user=None, progress=True):
+    """
+    Export data to the export folder.
+
+    :param user: the user that started this.
+    """
+    with ProgressContext(progress, user=user, title='Exporting recent finished items') as ctx:
+        result = import_export.exportItems(ctx, user)
+    result['action'] = 'export'
+    return result
+
+
 class NCISeerResource(Resource):
     def __init__(self):
         super(NCISeerResource, self).__init__()
@@ -280,10 +304,7 @@ class NCISeerResource(Resource):
     def ingest(self):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
-        with ProgressContext(True, user=user, title='Importing data') as ctx:
-            result = import_export.ingestData(ctx, user)
-        result['action'] = 'ingest'
-        return result
+        return ingestData(user)
 
     @autoDescribeRoute(
         Description('Export recently finished items to the export folder asynchronously.')
@@ -293,10 +314,7 @@ class NCISeerResource(Resource):
     def export(self):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
-        with ProgressContext(True, user=user, title='Exporting recent finished items') as ctx:
-            result = import_export.exportItems(ctx, user)
-        result['action'] = 'export'
-        return result
+        return exportData(user)
 
     @autoDescribeRoute(
         Description('Export all finished items to the export folder asynchronously.')

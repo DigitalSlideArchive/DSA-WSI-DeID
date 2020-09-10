@@ -57,6 +57,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/DigitalSlideArchive',
     zip_safe=False,
+    python_requires='>=3.6',
     entry_points={
         'girder.plugin': [
             'nci_seer = nci_seer:GirderPlugin',
