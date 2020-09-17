@@ -34,7 +34,7 @@ wrap(ItemView, 'render', function (render) {
         }
         restRequest({
             method: 'PUT',
-            url: 'nciseer/item/' + this.model.id + '/redactList',
+            url: 'wsi_deid/item/' + this.model.id + '/redactList',
             contentType: 'application/json',
             data: JSON.stringify(redactList),
             error: null
@@ -150,7 +150,7 @@ wrap(ItemView, 'render', function (render) {
             '</div></div>');
         restRequest({
             method: 'PUT',
-            url: 'nciseer/item/' + this.model.id + '/action/' + action,
+            url: 'wsi_deid/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
             $('.g-hui-loading-overlay').remove();
@@ -189,7 +189,7 @@ wrap(ItemView, 'render', function (render) {
         // if (this.model.get('largeImage') && this.model.get('largeImage').fileId && this.accessLevel >= AccessType.WRITE) {
         if (this.model.get('largeImage') && this.model.get('largeImage').fileId && getCurrentUser()) {
             restRequest({
-                url: `nciseer/project_folder/${this.model.get('folderId')}`,
+                url: `wsi_deid/project_folder/${this.model.get('folderId')}`,
                 error: null
             }).done((resp) => {
                 if (resp) {

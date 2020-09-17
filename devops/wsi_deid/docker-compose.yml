@@ -2,7 +2,7 @@
 version: '3'
 services:
   girder:
-    image: dsarchive/nciseer:stable
+    image: dsarchive/wsi_deid:stable
     privileged: true
     # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)
     # so that local file assetstores and logs are owned by yourself.

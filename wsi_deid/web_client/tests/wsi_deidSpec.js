@@ -1,11 +1,11 @@
 /* globals girderTest, describe, it, expect, waitsFor, runs, $ */
 
-girderTest.importPlugin('homepage', 'jobs', 'worker', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'nci_seer');
+girderTest.importPlugin('homepage', 'jobs', 'worker', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'wsi_deid');
 
 girderTest.startApp();
 
-describe('Test the NCI SEER plugin', function () {
-    it('change the NCI SEER settings', function () {
+describe('Test the WSI DeID plugin', function () {
+    it('change the WSI DeID settings', function () {
         girderTest.login('admin', 'Admin', 'Admin', 'password')();
         waitsFor(function () {
             return $('a.g-nav-link[g-target="admin"]').length > 0;
@@ -24,12 +24,12 @@ describe('Test the NCI SEER plugin', function () {
             return $('.g-plugin-config-link').length > 0;
         }, 'the plugins page to load');
         runs(function () {
-            expect($('.g-plugin-config-link[g-route="plugins/nci_seer/config"]').length > 0);
-            $('.g-plugin-config-link[g-route="plugins/nci_seer/config"]').click();
+            expect($('.g-plugin-config-link[g-route="plugins/wsi_deid/config"]').length > 0);
+            $('.g-plugin-config-link[g-route="plugins/wsi_deid/config"]').click();
         });
         girderTest.waitForLoad();
         waitsFor(function () {
-            return $('#g-nciseer-form input').length > 0;
+            return $('#g-wsi_deid-form input').length > 0;
         }, 'settings to be shown');
         /* test folders folder */
         runs(function () {

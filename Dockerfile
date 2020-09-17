@@ -44,10 +44,10 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
 # add a directory for girder mount
 RUN mkdir -p /fuse --mode=a+rwx
 
-RUN mkdir -p nci_seer && \
+RUN mkdir -p wsi_deid && \
     mkdir -p /conf
 
-WORKDIR nci_seer
+WORKDIR wsi_deid
 
 COPY . .
 
@@ -55,7 +55,7 @@ COPY . .
 RUN pip install --pre --no-cache-dir \
     # Until https://github.com/cherrypy/cheroot/issues/312 is resolved.
     cheroot!=8.4.3,!=8.4.4 \
-    # git+https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.git \
+    # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
     girder[mount] \
@@ -70,7 +70,7 @@ RUN girder build && \
     find /usr/local/lib/python3.7 -name node_modules -exec rm -rf {} \+ && \
     rm -rf /tmp/npm*
 
-COPY ./devops/nciseer/girder.local.conf ./devops/nciseer/provision.py /conf/
+COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 

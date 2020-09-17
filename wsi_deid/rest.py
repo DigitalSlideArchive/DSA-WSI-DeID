@@ -137,7 +137,7 @@ def process_item(item, user=None):
     creator = User().load(item['creatorId'], force=True)
     # Generate the redacted file first, so if it fails we don't do anything
     # else
-    with tempfile.TemporaryDirectory(prefix='nciseer') as tempdir:
+    with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
         try:
             filepath, info = process.redact_item(item, tempdir)
         except Exception as e:
@@ -146,7 +146,7 @@ def process_item(item, user=None):
         origFolder, _ = create_folder_hierarchy(item, user, origFolder)
         origItem = Item().copyItem(item, creator, folder=origFolder)
         origItem = Item().setMetadata(origItem, {
-            'nciseerProcessed': {
+            'wsi_deidProcessed': {
                 'itemId': str(item['_id']),
                 'time': datetime.datetime.utcnow().isoformat(),
                 'user': str(user['_id']) if user else None,
@@ -180,9 +180,9 @@ def process_item(item, user=None):
         'version': __version__,
     })
     item['meta'].pop('quarantine', None)
-    if 'nciseerExported' in item['meta']:
-        item['meta']['redacted'][-1]['previousExports'] = item['meta']['nciseerExported']
-    item['meta'].pop('nciseerExported', None)
+    if 'wsi_deidExported' in item['meta']:
+        item['meta']['redacted'][-1]['previousExports'] = item['meta']['wsi_deidExported']
+    item['meta'].pop('wsi_deidExported', None)
     item['updated'] = datetime.datetime.utcnow()
     item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item
@@ -229,10 +229,10 @@ def exportData(user=None, progress=True):
     return result
 
 
-class NCISeerResource(Resource):
+class WSIDeIDResource(Resource):
     def __init__(self):
-        super(NCISeerResource, self).__init__()
-        self.resourceName = 'nciseer'
+        super().__init__()
+        self.resourceName = 'wsi_deid'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)

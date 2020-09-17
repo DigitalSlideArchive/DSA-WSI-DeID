@@ -14,7 +14,7 @@ function performAction(action) {
 
     restRequest({
         method: 'PUT',
-        url: `nciseer/action/${action}`,
+        url: `wsi_deid/action/${action}`,
         error: null
     }).done((resp) => {
         let text = actions[action].done;
@@ -48,9 +48,11 @@ function performAction(action) {
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
-                ['export', 'exported'],
+                ['finished', 'exported'],
                 ['different', 'already present but different'],
-                ['present', 'already exported']
+                ['present', 'already exported'],
+                ['quarantined', 'currently quarantined'],
+                ['rejected', 'with rejected status']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
@@ -86,19 +88,19 @@ function performAction(action) {
 
 function addIngestControls() {
     var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
-    btns.prepend('<button class="nciseer-import-button btn btn-info">Import</button>');
-    this.events['click .nciseer-import-button'] = () => { performAction.call(this, 'ingest'); };
+    btns.prepend('<button class="wsi_deid-import-button btn btn-info">Import</button>');
+    this.events['click .wsi_deid-import-button'] = () => { performAction.call(this, 'ingest'); };
     this.delegateEvents();
 }
 
 function addExportControls() {
     var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
     btns.prepend(
-        '<button class="nciseer-export-button btn btn-info">Export Recent</button>' +
-        '<button class="nciseer-exportall-button btn btn-info">Export All</button>'
+        '<button class="wsi_deid-export-button btn btn-info">Export Recent</button>' +
+        '<button class="wsi_deid-exportall-button btn btn-info">Export All</button>'
     );
-    this.events['click .nciseer-export-button'] = () => { performAction.call(this, 'export'); };
-    this.events['click .nciseer-exportall-button'] = () => { performAction.call(this, 'exportall'); };
+    this.events['click .wsi_deid-export-button'] = () => { performAction.call(this, 'export'); };
+    this.events['click .wsi_deid-exportall-button'] = () => { performAction.call(this, 'exportall'); };
     this.delegateEvents();
 }
 
@@ -107,7 +109,7 @@ wrap(HierarchyWidget, 'render', function (render) {
 
     if (this.parentModel.resourceName === 'folder' && getCurrentUser()) {
         restRequest({
-            url: `nciseer/project_folder/${this.parentModel.id}`,
+            url: `wsi_deid/project_folder/${this.parentModel.id}`,
             error: null
         }).done((resp) => {
             if (resp) {

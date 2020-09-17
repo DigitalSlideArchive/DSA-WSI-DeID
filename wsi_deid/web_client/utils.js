@@ -4,7 +4,7 @@ import { restRequest } from '@girder/core/rest';
 
 function goToNextUnprocessedItem(callback) {
     restRequest({
-        url: 'nciseer/next_unprocessed_item',
+        url: 'wsi_deid/next_unprocessed_item',
         error: null
     }).done((resp) => {
         if (resp) {
