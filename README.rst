@@ -1,6 +1,6 @@
-==========================================================
-NCI SEER Pediatic WSI Pilot |build-status| |license-badge|
-==========================================================
+===========================================
+DSA WSI DeID |build-status| |license-badge|
+===========================================
 
 This builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), and Philips WSI files.
 
@@ -14,27 +14,27 @@ Prerequisites
 
 At a minimum, you need `Docker <https://docs.docker.com/install/>`_ and `docker-compose <https://docs.docker.com/compose/install/>`_.  You also need a copy of this repository, either obtained via ``git`` or downloaded directly.  If you have ``git`` installed, this can be::
 
-    git clone https://github.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.git
+    git clone https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git
 
-Install commands need to be run from the ``devops/nciseer`` directory.  Examples are given via a command prompt, but a desktop version of Docker will work as well.
+Install commands need to be run from the ``devops/wsi_deid`` directory.  Examples are given via a command prompt, but a desktop version of Docker will work as well.
 
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/nciseer`` directory, named ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
 
     ---
     version: '3'
     services:
       girder:
-        # Change "stable" to a version number (e.g., dsarchive/nciseer:v1.0.0)
+        # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0)
         # to use a fixed version
-        image: dsarchive/nciseer:stable
+        image: dsarchive/wsi_deid:stable
         volumes:
-          - c:\seer\import:/import
-          - c:\seer\export:/export
+          - c:\wsi_deid\import:/import
+          - c:\wsi_deid\export:/export
 
-where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\seer\import:/import`` specifies that the local filesystem directory ``c:\seer\import`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
+where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\wsi_deid\import:/import`` specifies that the local filesystem directory ``c:\wsi_deid\import`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
@@ -43,7 +43,7 @@ which will extend and override the definitions in ``docker-compose.yml`` with th
 Initial Start
 -------------
 
-From a command prompt in the ``devops/nciseer`` directory, if you are using import and export paths, type::
+From a command prompt in the ``devops/wsi_deid`` directory, if you are using import and export paths, type::
 
     docker-compose pull
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
@@ -65,7 +65,7 @@ Note: If you prefer a different locally mounted port, you can specific that via 
 Update an Existing System
 -------------------------
 
-From a command prompt in the ``devops/nciseer`` directory, if you are using import and export paths, type::
+From a command prompt in the ``devops/wsi_deid`` directory, if you are using import and export paths, type::
 
     git pull
     docker-compose pull
@@ -89,14 +89,14 @@ By default, `docker-compose up` will use the most recent stable version of the s
 
     git checkout v1.0.0
 
-Modify the version in your ``docker-compose.local.yml`` file.  For example, change the line which reads ``image: dsarchive/nciseer:stable`` to ``image: dsarchive/nciseer:v1.0.0``.  Now, when you do::
+Modify the version in your ``docker-compose.local.yml`` file.  For example, change the line which reads ``image: dsarchive/wsi_deid:stable`` to ``image: dsarchive/wsi_deid:v1.0.0``.  Now, when you do::
     
     docker-compose pull
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 that version will be pullled and run.
 
-For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/nciseer``).  You can build the docker image locally by executing ``docker build --force-rm -t dsarchive/nciseer .`` in the top directory of the repository.
+For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/wsi_deid``).  You can build the docker image locally by executing ``docker build --force-rm -t dsarchive/wsi_deid .`` in the top directory of the repository.
 
 Debugging
 ---------
@@ -117,20 +117,20 @@ You can follow the logs and see them update as they change::
 Fixing Common Problems
 ----------------------
 
-If you accidentally delete one of the ``SEER`` collection folders, simply restart the system with::
+If you accidentally delete one of the ``WSI DeID`` collection folders, simply restart the system with::
 
     docker-compose down
     docker-compose up
     
-substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``SEER`` collection folders that are tied to specific workflow states.
+substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``WSI DeID`` collection folders that are tied to specific workflow states.
 
 
-.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot.png?style=shield
-    :target: https://circleci.com/gh/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot
+.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID.png?style=shield
+    :target: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID
     :alt: Build Status
 
 .. |license-badge| image:: https://img.shields.io/badge/license-Apache%202-blue.svg
-    :target: https://raw.githubusercontent.com/DigitalSlideArchive/NCI-SEER-Pediatric-WSI-Pilot/master/LICENSE
+    :target: https://raw.githubusercontent.com/DigitalSlideArchive/DSA-WSI-DeID/master/LICENSE
     :alt: License
 
 

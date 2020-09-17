@@ -5,14 +5,14 @@ import sys
 
 from girder.models.setting import Setting
 
-from nci_seer.constants import PluginSettings
+from wsi_deid.constants import PluginSettings
 
 from .datastore import datastore
 
 
 @pytest.fixture
 def provisionServer(server, admin, fsAssetstore, tmp_path):
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'devops', 'nciseer'))
+    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'devops', 'wsi_deid'))
     import provision  # noqa
     provision.provision()
     del sys.path[-1]
@@ -21,8 +21,8 @@ def provisionServer(server, admin, fsAssetstore, tmp_path):
     os.makedirs(importPath, exist_ok=True)
     exportPath = tmp_path / 'export'
     os.makedirs(exportPath, exist_ok=True)
-    Setting().set(PluginSettings.NCISEER_IMPORT_PATH, str(importPath))
-    Setting().set(PluginSettings.NCISEER_EXPORT_PATH, str(exportPath))
+    Setting().set(PluginSettings.WSI_DEID_IMPORT_PATH, str(importPath))
+    Setting().set(PluginSettings.WSI_DEID_EXPORT_PATH, str(exportPath))
     for filename in {'aperio_jp2k.svs', 'hamamatsu.ndpi', 'philips.ptif'}:
         path = datastore.fetch(filename)
         shutil.copy(path, str(importPath / filename))

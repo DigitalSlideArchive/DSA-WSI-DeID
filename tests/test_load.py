@@ -3,6 +3,6 @@ import pytest
 from girder.plugin import loadedPlugins
 
 
-@pytest.mark.plugin('nci_seer')
+@pytest.mark.plugin('wsi_deid')
 def test_import(server):
-    assert 'nci_seer' in loadedPlugins()
+    assert 'wsi_deid' in loadedPlugins()

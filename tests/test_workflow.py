@@ -9,11 +9,11 @@ from girder.models.setting import Setting
 from .utilities import provisionServer  # noqa
 
 
-@pytest.mark.plugin('nci_seer')
+@pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 def test_workflow(server, provisionServer, user):  # noqa
-    from nci_seer import rest
-    from nci_seer.constants import PluginSettings
+    from wsi_deid import rest
+    from wsi_deid.constants import PluginSettings
 
     importPath, exportPath = provisionServer
     importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)

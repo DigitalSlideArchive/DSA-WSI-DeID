@@ -170,7 +170,7 @@ def ingestData(ctx, user=None):  # noqa
     :param ctx: a progress context.
     :param user: the user triggering this.
     """
-    importPath = Setting().get(PluginSettings.NCISEER_IMPORT_PATH)
+    importPath = Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)
     importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     if not importPath or not importFolderId:
         raise Exception('Import path and/or folder not specified.')
@@ -269,7 +269,7 @@ def importReport(ctx, report, excelReport, user):
         'FailureReason',
     ])
     reportName = 'DeID Import %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
-    with tempfile.TemporaryDirectory(prefix='nciseer') as tempdir:
+    with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
         path = os.path.join(tempdir, reportName)
         ctx.update(message='Saving report')
         df.to_excel(path, index=False)
@@ -297,7 +297,7 @@ def exportItems(ctx, user=None, all=False):
     """
     from . import __version__
 
-    exportPath = Setting().get(PluginSettings.NCISEER_EXPORT_PATH)
+    exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     if not exportPath or not exportFolderId:
         raise Exception('Export path and/or finished folder not specified.')
@@ -310,7 +310,7 @@ def exportItems(ctx, user=None, all=False):
         except Exception:
             continue
         sourcePath = tileSource._getLargeImagePath()
-        if not all and item.get('meta', {}).get('nciseerExported'):
+        if not all and item.get('meta', {}).get('wsi_deidExported'):
             continue
         filepath = filepath.split(os.path.sep, 1)[1]
         ctx.update(message='Exporting %s' % filepath)
@@ -324,13 +324,13 @@ def exportItems(ctx, user=None, all=False):
         else:
             os.makedirs(destFolder, exist_ok=True)
             shutil.copy2(sourcePath, destPath)
-            exportedRecord = item.get('meta', {}).get('nciseerExported', [])
+            exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
             exportedRecord.append({
                 'time': datetime.datetime.utcnow().isoformat(),
                 'user': str(user['_id']) if user else None,
                 'version': __version__,
             })
-            item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
+            item = Item().setMetadata(item, {'wsi_deidExported': exportedRecord})
             report.append({
                 'item': item,
                 'status': 'finished',
@@ -363,16 +363,16 @@ def exportNoteRejected(report, user, all):
                 ImageItem().tileSource(item)
             except Exception:
                 continue
-            if not all and item.get('meta', {}).get('nciseerExported'):
+            if not all and item.get('meta', {}).get('wsi_deidExported'):
                 continue
-            exportedRecord = item.get('meta', {}).get('nciseerExported', [])
+            exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
             exportedRecord.append({
                 'time': datetime.datetime.utcnow().isoformat(),
                 'user': str(user['_id']) if user else None,
                 'version': __version__,
                 'status': status,
             })
-            item = Item().setMetadata(item, {'nciseerExported': exportedRecord})
+            item = Item().setMetadata(item, {'wsi_deidExported': exportedRecord})
             report.append({
                 'item': item,
                 'status': status,

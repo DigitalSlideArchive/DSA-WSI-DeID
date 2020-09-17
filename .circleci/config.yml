@@ -12,7 +12,7 @@ commands:
       - run:
           name: Load archived docker images
           command: |
-            docker load -i /tmp/workspace/nciseer_girder.tar
+            docker load -i /tmp/workspace/wsi_deid_girder.tar
 jobs:
   test:
     docker:
@@ -30,7 +30,7 @@ jobs:
           command: |
             npm install
             npm run lint
-          working_directory: nci_seer/web_client
+          working_directory: wsi_deid/web_client
   docker-compose:
     working_directory: ~/project
     machine: true
@@ -38,16 +38,16 @@ jobs:
       - checkout
       - run:
           name: Run docker build
-          command: bash -c 'docker build --force-rm -t dsarchive/nciseer .'
+          command: bash -c 'docker build --force-rm -t dsarchive/wsi_deid .'
           working_directory: .
       - run:
           name: Make a local config file.
-          command: bash -c 'cp docker-compose.example.local.yml docker-compose.local.yml && sed -i "s/:stable//g" docker-compose.local.yml && sed -i "s/c:\\\\seer\\\\/\\/tmp\\/seer\\//g" docker-compose.local.yml && mkdir -p /tmp/seer/import && mkdir -p /tmp/seer/export'
-          working_directory: ./devops/nciseer
+          command: bash -c 'cp docker-compose.example.local.yml docker-compose.local.yml && sed -i "s/:stable//g" docker-compose.local.yml && sed -i "s/c:\\\\wsi_deid\\\\/\\/tmp\\/wsi_deid\\//g" docker-compose.local.yml && mkdir -p /tmp/wsi_deid/import && mkdir -p /tmp/wsi_deid/export'
+          working_directory: ./devops/wsi_deid
       - run:
           name: Run docker-compose up
           command: bash -c 'docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d'
-          working_directory: ./devops/nciseer
+          working_directory: ./devops/wsi_deid
       - run:
           name: Wait for girder to respond and be configured
           command: |
@@ -55,17 +55,17 @@ jobs:
       - run:
           name: Archive docker images
           command: |
-            docker save -o nciseer_girder.tar dsarchive/nciseer:latest
+            docker save -o wsi_deid_girder.tar dsarchive/wsi_deid:latest
       - persist_to_workspace:
           root: .
           paths:
-            - ./nciseer_girder.tar
+            - ./wsi_deid_girder.tar
       - store_artifacts:
-          path: ./nciseer_girder.tar
+          path: ./wsi_deid_girder.tar
       - run:
-          name: Report nci_seer version
+          name: Report wsi_deid version
           command: |
-            docker run dsarchive/nciseer bash -c 'python3 -c "import nci_seer;print(nci_seer.__version__)" 2>/dev/null'
+            docker run dsarchive/wsi_deid bash -c 'python3 -c "import wsi_deid;print(wsi_deid.__version__)" 2>/dev/null'
   publish-docker:
     working_directory: ~/project
     machine: true
@@ -76,12 +76,12 @@ jobs:
           name: Publish images to Docker Hub
           command: |
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push dsarchive/nciseer:latest
+              docker push dsarchive/wsi_deid:latest
               if [[ $CIRCLE_TAG =~ ^v.*$ ]]; then
-              docker tag dsarchive/nciseer:latest "dsarchive/nciseer:$CIRCLE_TAG"
-              docker push "dsarchive/nciseer:$CIRCLE_TAG"
-              docker tag dsarchive/nciseer:latest dsarchive/nciseer:stable
-              docker push dsarchive/nciseer:stable
+              docker tag dsarchive/wsi_deid:latest "dsarchive/wsi_deid:$CIRCLE_TAG"
+              docker push "dsarchive/wsi_deid:$CIRCLE_TAG"
+              docker tag dsarchive/wsi_deid:latest dsarchive/wsi_deid:stable
+              docker push dsarchive/wsi_deid:stable
               fi
 
 workflows:

@@ -39,7 +39,7 @@ var ConfigView = View.extend({
     },
     initialize: function () {
         this.breadcrumb = new PluginConfigBreadcrumbWidget({
-            pluginName: 'NCI SEER Pediatic WSI Pilot',
+            pluginName: 'WSI DeID',
             parentView: this
         });
 
@@ -51,8 +51,8 @@ var ConfigView = View.extend({
             'histomicsui.original_folder': { name: 'Original', id: 'g-hui-original-folder' },
             'histomicsui.finished_folder': { name: 'Approved', id: 'g-hui-finished-folder' },
             'histomicsui.reports_folder': { name: 'Reports', id: 'g-hui-reports-folder' },
-            'nciseer.import_path': { name: 'Internal Import Path', id: 'g-nciseer-import-path' },
-            'nciseer.export_path': { name: 'Internal Export Path', id: 'g-nciseer-export-path' }
+            'wsi_deid.import_path': { name: 'Internal Import Path', id: 'g-wsi-deid-import-path' },
+            'wsi_deid.export_path': { name: 'Internal Export Path', id: 'g-wsi-deid-export-path' }
         };
         this._browserWidgetView = {};
         $.when(

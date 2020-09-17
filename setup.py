@@ -23,7 +23,7 @@ def prerelease_local_scheme(version):
 
 
 setup(
-    name='nci_seer',
+    name='wsi_deid',
     use_scm_version={'local_scheme': prerelease_local_scheme},
     setup_requires=['setuptools-scm'],
     author='Kitware, Inc.',
@@ -37,7 +37,7 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8'
     ],
-    description='NCI SEER Pediatric WSI Pilot plugin.',
+    description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
         'girder-homepage',
         'histomicsui',
@@ -53,14 +53,14 @@ setup(
     long_description=readme,
     long_description_content_type='text/x-rst',
     include_package_data=True,
-    keywords='girder-plugin, nci_seer',
+    keywords='girder-plugin, wsi_deid',
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/DigitalSlideArchive',
     zip_safe=False,
     python_requires='>=3.6',
     entry_points={
         'girder.plugin': [
-            'nci_seer = nci_seer:GirderPlugin',
+            'wsi_deid = wsi_deid:GirderPlugin',
         ],
     },
 )

@@ -4,7 +4,7 @@ import router from '@girder/core/router';
 import { registerPluginNamespace } from '@girder/core/pluginUtils';
 import { exposePluginConfig } from '@girder/core/utilities/PluginUtils';
 
-import * as NCISeer from './index';
+import * as WSIDeID from './index';
 
 // import modules for side effects
 import './views/GlobalNavView';
@@ -13,13 +13,13 @@ import './views/ItemView';
 
 import ConfigView from './views/ConfigView';
 
-const pluginName = 'nci_seer';
+const pluginName = 'wsi_deid';
 const configRoute = `plugins/${pluginName}/config`;
 
-registerPluginNamespace('nci_seer', NCISeer);
+registerPluginNamespace('wsi_deid', WSIDeID);
 
 exposePluginConfig(pluginName, configRoute);
 
-router.route(configRoute, 'NCISeerConfig', function () {
+router.route(configRoute, 'WSIDeIDConfig', function () {
     events.trigger('g:navigateTo', ConfigView);
 });

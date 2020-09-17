@@ -4,7 +4,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
-from .rest import NCISeerResource
+from .rest import WSIDeIDResource
 
 
 try:
@@ -31,8 +31,8 @@ def validateSettingsFolder(doc):
 
 
 @setting_utilities.validator({
-    PluginSettings.NCISEER_IMPORT_PATH,
-    PluginSettings.NCISEER_EXPORT_PATH,
+    PluginSettings.WSI_DEID_IMPORT_PATH,
+    PluginSettings.WSI_DEID_EXPORT_PATH,
 })
 def validateSettingsImportExport(doc):
     if not doc.get('value', None):
@@ -40,8 +40,8 @@ def validateSettingsImportExport(doc):
 
 
 class GirderPlugin(plugin.GirderPlugin):
-    DISPLAY_NAME = 'NCI SEER Pediatic WSI Pilot'
+    DISPLAY_NAME = 'WSI DeID'
     CLIENT_SOURCE_PATH = 'web_client'
 
     def load(self, info):
-        info['apiRoot'].nciseer = NCISeerResource()
+        info['apiRoot'].wsi_deid = WSIDeIDResource()

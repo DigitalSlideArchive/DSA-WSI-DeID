@@ -1,8 +1,8 @@
-===============================================
-NCI SEER Pediatric WSI Pilot via Docker Compose
-===============================================
+===========================
+WSI DeID via Docker Compose
+===========================
 
-This directory contains a docker-compose set up for the NCI SEER Pediatic WSI Pilot.
+This directory contains a docker-compose set up for the WSI DeID project.
 
 Database files and local assertsore files are persistently stored in docker volumes.  You may want to extend the docker-compose.yml file to mount external file system directories for easier import and export.
 
@@ -18,6 +18,6 @@ To start the program::
 
     docker-compose up
 
-Note that this does not add any sample files.  By default, it creates an ``admin`` user with a password of ``password``.  The ``SEER`` collection is created with a set of standard workflow folders.
+Note that this does not add any sample files.  By default, it creates an ``admin`` user with a password of ``password``.  The ``WSI DeID`` collection is created with a set of standard workflow folders.
 
 

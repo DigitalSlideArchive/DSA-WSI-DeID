@@ -6,5 +6,5 @@ class PluginSettings(object):
     HUI_ORIGINAL_FOLDER = 'histomicsui.original_folder'
     HUI_FINISHED_FOLDER = 'histomicsui.finished_folder'
     HUI_REPORTS_FOLDER = 'histomicsui.reports_folder'
-    NCISEER_IMPORT_PATH = 'nciseer.import_path'
-    NCISEER_EXPORT_PATH = 'nciseer.export_path'
+    WSI_DEID_IMPORT_PATH = 'wsi_deid.import_path'
+    WSI_DEID_EXPORT_PATH = 'wsi_deid.export_path'
