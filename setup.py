@@ -46,7 +46,7 @@ setup(
         'pandas',
         'python-magic',
         'pyvips',
-        'tifftools',
+        'tifftools>=1.0.0.dev42',
         'xlrd',
     ],
     license='Apache Software License 2.0',
