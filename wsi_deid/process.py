@@ -355,7 +355,7 @@ def redact_tiff_tags(ifds, redactList, title):
                 if redactedTags[idx][tag] is None:
                     del ifd['tags'][tag]
                 else:
-                    taginfo['type'] = tifftools.Datatype.ASCII
+                    taginfo['datatype'] = tifftools.Datatype.ASCII
                     taginfo['data'] = redactedTags[idx][tag]
 
 
@@ -395,7 +395,7 @@ def add_deid_metadata(item, ifds):
     :param ifds: a list of ifd info records.  Tags may be added or modified.
     """
     ifds[0]['tags'][tifftools.Tag.Software.value] = {
-        'type': tifftools.Datatype.ASCII,
+        'datatype': tifftools.Datatype.ASCII,
         'data': get_deid_field(item),
     }
 
@@ -430,7 +430,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         raise Exception('Aperio TIFF directories are not in the expected order.')
     # Set new image description
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'type': tifftools.Datatype.ASCII,
+        'datatype': tifftools.Datatype.ASCII,
         'data': imageDescription,
     }
     # redact or adjust thumbnail
@@ -457,7 +457,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     labelDescription = aperioValues[0].split('\n', 1)[1] + '\nlabel %dx%d' % (
         labelImage.width, labelImage.height)
     labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'type': tifftools.Datatype.ASCII,
+        'datatype': tifftools.Datatype.ASCII,
         'data': labelDescription
     }
     ifds.extend(labelinfo['ifds'])
@@ -507,11 +507,11 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
     propertyMap = ''.join(propertyList)
     for ifd in ifds:
         ifd['tags'][tifftools.Tag.NDPI_REFERENCE.value] = {
-            'type': tifftools.Datatype.ASCII,
+            'datatype': tifftools.Datatype.ASCII,
             'data': title,
         }
         ifd['tags'][propertyTag] = {
-            'type': tifftools.Datatype.ASCII,
+            'datatype': tifftools.Datatype.ASCII,
             'data': propertyMap,
         }
     outputPath = os.path.join(tempdir, 'hamamatsu.ndpi')
@@ -662,7 +662,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
     labelinfo = tifftools.read_tiff(labelPath)
     labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'type': tifftools.Datatype.ASCII,
+        'datatype': tifftools.Datatype.ASCII,
         'data': 'Label'
     }
     ifds.extend(labelinfo['ifds'])
@@ -686,7 +686,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
         'ObjectType': 'DPScannedImage',
     })
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'type': tifftools.Datatype.ASCII,
+        'datatype': tifftools.Datatype.ASCII,
         'data': xml.etree.ElementTree.tostring(
             dictToEtree(xmldict), encoding='utf8', method='xml').decode(),
     }
