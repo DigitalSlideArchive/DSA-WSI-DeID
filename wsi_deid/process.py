@@ -419,8 +419,8 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     aperioValues = aperio_value_list(item, redactList, title)
     imageDescription = '|'.join(aperioValues)
     # We expect aperio to have the full resolution image in directory 0, the
-    # thumbnail in directory 1, lower resolutions starting in 2, and macro and
-    # label images in other directories.  Confirm this -- our tiff reader will
+    # thumbnail in directory 1, lower resolutions starting in 2, and label and
+    # macro images in other directories.  Confirm this -- our tiff reader will
     # report the directories used for the full resolution.
     tiffSource = large_image_source_tiff.girder_source.TiffGirderTileSource(item)
     mainImageDir = [dir._directoryNum for dir in tiffSource._tiffDirectories[::-1] if dir]
@@ -428,6 +428,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     if mainImageDir != [d + (1 if d and 'thumbnail' in associatedImages else 0)
                         for d in range(len(mainImageDir))]:
         raise Exception('Aperio TIFF directories are not in the expected order.')
+    firstAssociatedIdx = max(mainImageDir) + 1
     # Set new image description
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
         'datatype': tifftools.Datatype.ASCII,
@@ -437,6 +438,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     if 'thumbnail' in associatedImages:
         if 'thumbnail' in redactList['images']:
             ifds.pop(1)
+            firstAssociatedIdx -= 1
         else:
             thumbnailComment = ifds[1]['tags'][tifftools.Tag.ImageDescription.value]['data']
             thumbnailDescription = '|'.join(thumbnailComment.split('|', 1)[0:1] + aperioValues[1:])
@@ -460,7 +462,11 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         'datatype': tifftools.Datatype.ASCII,
         'data': labelDescription
     }
-    ifds.extend(labelinfo['ifds'])
+    labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
+        'data': [1], 'datatype': tifftools.Datatype.LONG}
+    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDepth] = {
+        'data': [1], 'datatype': tifftools.Datatype.SHORT}
+    ifds[firstAssociatedIdx:firstAssociatedIdx] = labelinfo['ifds']
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
@@ -665,6 +671,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
         'datatype': tifftools.Datatype.ASCII,
         'data': 'Label'
     }
+    labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
+        'data': [1], 'datatype': tifftools.Datatype.LONG}
     ifds.extend(labelinfo['ifds'])
     jpeg = BytesIO()
     labelImage.save(jpeg, format='jpeg', quality=90)
@@ -696,7 +704,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
 
 
 def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
-                       background='#000000', textColor='#ffffff'):
+                       background='#000000', textColor='#ffffff', square=True):
     """
     Add a title to an image.  If the image doesn't exist, a new image is made
     the minimum width and appropriate height.  If the image does exist, a bar
@@ -711,6 +719,7 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
     :param background: the background color of the title and any necessary
         pillarbox.
     :param textColor: the color of the title text.
+    :param square: if True, output a square image.
     :returns: a PIL image.
     """
     mode = 'RGB'
@@ -740,6 +749,11 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         if iter != 1 and (textW > targetW * 0.95 or textW < targetW * 0.85):
             fontSize = fontSize * targetW * 0.9 / textW
     titleH = int(math.ceil(textH * 1.25))
+    if square:
+        if targetW < h + titleH:
+            targetW = h + titleH
+        else:
+            titleH = targetW - h
     if previouslyAdded and w == targetW and h >= titleH:
         newImage = image.copy()
     else:
