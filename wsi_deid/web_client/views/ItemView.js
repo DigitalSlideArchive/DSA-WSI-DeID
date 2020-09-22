@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import _ from 'underscore';
 
 // import { AccessType } from '@girder/core/constants';
 import events from '@girder/core/events';
@@ -11,11 +12,73 @@ import ItemViewTemplate from '../templates/ItemView.pug';
 import '../stylesheets/ItemView.styl';
 import { goToNextUnprocessedItem } from '../utils';
 
+let PHIPIITypes = [{
+    category: 'patient_identifier',
+    text: 'Patient Identifiers',
+    types: [
+        { key: 'patient_name', text: 'Patient Name' },
+        { key: 'patient_maiden_name', text: 'Patient Maiden Name' },
+        { key: 'mother_maiden_name', text: 'Mother\'s Maiden Name' },
+        { key: 'family_name', text: 'Family Member\'s Name' },
+        { key: 'face_photograph', text: 'Full Face Photograph ' },
+        { key: 'patient_ssn', text: 'Social Security Number' },
+        { key: 'patient_dob', text: 'Date of Birth ' },
+        { key: 'patient_email', text: 'Patient E-mail Address' },
+        { key: 'patient_phone', text: 'Patient Phone or Fax Number' }
+    ]
+}, {
+    category: 'patient_demographic',
+    text: 'Patient Demographics',
+    types: [
+        { key: 'patient_age', text: 'Patient Age' },
+        { key: 'patient_location', text: 'Patient Geographic Location ' },
+        { key: 'patient_birth_location', text: 'Patient Location of Birth' }
+    ]
+}, {
+    category: 'facility_information',
+    text: 'Facility/Physician Information',
+    types: [
+        { key: 'facility_name_addr', text: 'Facility Name or Address' },
+        { key: 'laboratory_name_addr', text: 'Laboratory Name or Address ' },
+        { key: 'physician_name_addr', text: 'Physician Name or Address ' },
+        { key: 'admission_date', text: 'Admission Date' },
+        { key: 'test_date', text: 'Test, Procedure, or Specimen Date' },
+        { key: 'service_date', text: 'Date of Service' },
+        { key: 'facility_phone', text: 'Facility Phone or Fax Number' },
+        { key: 'laboratory_phone', text: 'Laboratory Phone or Fax Number' },
+        { key: 'ip_address', text: 'Internet Protocol (IP) addresses' },
+        { key: 'url', text: 'Web Universal Resource Locators (URLs)' }
+    ]
+}, {
+    category: 'other_personal',
+    text: 'Other Personal Information',
+    types: [
+        { key: 'medical_record_number', text: 'Medical Record Number' },
+        { key: 'financial_number', text: 'Financial Number ' },
+        { key: 'account_number', text: 'Account Number ' },
+        { key: 'beneficiary_number', text: 'Health Plan Beneficiary Number ' },
+        { key: 'device_identifier', text: 'Device Identifiers/Serial Numbers' }
+    ]
+}, {
+    category: 'other',
+    text: 'Other',
+    types: [
+        { key: 'other', text: 'Other' }
+    ]
+}];
+
 wrap(ItemView, 'render', function (render) {
     const getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
         redactList.metadata = redactList.metadata || {};
         redactList.images = redactList.images || {};
+        ['images', 'metadata'].forEach((main) => {
+            for (let key in redactList[main]) {
+                if (!_.isObject(redactList[main][key]) || redactList[main][key] === null) {
+                    redactList[main][key] = { value: redactList[main][key] };
+                }
+            }
+        });
         return redactList;
     };
 
@@ -24,13 +87,18 @@ wrap(ItemView, 'render', function (render) {
         const target = $(event.currentTarget);
         const keyname = target.attr('keyname');
         const category = target.attr('category');
-        const undo = target.hasClass('undo');
+        const reason = target.val();
         const redactList = getRedactList();
         let isRedacted = redactList[category][keyname] !== undefined;
-        if (isRedacted && undo) {
+        if (isRedacted && (!reason || reason === 'none')) {
             delete redactList[category][keyname];
-        } else if (!isRedacted && !undo) {
-            redactList[category][keyname] = null;
+            isRedacted = false;
+        } else if (!isRedacted || redactList[category][keyname].reason !== reason) {
+            redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') };
+            isRedacted = true;
+        } else {
+            // no change
+            return;
         }
         restRequest({
             method: 'PUT',
@@ -43,8 +111,6 @@ wrap(ItemView, 'render', function (render) {
             this.model.set('meta', {});
         }
         this.model.get('meta').redactList = redactList;
-        isRedacted = !isRedacted;
-        target.toggleClass('undo');
         target.closest('td').toggleClass('redacted', isRedacted);
         target.closest('td').find('.redact-replacement').remove();
         return false;
@@ -61,6 +127,35 @@ wrap(ItemView, 'render', function (render) {
             return false;
         }
         return true;
+    };
+
+    const addRedactButton = (parentElem, keyname, redactRecord, category) => {
+        let elem = $('<select class="g-hui-redact"/>');
+        elem.attr({
+            keyname: keyname,
+            category: category,
+            title: 'Redact this ' + category
+        });
+        elem.append($('<option value="none">Keep (do not redact)</option>'));
+        let matched = false;
+        PHIPIITypes.forEach((cat) => {
+            let optgroup = $('<optgroup/>');
+            optgroup.attr({ label: cat.text });
+            cat.types.forEach((phitype) => {
+                let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
+                if (redactRecord && redactRecord.reason === phitype.key) {
+                    opt.attr('selected', 'selected');
+                    matched = true;
+                }
+                optgroup.append(opt);
+            });
+            elem.append(optgroup);
+        });
+        if (!matched && redactRecord) {
+            $('[value="other"]', elem).attr('selected', 'selected');
+        }
+        elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
+        parentElem.append(elem);
     };
 
     const hideField = (keyname) => {
@@ -99,16 +194,12 @@ wrap(ItemView, 'render', function (render) {
             if (showControls) {
                 let isRedacted = redactList.metadata[keyname] !== undefined;
                 let redactButtonAllowed = true;
-                if (redactList.metadata[keyname]) {
-                    elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname]));
+                if (isRedacted && redactList.metadata[keyname].value) {
+                    elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname].value));
                     redactButtonAllowed = false;
                 }
                 if (showRedactButton(keyname) && redactButtonAllowed) {
-                    elem.append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
-                        keyname: keyname,
-                        category: 'metadata',
-                        title: 'Toggle redacting this metadata'
-                    }));
+                    addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata');
                 }
                 elem.toggleClass('redacted', isRedacted);
             }
@@ -121,15 +212,15 @@ wrap(ItemView, 'render', function (render) {
             this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
                 elem = $(elem);
                 let keyname = elem.attr('auximage');
-                let isRedacted = redactList.images[keyname] !== undefined;
                 elem.find('.g-hui-redact').remove();
-                elem.find('.g-widget-auximage-title').append($('<a class="g-hui-redact' + (isRedacted ? ' undo' : '') + '"><span>Redact</span></a>').attr({
-                    keyname: keyname,
-                    category: 'images',
-                    title: 'Toggle redacting this image'
-                }));
+                addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images');
             });
-            this.events['click .g-hui-redact'] = flagRedaction;
+            this.events['input .g-hui-redact'] = flagRedaction;
+            this.events['change .g-hui-redact'] = flagRedaction;
+            this.events['click .g-hui-redact-label'] = (event) => {
+                event.stopPropagation();
+                return false;
+            };
             this.delegateEvents();
         }
     };

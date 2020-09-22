@@ -1,12 +1,13 @@
-.g-hui-redact
+.g-hui-redact-label
   text-transform uppercase
   font-weight bold
   font-size 12px
   margin-left 10px
-  &.undo span
-    text-decoration-line line-through
-    text-decoration-color black
-    text-decoration-style solid
+  display inline-block
+  .g-hui-redact
+    margin-left 5px
+    font-weight normal
+    text-transform none
 
 .large_image_metadata_value.redacted
   text-decoration-line line-through
@@ -16,6 +17,8 @@
     margin-left 10px
     text-decoration-line none
     display inline-block
+  .g-hui-redact-label
+    text-decoration-line none
 
 .g-widget-metadata-container.workflow .g-workflow-button
   margin 10px
