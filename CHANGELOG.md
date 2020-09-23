@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+### Features
+- Specify a reason when redacting metadata and images
+
 ### Changes
-- Renamed to WSI DeId / DSA-WSI-DeID
+- Renamed to WSI DeId / DSA-WSI-DeID (#112)
+- Updated homepage (#113)
+
+### Bug Fixes
+- Make output compatible with Aperio's ImageScope (#119)
 
 ## Version 1.1.1
 
