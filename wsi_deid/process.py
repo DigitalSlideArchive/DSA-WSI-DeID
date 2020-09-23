@@ -753,7 +753,7 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         if iter != 1 and (textW > targetW * 0.95 or textW < targetW * 0.85):
             fontSize = fontSize * targetW * 0.9 / textW
     titleH = int(math.ceil(textH * 1.25))
-    if square:
+    if square and (w != h or (not previouslyAdded or w != targetW or h < titleH)):
         if targetW < h + titleH:
             targetW = h + titleH
         else:
