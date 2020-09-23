@@ -106,7 +106,7 @@ def get_standard_redactions(item, title):
         tag = tifftools.Tag[key].value
         if tag in ifds[0]['tags']:
             redactList['metadata']['internal;openslide;tiff.%s' % key] = {
-                'value': None, 'reason': 'automatic'}
+                'value': None, 'automatic': True}
     return redactList
 
 
