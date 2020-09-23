@@ -3,11 +3,15 @@
 ## Unreleased
 
 ### Features
-- Specify a reason when redacting metadata and images
+- Specify a reason when redacting metadata and images (#120)
+
+### Improvements
+- Indicate when images will be redacted (#122)
 
 ### Changes
 - Renamed to WSI DeId / DSA-WSI-DeID (#112)
 - Updated homepage (#113)
+- Changed export report format (#123)
 
 ### Bug Fixes
 - Make output compatible with Aperio's ImageScope (#119)

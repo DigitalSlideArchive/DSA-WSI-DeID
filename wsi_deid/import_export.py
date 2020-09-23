@@ -5,6 +5,8 @@ import pandas as pd
 import shutil
 import tempfile
 
+import dateutil.parser
+
 from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
@@ -397,35 +399,85 @@ def exportReport(ctx, exportPath, report, user):
         'quarantined': 'Quarantined',
         'rejected': 'Rejected',
     }
+    curtime = datetime.datetime.utcnow()
     dataList = []
     for row in report:
         row['item']['meta'].setdefault('deidUpload', {})
-        data = {}
+        data = {'Date_DEID_Export': curtime}
         data.update(row['item']['meta']['deidUpload'])
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
         if 'redacted' in row['item']['meta']:
             try:
                 info = row['item']['meta']['redacted'][-1]
+                data['Last_DEID_RunDate'] = dateutil.parser.parse(info['time'])
                 data['ScannerMake'] = info['details']['format'].capitalize()
                 data['ScannerModel'] = info['details']['model']
-                data['ByteSize_Input'] = row['item']['meta']['redacted'][0]['originalSize']
-                data['ByteSize_Output'] = info['redactedSize']
-                data['Total_MetadataFields'] = info[
-                    'details']['fieldCount']['metadata']['redactable']
-                data['PHIPII_Presence'] = 'yes' if (
+                data['ByteSize_InboundWSI'] = row['item']['meta']['redacted'][0]['originalSize']
+                data['ByteSize_ExportedWSI'] = info['redactedSize']
+                data['Total_VendorMetadataFields'] = info[
+                    'details']['fieldCount']['metadata']['redactable'] + info[
+                    'details']['fieldCount']['metadata']['automatic']
+                data['Total_VendorMetadataFields_ModifiedOrCreated'] = info[
+                    'details']['fieldCount']['metadata']['automatic'] + info[
+                    'details']['redactionCount']['metadata']
+                data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ' '.join(sorted(
+                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
+                    if not v.get('reason'))) or 'N/A'
+                data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'yes' if (
                     info['details']['redactionCount']['images'] or
                     info['details']['redactionCount']['metadata']) else 'no'
+                data['Total_Addtl_UserIdentiedPHIPII_MetadataFields'] = info[
+                    'details']['redactionCount']['metadata']
+                data['Addtl_UserIdentiedPHIPII_MetadataFields'] = ' '.join(sorted(
+                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
+                    if v.get('reason'))) or 'N/A'
+                data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ' '.join(sorted(set(
+                    v['category'] for k, v in info['redactList']['metadata'].items()
+                    if v.get('reason') and v.get('category')))) or 'N/A'
+                data['Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields'] = ' '.join(sorted(
+                    set(
+                        v['reason'] for k, v in info['redactList']['metadata'].items()
+                        if v.get('reason')))) or 'N/A'
+                data['Total_VendorImageComponents'] = info[
+                    'details']['fieldCount']['images']
+                data['Total_UserIdentiedPHIPII_ImageComponents'] = info[
+                    'details']['redactionCount']['images']
+                data['UserIdentiedPHIPII_ImageComponents'] = ' '.join(sorted(
+                    k for k, v in info['redactList']['images'].items()
+                    if v.get('reason'))) or 'N/A'
+                data['UserIdentifiedPHIPII_Category_ImageComponents'] = ' '.join(sorted(set(
+                    v['category'] for k, v in info['redactList']['images'].items()
+                    if v.get('reason') and v.get('category')))) or 'N/A'
+                data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ' '.join(sorted(set(
+                    v['reason'] for k, v in info['redactList']['images'].items()
+                    if v.get('reason')))) or 'N/A'
             except KeyError:
                 pass
         dataList.append(data)
     df = pd.DataFrame(dataList, columns=[
+        'Last_DEID_RunDate', 'Date_DEID_Export',
         'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
-        'InputFileName',
-        'DSAImageStatus',
         'ScannerMake', 'ScannerModel',
-        'ByteSize_Input', 'ByteSize_Output',
-        'Total_MetadataFields',
-        'PHIPII_Presence',
+        'DSAImageStatus',
+        'ByteSize_InboundWSI',
+        'ByteSize_ExportedWSI',
+        'Total_VendorMetadataFields',
+        'Total_VendorMetadataFields_ModifiedOrCreated',
+        # Space separated list of redacted fields names (chunk after last ;)
+        'Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted',
+        'Addtl_UserIdentifiedPHIPII_BINARY',          # no/yes
+        'Total_Addtl_UserIdentiedPHIPII_MetadataFields',
+        # N/A is none, otherwise space separated field names (chunk after ;)
+        'Addtl_UserIdentiedPHIPII_MetadataFields',
+        # category list or N/A
+        'Addtl_UserIdentifiedPHIPII_Category_MetadataFields',
+        # reason list or N/A
+        'Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields',
+        'Total_VendorImageComponents',
+        'Total_UserIdentiedPHIPII_ImageComponents',
+        'UserIdentiedPHIPII_ImageComponents',
+        'UserIdentifiedPHIPII_Category_ImageComponents',
+        'UserIdentifiedPHIPII_DetailedType_ImageComponents',
     ])
     exportName = 'DeID Export %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     path = os.path.join(exportPath, exportName)
