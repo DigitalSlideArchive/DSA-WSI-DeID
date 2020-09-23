@@ -20,6 +20,20 @@
   .g-hui-redact-label
     text-decoration-line none
 
+.g-widget-auximage-image
+  position relative
+.g-widget-auximage.redacted
+  .g-widget-auximage-image:after
+    position absolute
+    top 0
+    bottom 0
+    left 0
+    right 0
+    content "\a0"
+    background linear-gradient(to top left, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%), linear-gradient(to top right, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%)
+  .g-widget-auximage-image img
+    opacity 0.5
+
 .g-widget-metadata-container.workflow .g-workflow-button
   margin 10px
 

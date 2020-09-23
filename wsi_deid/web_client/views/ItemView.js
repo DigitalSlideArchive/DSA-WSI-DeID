@@ -93,7 +93,7 @@ wrap(ItemView, 'render', function (render) {
         if (isRedacted && (!reason || reason === 'none')) {
             delete redactList[category][keyname];
             isRedacted = false;
-        } else if (!isRedacted || redactList[category][keyname].reason !== reason) {
+        } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
             redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') };
             isRedacted = true;
         } else {
@@ -111,8 +111,9 @@ wrap(ItemView, 'render', function (render) {
             this.model.set('meta', {});
         }
         this.model.get('meta').redactList = redactList;
-        target.closest('td').toggleClass('redacted', isRedacted);
-        target.closest('td').find('.redact-replacement').remove();
+        target.closest('td.large_image_metadata_value').toggleClass('redacted', isRedacted);
+        target.closest('td.large_image_metadata_value').find('.redact-replacement').remove();
+        target.closest('.g-widget-auximage').toggleClass('redacted', isRedacted);
         return false;
     };
 
@@ -214,6 +215,8 @@ wrap(ItemView, 'render', function (render) {
                 let keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
                 addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images');
+                let isRedacted = redactList.images[keyname] !== undefined;
+                elem.toggleClass('redacted', isRedacted);
             });
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
