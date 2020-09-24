@@ -269,6 +269,12 @@ wrap(ItemView, 'render', function (render) {
             }).done((resp) => {
                 if (resp) {
                     addRedactionControls(resp === 'ingest' || resp === 'quarantine');
+                    /* Start with the metadata section collapsed */
+                    this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
+                    this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
+                    /* Don't show the annotation list */
+                    this.$el.find('.g-annotation-list-container').remove();
+                    /* Show workflow buttons */
                     this.$el.append(ItemViewTemplate({
                         project_folder: resp
                     }));

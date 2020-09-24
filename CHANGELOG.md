@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+### Improvements
+- Start with Girder meta section collapsed (#125)
+
 ### Changes
-- Change redaction reasons and export report format
+- Change redaction reasons and export report format (#124)
 
 ## Version 1.2.0
 
