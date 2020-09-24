@@ -9,7 +9,7 @@ function performAction(action) {
     const actions = {
         ingest: { done: 'Import complete.', fail: 'Failed to import.' },
         export: { done: 'Recent export complete.', fail: 'Failed to export recent items.' },
-        exportall: { done: 'Export all complete.', fail: 'Failed to export all item.' }
+        exportall: { done: 'Export all complete.', fail: 'Failed to export all items.' }
     };
 
     restRequest({

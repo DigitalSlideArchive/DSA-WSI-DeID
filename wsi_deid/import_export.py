@@ -343,7 +343,7 @@ def exportItems(ctx, user=None, all=False):
     return reportSummary(report)
 
 
-def exportNoteRejected(report, user, all):
+def exportNoteRejected(report, user, all, allFiles=True):
     """
     Note items that are rejected or quarantined, collecting them for a report.
 
@@ -351,12 +351,20 @@ def exportNoteRejected(report, user, all):
     :param user: the user triggering this.
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
+    :param allFiles: True to report on all files in all folders.  False to only
+        report rejected and quarantined items.
     """
     from . import __version__
 
-    for status, settingkey in [
-            ('rejected', PluginSettings.HUI_REJECTED_FOLDER),
-            ('quarantined', PluginSettings.HUI_QUARANTINE_FOLDER)]:
+    shortList = [
+        ('rejected', PluginSettings.HUI_REJECTED_FOLDER),
+        ('quarantined', PluginSettings.HUI_QUARANTINE_FOLDER),
+    ]
+    longList = shortList + [
+        ('imported', PluginSettings.HUI_INGEST_FOLDER),
+        ('processed', PluginSettings.HUI_PROCESSED_FOLDER),
+    ]
+    for status, settingkey in (shortList if not allFiles else longList):
         folderId = Setting().get(settingkey)
         folder = Folder().load(folderId, force=True, exc=True)
         for _, file in Folder().fileList(folder, user, data=False):
@@ -398,18 +406,22 @@ def exportReport(ctx, exportPath, report, user):
         'redacted': 'Approved',
         'quarantined': 'Quarantined',
         'rejected': 'Rejected',
+        'imported': 'AvailableToProcess',
+        'processed': 'ReadyForApproval',
+        'different': 'FailedToExport',
     }
     curtime = datetime.datetime.utcnow()
     dataList = []
+    timeformat = '%m%d%Y: %H%M%S'
     for row in report:
         row['item']['meta'].setdefault('deidUpload', {})
-        data = {'Date_DEID_Export': curtime}
+        data = {'Date_DEID_Export': curtime.strftime(timeformat)}
         data.update(row['item']['meta']['deidUpload'])
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
         if 'redacted' in row['item']['meta']:
             try:
                 info = row['item']['meta']['redacted'][-1]
-                data['Last_DEID_RunDate'] = dateutil.parser.parse(info['time'])
+                data['Last_DEID_RunDate'] = dateutil.parser.parse(info['time']).strftime(timeformat)
                 data['ScannerMake'] = info['details']['format'].capitalize()
                 data['ScannerModel'] = info['details']['model']
                 data['ByteSize_InboundWSI'] = row['item']['meta']['redacted'][0]['originalSize']
@@ -417,40 +429,39 @@ def exportReport(ctx, exportPath, report, user):
                 data['Total_VendorMetadataFields'] = info[
                     'details']['fieldCount']['metadata']['redactable'] + info[
                     'details']['fieldCount']['metadata']['automatic']
-                data['Total_VendorMetadataFields_ModifiedOrCreated'] = info[
-                    'details']['fieldCount']['metadata']['automatic'] + info[
-                    'details']['redactionCount']['metadata']
-                data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ' '.join(sorted(
-                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
-                    if not v.get('reason'))) or 'N/A'
-                data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'yes' if (
+                data['Total_VendorMetadataFields_ModifiedOrCreated'] = len(
+                    info['redactList']['metadata'])
+                data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ', '.join(sorted(
+                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items())
+                ) or 'N/A'
+                data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'Yes' if (
                     info['details']['redactionCount']['images'] or
-                    info['details']['redactionCount']['metadata']) else 'no'
-                data['Total_Addtl_UserIdentiedPHIPII_MetadataFields'] = info[
+                    info['details']['redactionCount']['metadata']) else 'No'
+                data['Total_Addtl_UserIdentifiedPHIPII_MetadataFields'] = info[
                     'details']['redactionCount']['metadata']
-                data['Addtl_UserIdentiedPHIPII_MetadataFields'] = ' '.join(sorted(
+                data['Addtl_UserIdentifiedPHIPII_MetadataFields'] = ', '.join(sorted(
                     k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
                     if v.get('reason'))) or 'N/A'
-                data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ' '.join(sorted(set(
+                data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ', '.join(sorted(set(
                     v['category'] for k, v in info['redactList']['metadata'].items()
                     if v.get('reason') and v.get('category')))) or 'N/A'
-                data['Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields'] = ' '.join(sorted(
+                data['Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields'] = ', '.join(sorted(
                     set(
                         v['reason'] for k, v in info['redactList']['metadata'].items()
-                        if v.get('reason')))) or 'N/A'
+                        if v.get('reason') and v.get('category') == 'Personal_Info'))) or 'N/A'
                 data['Total_VendorImageComponents'] = info[
                     'details']['fieldCount']['images']
-                data['Total_UserIdentiedPHIPII_ImageComponents'] = info[
+                data['Total_UserIdentifiedPHIPII_ImageComponents'] = info[
                     'details']['redactionCount']['images']
-                data['UserIdentiedPHIPII_ImageComponents'] = ' '.join(sorted(
+                data['UserIdentifiedPHIPII_ImageComponents'] = ' '.join(sorted(
                     k for k, v in info['redactList']['images'].items()
                     if v.get('reason'))) or 'N/A'
-                data['UserIdentifiedPHIPII_Category_ImageComponents'] = ' '.join(sorted(set(
+                data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted(set(
                     v['category'] for k, v in info['redactList']['images'].items()
                     if v.get('reason') and v.get('category')))) or 'N/A'
-                data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ' '.join(sorted(set(
+                data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ', '.join(sorted(set(
                     v['reason'] for k, v in info['redactList']['images'].items()
-                    if v.get('reason')))) or 'N/A'
+                    if v.get('reason') and v.get('category') == 'Personal_Info'))) or 'N/A'
             except KeyError:
                 pass
         dataList.append(data)
@@ -466,16 +477,16 @@ def exportReport(ctx, exportPath, report, user):
         # Space separated list of redacted fields names (chunk after last ;)
         'Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted',
         'Addtl_UserIdentifiedPHIPII_BINARY',          # no/yes
-        'Total_Addtl_UserIdentiedPHIPII_MetadataFields',
+        'Total_Addtl_UserIdentifiedPHIPII_MetadataFields',
         # N/A is none, otherwise space separated field names (chunk after ;)
-        'Addtl_UserIdentiedPHIPII_MetadataFields',
+        'Addtl_UserIdentifiedPHIPII_MetadataFields',
         # category list or N/A
         'Addtl_UserIdentifiedPHIPII_Category_MetadataFields',
         # reason list or N/A
         'Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields',
         'Total_VendorImageComponents',
-        'Total_UserIdentiedPHIPII_ImageComponents',
-        'UserIdentiedPHIPII_ImageComponents',
+        'Total_UserIdentifiedPHIPII_ImageComponents',
+        'UserIdentifiedPHIPII_ImageComponents',
         'UserIdentifiedPHIPII_Category_ImageComponents',
         'UserIdentifiedPHIPII_DetailedType_ImageComponents',
     ])

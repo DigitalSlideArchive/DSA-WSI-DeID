@@ -13,58 +13,30 @@ import '../stylesheets/ItemView.styl';
 import { goToNextUnprocessedItem } from '../utils';
 
 let PHIPIITypes = [{
-    category: 'patient_identifier',
-    text: 'Patient Identifiers',
+    category: 'Personal_Info',
+    text: 'Personal Information',
     types: [
-        { key: 'patient_name', text: 'Patient Name' },
-        { key: 'patient_maiden_name', text: 'Patient Maiden Name' },
-        { key: 'mother_maiden_name', text: 'Mother\'s Maiden Name' },
-        { key: 'family_name', text: 'Family Member\'s Name' },
-        { key: 'face_photograph', text: 'Full Face Photograph ' },
-        { key: 'patient_ssn', text: 'Social Security Number' },
-        { key: 'patient_dob', text: 'Date of Birth ' },
-        { key: 'patient_email', text: 'Patient E-mail Address' },
-        { key: 'patient_phone', text: 'Patient Phone or Fax Number' }
+        { key: 'Patient_Name', text: 'Patient Name' },
+        { key: 'Patient_DOB', text: 'Date of Birth ' },
+        { key: 'SSN', text: 'Social Security Number' },
+        { key: 'Other', text: 'Other' }
     ]
 }, {
-    category: 'patient_demographic',
-    text: 'Patient Demographics',
-    types: [
-        { key: 'patient_age', text: 'Patient Age' },
-        { key: 'patient_location', text: 'Patient Geographic Location ' },
-        { key: 'patient_birth_location', text: 'Patient Location of Birth' }
-    ]
+    category: 'Demographics',
+    key: 'Demographics',
+    text: 'Demographics'
 }, {
-    category: 'facility_information',
-    text: 'Facility/Physician Information',
-    types: [
-        { key: 'facility_name_addr', text: 'Facility Name or Address' },
-        { key: 'laboratory_name_addr', text: 'Laboratory Name or Address ' },
-        { key: 'physician_name_addr', text: 'Physician Name or Address ' },
-        { key: 'admission_date', text: 'Admission Date' },
-        { key: 'test_date', text: 'Test, Procedure, or Specimen Date' },
-        { key: 'service_date', text: 'Date of Service' },
-        { key: 'facility_phone', text: 'Facility Phone or Fax Number' },
-        { key: 'laboratory_phone', text: 'Laboratory Phone or Fax Number' },
-        { key: 'ip_address', text: 'Internet Protocol (IP) addresses' },
-        { key: 'url', text: 'Web Universal Resource Locators (URLs)' }
-    ]
+    category: 'Facility_Physician',
+    key: 'Facility_Physician',
+    text: 'Facility/Physician Information'
 }, {
-    category: 'other_personal',
-    text: 'Other Personal Information',
-    types: [
-        { key: 'medical_record_number', text: 'Medical Record Number' },
-        { key: 'financial_number', text: 'Financial Number ' },
-        { key: 'account_number', text: 'Account Number ' },
-        { key: 'beneficiary_number', text: 'Health Plan Beneficiary Number ' },
-        { key: 'device_identifier', text: 'Device Identifiers/Serial Numbers' }
-    ]
+    category: 'Other_Personal',
+    key: 'Other_Personal',
+    text: 'Other Personal Information'
 }, {
-    category: 'other',
-    text: 'Other',
-    types: [
-        { key: 'other', text: 'Other' }
-    ]
+    category: 'unknown',
+    key: 'unkown',
+    text: 'Other'
 }];
 
 wrap(ItemView, 'render', function (render) {
@@ -140,20 +112,29 @@ wrap(ItemView, 'render', function (render) {
         elem.append($('<option value="none">Keep (do not redact)</option>'));
         let matched = false;
         PHIPIITypes.forEach((cat) => {
-            let optgroup = $('<optgroup/>');
-            optgroup.attr({ label: cat.text });
-            cat.types.forEach((phitype) => {
-                let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
-                if (redactRecord && redactRecord.reason === phitype.key) {
+            if (cat.types) {
+                let optgroup = $('<optgroup/>');
+                optgroup.attr({ label: cat.text });
+                cat.types.forEach((phitype) => {
+                    let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
+                    if (redactRecord && redactRecord.reason === phitype.key) {
+                        opt.attr('selected', 'selected');
+                        matched = true;
+                    }
+                    optgroup.append(opt);
+                });
+                elem.append(optgroup);
+            } else {
+                let opt = $('<option/>').attr({ value: cat.key, category: cat.category }).text(cat.text);
+                if (redactRecord && redactRecord.reason === cat.key) {
                     opt.attr('selected', 'selected');
                     matched = true;
                 }
-                optgroup.append(opt);
-            });
-            elem.append(optgroup);
+                elem.append(opt);
+            }
         });
         if (!matched && redactRecord) {
-            $('[value="other"]', elem).attr('selected', 'selected');
+            $('[value="unknown"]', elem).attr('selected', 'selected');
         }
         elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
         parentElem.append(elem);
