@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changes
+- Change redaction reasons and export report format
+
+## Version 1.2.0
+
 ### Features
 - Specify a reason when redacting metadata and images (#120)
 
