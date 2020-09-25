@@ -418,7 +418,6 @@ def exportReport(ctx, exportPath, report, user):
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
         if data['DSAImageStatus'] == 'Approved':
             data['Date_DEID_Export'] = curtime.strftime(timeformat)
-        print(row['item'])
         if data['DSAImageStatus'] != 'AvailableToProcess':
             data['Last_DEID_RunDate'] = row['item'].get(
                 'modified', row['item']['created']).strftime(timeformat)
