@@ -5,8 +5,6 @@ import pandas as pd
 import shutil
 import tempfile
 
-import dateutil.parser
-
 from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
@@ -415,13 +413,18 @@ def exportReport(ctx, exportPath, report, user):
     timeformat = '%m%d%Y: %H%M%S'
     for row in report:
         row['item']['meta'].setdefault('deidUpload', {})
-        data = {'Date_DEID_Export': curtime.strftime(timeformat)}
+        data = {}
         data.update(row['item']['meta']['deidUpload'])
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
+        if data['DSAImageStatus'] == 'Approved':
+            data['Date_DEID_Export'] = curtime.strftime(timeformat)
+        print(row['item'])
+        if data['DSAImageStatus'] != 'AvailableToProcess':
+            data['Last_DEID_RunDate'] = row['item'].get(
+                'modified', row['item']['created']).strftime(timeformat)
         if 'redacted' in row['item']['meta']:
             try:
                 info = row['item']['meta']['redacted'][-1]
-                data['Last_DEID_RunDate'] = dateutil.parser.parse(info['time']).strftime(timeformat)
                 data['ScannerMake'] = info['details']['format'].capitalize()
                 data['ScannerModel'] = info['details']['model']
                 data['ByteSize_InboundWSI'] = row['item']['meta']['redacted'][0]['originalSize']
@@ -453,7 +456,7 @@ def exportReport(ctx, exportPath, report, user):
                     'details']['fieldCount']['images']
                 data['Total_UserIdentifiedPHIPII_ImageComponents'] = info[
                     'details']['redactionCount']['images']
-                data['UserIdentifiedPHIPII_ImageComponents'] = ' '.join(sorted(
+                data['UserIdentifiedPHIPII_ImageComponents'] = ', '.join(sorted(
                     k for k, v in info['redactList']['images'].items()
                     if v.get('reason'))) or 'N/A'
                 data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted(set(
