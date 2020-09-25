@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 1.2.2
+
+### Changes
+- Modify the export report format (#126)
+
+## Version 1.2.1
+
 ### Improvements
 - Start with Girder meta section collapsed (#125)
 
