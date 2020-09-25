@@ -18,8 +18,7 @@ let PHIPIITypes = [{
     types: [
         { key: 'Patient_Name', text: 'Patient Name' },
         { key: 'Patient_DOB', text: 'Date of Birth ' },
-        { key: 'SSN', text: 'Social Security Number' },
-        { key: 'Other', text: 'Other' }
+        { key: 'SSN', text: 'Social Security Number' }
     ]
 }, {
     category: 'Demographics',
@@ -33,10 +32,6 @@ let PHIPIITypes = [{
     category: 'Other_Personal',
     key: 'Other_Personal',
     text: 'Other Personal Information'
-}, {
-    category: 'unknown',
-    key: 'unkown',
-    text: 'Other'
 }];
 
 wrap(ItemView, 'render', function (render) {
@@ -134,7 +129,7 @@ wrap(ItemView, 'render', function (render) {
             }
         });
         if (!matched && redactRecord) {
-            $('[value="unknown"]', elem).attr('selected', 'selected');
+            $('[value="Other_Personal"]', elem).attr('selected', 'selected');
         }
         elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
         parentElem.append(elem);
