@@ -1,37 +1,27 @@
-## Welcome to GitHub Pages
+# DSA WSI DeiD
+---
+## Digital Slide Archive Whole-Slide Image DeIdentifier
 
-You can use the [editor on GitHub](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+### Software Rationale
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+The Surveillance Research Program (SRP) at the National Cancer Institute (NCI), which funds and operates the Surveillance, Epidemiology, and End Results (SEER) cancer registry system, is interested in collecting whole slide images (WSI) of microscopic slides generated as part of cancer diagnosis and surgical treatment.
 
-### Markdown
+SEER registries, which maintain personally identifiable information (PII) and protected health information (PHI) for long-term follow up of cancer patients, will serve as honest brokers for obtaining digital WSIs of clinical microscopic slides.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+In the future, the end goal will be to link these WSIs to data collected by SEER and offer them as another data product.  In order for WSIs to be shared, they need to be deidentified and the files renamed.
 
-```markdown
-Syntax highlighted code block
+### Tool Developed
 
-# Header 1
-## Header 2
-### Header 3
+Partnering with Dr. David Gutman from Emory University and Kitware, Inc., SRP has developed the WSI DeID software that deidentifies WSI files, including component images and metadata.
 
-- Bulleted
-- List
+The WSI DeID tool is an open-source software that can be deployed in either a Windows or Linux environment.
 
-1. Numbered
-2. List
+### Assessment of Software Validation
 
-**Bold** and _Italic_ and `Code` text
+Between August 2020 and August 2021, NCI/SRP is conducting the SEER-Linked Pediatric Cancer Whole Slide Imaging Pilot (Pilot) to test the validity of this deidentification software. This Pilot entails collecting WSIs and associated metadata from pediatric cancer cases via participating cancer registries.
 
-[Link](url) and ![Image](src)
-```
+### More Information
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/USAGE.rst)
 
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+[Introduction and Installation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst)
