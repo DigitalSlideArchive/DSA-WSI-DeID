@@ -134,7 +134,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     mimeType = 'image/tiff'
     item = Item().createItem(name=name, creator=user, folder=parentFolder)
     file = File().createFile(
-        name=record['name'], creator=user, item=item, reuseExisting=False,
+        name=name, creator=user, item=item, reuseExisting=False,
         assetstore=assetstore, mimeType=mimeType, size=stat.st_size,
         saveFile=False)
     file['path'] = os.path.abspath(os.path.expanduser(imagePath))
