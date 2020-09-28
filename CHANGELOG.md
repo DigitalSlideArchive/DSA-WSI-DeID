@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Features
+- Also show the Reject control in the Image Viewer header (#129)
+
 ### Improvements
 - Scroll to the top of the viewport when switching to the next item (#128)
 - Have only one "other" category for PHI (#128)

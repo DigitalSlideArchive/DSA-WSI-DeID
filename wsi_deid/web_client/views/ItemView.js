@@ -273,6 +273,8 @@ wrap(ItemView, 'render', function (render) {
                     this.$el.append(ItemViewTemplate({
                         project_folder: resp
                     }));
+                    /* Place a copy of any reject buttons in the item header */
+                    this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
                     this.events['click .g-workflow-button'] = workflowButton;
                     this.delegateEvents();
                 }
