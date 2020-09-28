@@ -8,6 +8,7 @@
 ### Improvements
 - Scroll to the top of the viewport when switching to the next item (#128)
 - Have only one "other" category for PHI (#128)
+- Ensure import filenames are ImageID-based (#130)
 
 ### Changes
 - Append rather than overwrite the tiff.Software field (#128)
