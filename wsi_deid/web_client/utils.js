@@ -14,6 +14,7 @@ function goToNextUnprocessedItem(callback) {
                 timeout: 4000
             });
             router.navigate('item/' + resp, { trigger: true });
+            window.scrollTo(0, 0);
         } else {
             events.trigger('g:alert', {
                 icon: 'ok',

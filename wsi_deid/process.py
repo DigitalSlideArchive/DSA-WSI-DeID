@@ -117,7 +117,8 @@ def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;openslide;aperio.Filename': {'value': title},
             'internal;openslide;aperio.Title': {'value': title},
-            'internal;openslide;tiff.Software': {'value': get_deid_field(item)},
+            'internal;openslide;tiff.Software': {
+                'value': get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))},
         },
     }
     if metadata['openslide'].get('aperio.Date'):
@@ -132,7 +133,8 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
         'images': {},
         'metadata': {
             'internal;openslide;hamamatsu.Reference': {'value': title},
-            'internal;openslide;tiff.Software': {'value': get_deid_field(item)},
+            'internal;openslide;tiff.Software': {
+                'value': get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))},
         },
     }
     for key in {'Created', 'Updated'}:
@@ -149,7 +151,8 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': {'value': title},
             'internal;xml;PIM_DP_UFS_BARCODE': {'value': title},
-            'internal;tiff;software': {'value': get_deid_field(item)},
+            'internal;tiff;software': {
+                'value': get_deid_field(item, metadata.get('tiff', {}).get('software'))},
         },
     }
     for key in {'DICOM_DATE_OF_LAST_CALIBRATION'}:
@@ -377,7 +380,7 @@ def get_deid_field_dict(item):
     return result
 
 
-def get_deid_field(item):
+def get_deid_field(item, prefix=None):
     """
     Return a text field with the DeID Upload metadata formatted for storage.
 
@@ -387,7 +390,14 @@ def get_deid_field(item):
     from . import __version__
 
     version = 'DSA Redaction %s' % __version__
-    return version + '\n' + '|'.join([
+    if prefix and prefix.strip():
+        if 'DSA Redaction' in prefix:
+            prefix.split('DSA Redaction')[0].strip()
+        if prefix:
+            prefix = prefix.strip() + '\n'
+    else:
+        prefix = ''
+    return prefix + version + '\n' + '|'.join([
         '%s = %s' % (k, v) for k, v in sorted(get_deid_field_dict(item).items())])
 
 
