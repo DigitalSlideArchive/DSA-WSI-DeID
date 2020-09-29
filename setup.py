@@ -39,6 +39,7 @@ setup(
     ],
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
+        'celery<5',
         'girder-homepage',
         'histomicsui',
         'large_image[tiff,openslide,memcached]',

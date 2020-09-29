@@ -6,11 +6,15 @@
     "homepage": "https://github.com/DigitalSlideArchive",
     "license": "Apache-2.0",
     "peerDependencies": {
-        "@girder/core": "*"
+        "@girder/core": "*",
+        "@girder/large_image": "*"
     },
     "girderPlugin": {
         "name": "wsi_deid",
-        "main": "./main.js"
+        "main": "./main.js",
+        "dependencies": [
+            "large_image"
+        ]
     },
     "scripts": {
         "lint": "eslint . && pug-lint . && stylint"
