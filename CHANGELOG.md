@@ -4,11 +4,11 @@
 
 ### Features
 - Also show the Reject control in the Image Viewer header (#129)
-- Show metadata that will be added (#132)
+- Show metadata that will be added (#131)
 
 ### Improvements
 - Scroll to the top of the viewport when switching to the next item (#128)
-- Have two "other" categories for PHI (#128, #132)
+- Have two "other" categories for PHI (#128, #131)
 - Ensure import filenames are ImageID-based (#130)
 
 ### Changes
