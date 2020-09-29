@@ -8,6 +8,8 @@ import ItemView from '@girder/core/views/body/ItemView';
 import { restRequest } from '@girder/core/rest';
 import { wrap } from '@girder/core/utilities/PluginUtils';
 
+import ItemViewWidget from '@girder/large_image/views/itemViewWidget';
+
 import ItemViewTemplate from '../templates/ItemView.pug';
 import '../stylesheets/ItemView.styl';
 import { goToNextUnprocessedItem } from '../utils';
@@ -18,7 +20,8 @@ let PHIPIITypes = [{
     types: [
         { key: 'Patient_Name', text: 'Patient Name' },
         { key: 'Patient_DOB', text: 'Date of Birth ' },
-        { key: 'SSN', text: 'Social Security Number' }
+        { key: 'SSN', text: 'Social Security Number' },
+        { key: 'Other_Personal', text: 'Other Personal' }
     ]
 }, {
     category: 'Demographics',
@@ -29,13 +32,13 @@ let PHIPIITypes = [{
     key: 'Facility_Physician',
     text: 'Facility/Physician Information'
 }, {
-    category: 'Other_Personal',
-    key: 'Other_Personal',
-    text: 'Other Personal Information'
+    category: 'Other_PHIPII',
+    key: 'Other_PHIPII',
+    text: 'Other PHI/PII'
 }];
 
 wrap(ItemView, 'render', function (render) {
-    const getRedactList = () => {
+    this.getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
         redactList.metadata = redactList.metadata || {};
         redactList.images = redactList.images || {};
@@ -55,7 +58,7 @@ wrap(ItemView, 'render', function (render) {
         const keyname = target.attr('keyname');
         const category = target.attr('category');
         const reason = target.val();
-        const redactList = getRedactList();
+        const redactList = this.getRedactList();
         let isRedacted = redactList[category][keyname] !== undefined;
         if (isRedacted && (!reason || reason === 'none')) {
             delete redactList[category][keyname];
@@ -129,7 +132,7 @@ wrap(ItemView, 'render', function (render) {
             }
         });
         if (!matched && redactRecord) {
-            $('[value="Other_Personal"]', elem).attr('selected', 'selected');
+            $('[value="Other_PHIPII"]', elem).attr('selected', 'selected');
         }
         elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
         parentElem.append(elem);
@@ -159,7 +162,7 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.li-metadata-tabs .tab-pane').removeClass('active');
         this.$el.find('.li-metadata-tabs .tab-pane').last().addClass('active');
 
-        const redactList = getRedactList();
+        const redactList = this.getRedactList();
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
@@ -283,3 +286,26 @@ wrap(ItemView, 'render', function (render) {
     });
     render.call(this);
 });
+
+wrap(ItemViewWidget, 'render', function (render) {
+    /* Add any internal metadata items that will be added but don't already
+     * exist. */
+    let internal = this.metadata.internal;
+    Object.entries(this.parentView.getRedactList().metadata).forEach(([k, v]) => {
+        let parts = k.split(';');
+        if (parts[0] !== 'internal' || !v || v.value === undefined || parts.length !== 3) {
+            return;
+        }
+        if (internal[parts[1]] && internal[parts[1]][parts[2]] === undefined) {
+            internal[parts[1]][parts[2]] = '';
+        }
+        // sort the results
+        let sorted = {};
+        Object.keys(internal[parts[1]]).sort().forEach((k) => {
+            sorted[k] = internal[parts[1]][k];
+        });
+        internal[parts[1]] = sorted;
+    });
+    render.call(this);
+});
+ItemViewWidget._deid = true;
