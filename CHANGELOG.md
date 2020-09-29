@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Bug Fixes
+- Fix a potential plugin load order issue
+
+## Version 1.2.3
+
 ### Features
 - Also show the Reject control in the Image Viewer header (#129)
 - Show metadata that will be added (#131)
