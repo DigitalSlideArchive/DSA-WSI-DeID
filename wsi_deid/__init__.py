@@ -44,4 +44,5 @@ class GirderPlugin(plugin.GirderPlugin):
     CLIENT_SOURCE_PATH = 'web_client'
 
     def load(self, info):
+        plugin.getPlugin('histomicsui').load(info)
         info['apiRoot'].wsi_deid = WSIDeIDResource()
