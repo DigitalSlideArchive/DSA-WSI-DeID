@@ -6,6 +6,14 @@ This builds on the Digital Slide Archive, HistomicsUI, and Girder to provide con
 
 Developed by Kitware, Inc. with funding from The National Cancer Institute.
 
+.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID.png?style=shield
+    :target: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID
+    :alt: Build Status
+
+.. |license-badge| image:: https://img.shields.io/badge/license-Apache%202-blue.svg
+    :target: https://raw.githubusercontent.com/DigitalSlideArchive/DSA-WSI-DeID/master/LICENSE
+    :alt: License
+
 Installation
 ============
 
@@ -31,8 +39,8 @@ If you want to import and export data from your local filesystem into the Pilot,
         # to use a fixed version
         image: dsarchive/wsi_deid:stable
         volumes:
-          - c:\wsi_deid\import:/import
-          - c:\wsi_deid\export:/export
+          - c:\NCI_WSI:/import
+          - c:\DeID_WSI:/export
 
 where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\wsi_deid\import:/import`` specifies that the local filesystem directory ``c:\wsi_deid\import`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
@@ -82,6 +90,11 @@ or without the import and export paths, type::
 
 This uses ``git`` to update the repository, fetches the latest build from docker, stops the currently running version, and starts the new version.
 
+Complete Reset
+~~~~~~~~~~~~~~
+
+Information about images is stored in a persistent database located in a docker volume.  Processed images are stored in a second docker volume.  When a system is updated, this data persists.  To reset the system completely, deleting all information including users and processed images, first stop the system via ``docker-compose down``, then delete the docker volumes via the command ``docker volume rm wsi_deid_dbdata wsi_deid_fsdata wsi_deid_logs``. 
+
 Using a Specific Version
 ------------------------
 
@@ -124,15 +137,17 @@ If you accidentally delete one of the ``WSI DeID`` collection folders, simply re
     
 substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``WSI DeID`` collection folders that are tied to specific workflow states.
 
+Admin User
+----------
 
-.. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID.png?style=shield
-    :target: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID
-    :alt: Build Status
+By default, when the system is first installed, there is one user with Administrator status with a default username of ``admin`` and password of ``password``.  It is strongly recommended that this be changed immediately, either by logging in and changing the password or by logging in, creating a new admin user and deleting the existing one.
 
-.. |license-badge| image:: https://img.shields.io/badge/license-Apache%202-blue.svg
-    :target: https://raw.githubusercontent.com/DigitalSlideArchive/DSA-WSI-DeID/master/LICENSE
-    :alt: License
+Redaction Business Rules
+========================
 
+Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modications vary by WSI vendor format.
+
+To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specifc variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the [process.py](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py) source file.
 
 Usage
 =====

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.2.4
+
 ### Bug Fixes
 - Fix a potential plugin load order issue
 

@@ -74,7 +74,7 @@ Folder Versus Item Views
 
 The WSI DeID is based on Girder, which has a notion of Folders and Items. Folders are similar to a directory on your local computer's filesystem, whereas Items are a container for one or more files, such as would be on your local computer's filesystem. For the purposes of the WSI DeID documentation, an image is an item and they may be used interchangably. An image may contain multiple images, such as in the case where there is a primary image and Associated Images such as a label or macro image.
 
-A folder in Girder may contain items, and an item always has to be in a folder. When looking at the WSI DeID, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``AvailableToProcess`` folder. In this case, the folder has zero children folders and one item within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``1`` in the screenshot.
+A folder in Girder may contain items, and an item always has to be in a folder. When looking at the WSI DeID, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``AvailableToProcess`` folder. In this case, the folder has zero children folders and ten items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``10`` in the screenshot.
 
 .. image:: screenshots/image_folder_view.png
    :height: 100
