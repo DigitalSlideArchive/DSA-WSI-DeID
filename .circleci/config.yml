@@ -42,7 +42,7 @@ jobs:
           working_directory: .
       - run:
           name: Make a local config file.
-          command: bash -c 'cp docker-compose.example.local.yml docker-compose.local.yml && sed -i "s/:stable//g" docker-compose.local.yml && sed -i "s/c:\\\\wsi_deid\\\\/\\/tmp\\/wsi_deid\\//g" docker-compose.local.yml && mkdir -p /tmp/wsi_deid/import && mkdir -p /tmp/wsi_deid/export'
+          command: bash -c 'cp docker-compose.example.local.yml docker-compose.local.yml && sed -i "s/:stable//g" docker-compose.local.yml && sed -i "s/c:\\\\NCI_WSI/\\/tmp\\/wsi_deid\\/import/g" docker-compose.local.yml  && sed -i "s/c:\\\\DeID_WSI/\\/tmp\\/wsi_deid\\/export/g" docker-compose.local.yml && mkdir -p /tmp/wsi_deid/import && mkdir -p /tmp/wsi_deid/export'
           working_directory: ./devops/wsi_deid
       - run:
           name: Run docker-compose up

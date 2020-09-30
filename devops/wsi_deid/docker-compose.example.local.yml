@@ -6,5 +6,5 @@ services:
     # to use a fixed version
     image: dsarchive/wsi_deid:stable
     volumes:
-      - c:\wsi_deid\import:/import
-      - c:\wsi_deid\export:/export
+      - c:\NCI_WSI:/import
+      - c:\DeID_WSI:/export

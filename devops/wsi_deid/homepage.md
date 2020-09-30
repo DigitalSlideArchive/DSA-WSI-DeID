@@ -2,26 +2,18 @@
 ---
 ## Digital Slide Archive Whole-Slide Image DeIdentifier
 
-### Software Rationale
+This Whole Slide Imaging Deidentification tool, WSI DeID, was developed with support provided by the Childhood Cancer Data Initiative (CCDI) for the Surveillance Research Program (SRP) at the National Cancer Institute (NCI), which funds and operates the Surveillance, Epidemiology, and End Results (SEER) cancer registry system.
 
-The Surveillance Research Program (SRP) at the National Cancer Institute (NCI), which funds and operates the Surveillance, Epidemiology, and End Results (SEER) cancer registry system, is interested in collecting whole slide images (WSI) of microscopic slides generated as part of cancer diagnosis and surgical treatment.
+This tool is based on core Digital Slide Archive (DSA) components and provides a workflow for the deidentification of digital pathology slide image files from Leica Aperio, Hamamatsu, and Philips vendors, so that they may be shared for research. The DSA WSI DeID Tool enables users to view all the associated metadata in the WSI, use automated business rules to redact or replace specific whole slide image (WSI) metadata fields, review the changes as part of deidentification quality control verification, and export the deidentified WSI files in the original vendor format.
 
-SEER registries, which maintain personally identifiable information (PII) and protected health information (PHI) for long-term follow up of cancer patients, will serve as honest brokers for obtaining digital WSIs of clinical microscopic slides.
+[Additional NCI background information on WSI De-ID Tool](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/rationale.rst): Additional background on the rationale and planned use of the WSI DeID Tool is found here.
 
-In the future, the end goal will be to link these WSIs to data collected by SEER and offer them as another data product.  In order for WSIs to be shared, they need to be deidentified and the files renamed.
+[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/USAGE.rst): This provides detailed instructions for navigating the WSI DeID Tool.
 
-### Tool Developed
 
-Partnering with Dr. David Gutman from Emory University and Kitware, Inc., SRP has developed the WSI DeID software that deidentifies WSI files, including component images and metadata.
+[DSA De-ID Tool Introduction and Installation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst): This provides a technical introduction and installation instructions to the tool.
 
-The WSI DeID tool is an open-source software that can be deployed in either a Windows or Linux environment.
+[IT instructions to modify import and export folder locations specific to user’s computer drive locations.](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst#import-and-export-paths) For IT teams, instructions to customize the location of the WSI files where DSA finds the import folder (original WSI files and Upload Excel file with deidentification replacement values) and the export folder (where the deidentified WSI files will be placed) are found here. These folders cannot be selected in the tool front-end itself, and must be done via configuration files, following these instructions.
 
-### Assessment of Software Validation
+[IT instructions to customize deidentification business rules to fit their WSI deidentification use cases.](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst#redaction-business-rules) For IT teams, instructions to customize the deidentification business rules is found here. Groups can use these instructions to adapt to their specific deidentification rules.
 
-Between August 2020 and August 2021, NCI/SRP is conducting the SEER-Linked Pediatric Cancer Whole Slide Imaging Pilot (Pilot) to test the validity of this deidentification software. This Pilot entails collecting WSIs and associated metadata from pediatric cancer cases via participating cancer registries.
-
-### More Information
-
-[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/USAGE.rst)
-
-[Introduction and Installation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst)
