@@ -460,12 +460,19 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
                 'data'] = thumbnailDescription
     # redact other images
     for idx in range(len(ifds) - 1, 0, -1):
-        key = ifds[idx]['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
+        ifd = ifds[idx]
+        key = None
+        keyparts = ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
             'data', '').split('\n', 1)[-1].strip().split()
-        if len(key) and key[0].lower():
-            desc = key[0].lower()
-            if desc in redactList['images'] or desc == 'label':
-                ifds.pop(idx)
+        if len(keyparts) and keyparts[0].lower():
+            key = keyparts[0].lower()
+        if (key is None and ifd['tags'].get(tifftools.Tag.NewSubfileType.value) and
+                ifd['tags'][tifftools.Tag.NewSubfileType.value]['data'][0] &
+                tifftools.Tag.NewSubfileType.bitfield.Page.value):
+            key = 'label' if ifd['tags'][
+                tifftools.Tag.NewSubfileType.value]['data'][0] == 1 else 'macro'
+        if key in redactList['images'] or key == 'label':
+            ifds.pop(idx)
     # Add back label image
     labelPath = os.path.join(tempdir, 'label.tiff')
     labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
@@ -506,10 +513,11 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
     tiffinfo = tifftools.read_tiff(sourcePath)
     ifds = tiffinfo['ifds']
     sourceLensTag = tifftools.Tag.NDPI_SOURCELENS.value
-    if 'macro' in redactList['images']:
+    for key in redactList['images']:
+        lensval = {'macro': -1, 'nonempty': -2}
         ifds = [ifd for ifd in ifds
                 if sourceLensTag not in ifd['tags'] or
-                ifd['tags'][sourceLensTag]['data'][0] > 0]
+                ifd['tags'][sourceLensTag]['data'][0] != lensval.get(key)]
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
     propertyTag = tifftools.Tag.NDPI_PROPERTY_MAP.value

@@ -2,10 +2,16 @@
 
 ## Unreleased
 
+### Improvements
+- Handle more associated images for Aperio and Hamamatsu files
+
+### Changes
+- Updated the home page (#133, #134)
+
 ## Version 1.2.4
 
 ### Bug Fixes
-- Fix a potential plugin load order issue
+- Fix a potential plugin load order issue (#133, #134)
 
 ## Version 1.2.3
 
