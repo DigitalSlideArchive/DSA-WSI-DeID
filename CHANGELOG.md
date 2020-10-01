@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 1.2.5
+
 ### Improvements
 - Handle more associated images for Aperio and Hamamatsu files (#135)
 
