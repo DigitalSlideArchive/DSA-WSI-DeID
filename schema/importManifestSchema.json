@@ -17,23 +17,24 @@
         }
     ],
     "required": [
-        "imageFilename",
+        "InputFileName",
         "TokenID",
         "Proc_Seq",
+        "Proc_Type",
         "Spec_Site",
         "Slide_ID",
-        "ImageID",
-        "PostDSAStatus"
+        "ImageID"
+        
     ],
     "properties": {
-        "imageFilename": {
-            "$id": "#/properties/imageFilename",
+        "InputFileName": {
+            "$id": "#/properties/InputFileName",
             "type": "string",
-            "title": "The imageFilename schema",
-            "description": "An explanation about the purpose of this instance.",
+            "title": "InputFileName",
+            "description": "Name of file and file type as received from scanning facility.",
             "default": "",
             "examples": [
-                "meh.svs"
+                "129873425.svs or 12321312.ndpi"
             ]
         },
         "TokenID": {
@@ -50,6 +51,16 @@
             "$id": "#/properties/Proc_Seq",
             "type": "string",
             "title": "The Proc_Seq schema",
+            "description": "An explanation about the purpose of this instance.",
+            "default": "",
+            "examples": [
+                "01"
+            ]
+        },
+        "Proc_Type": {
+            "$id": "#/properties/Proc_Type",
+            "type": "string",
+            "title": "The Proc_Type schema",
             "description": "An explanation about the purpose of this instance.",
             "default": "",
             "examples": [
@@ -85,17 +96,7 @@
             "examples": [
                 "1234AB567001_01_01 Proc_Seq_ Slide_ID"
             ]
-        },
-        "PostDSAStatus": {
-            "$id": "#/properties/PostDSAStatus",
-            "type": "string",
-            "title": "The PostDSAStatus schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "Quarantined"
-            ]
         }
     },
-    "additionalProperties": true
+    "additionalProperties": false
 }

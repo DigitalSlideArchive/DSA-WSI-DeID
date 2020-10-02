@@ -1,0 +1,61 @@
+.upload-metadatatable {
+    .accept-button, .adjust-icon {
+		cursor: pointer;
+		&:hover {
+			color: rgb(138, 178, 238);
+		}
+    }
+    .upload-metadata-column-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		.column-header-name {
+			flex-shrink: 1;
+		}
+		.adjust-icon {
+			flex-shrink: 0;
+		}
+    }
+}
+
+.webix_drop_file:before {
+    content: "Drop Files here";
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border: 2px rgb(64, 133, 238) dashed;
+    background-color: rgb(240, 240, 240);
+    z-index: 2;    
+    font-size: 30px; 
+}
+
+.ellipsis-text,
+.ellipsis-text .webix_cell,
+.ellipsis-text .webix_list_item,
+.ellipsis-text .webix_template,
+.ellipsis-text .webix_el_box,
+.ellipsis-text .webix_inp_static,
+.ellipsis-text label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.validation-error-list {
+  li {
+    padding-inline-start: 10px;
+    margin-top: 5px;
+  }
+}
+
+.schema-status .webix_template{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
