@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## Version 1.2.6
+
+### Changes
+- Updated import and export status messages (#136)
+
 ## Version 1.2.5
 
 ### Improvements
