@@ -7,9 +7,9 @@ import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 
 function performAction(action) {
     const actions = {
-        ingest: { done: 'Import complete.', fail: 'Failed to import.' },
-        export: { done: 'Recent export complete.', fail: 'Failed to export recent items.' },
-        exportall: { done: 'Export all complete.', fail: 'Failed to export all items.' }
+        ingest: { done: 'Import completed.', fail: 'Failed to import.' },
+        export: { done: 'Recent export task completed.', fail: 'Failed to export recent items.  Check export file location for disk drive space or other system issues.' },
+        exportall: { done: 'Export all task completed.', fail: 'Failed to export all items.  Check export file location for disk drive space or other system issues.' }
     };
 
     restRequest({
@@ -22,11 +22,12 @@ function performAction(action) {
         if (resp.action === 'ingest') {
             [
                 ['added', 'added'],
-                ['replaced', 'replaced'],
-                ['missing', 'missing from import folder'],
-                ['unlisted', 'missing from DeID Upload files'],
                 ['present', 'already present'],
-                ['failed', 'failed to import']
+                ['replaced', 'replaced'],
+                ['duplicate', 'with duplicate ImageID.  Check DeID Upload file'],
+                ['missing', 'missing from import folder.  Check DeID Upload File and WSI image filenames'],
+                ['unlisted', 'in the import folder, but not listed in a DeID Upload Excel/CSV file'],
+                ['failed', 'failed to import.  Check if image files is in an accepted WSI format']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
@@ -38,21 +39,21 @@ function performAction(action) {
                 ['notexcel', 'could not be read']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
-                    text += `  ${resp[key]} Excel file${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    text += `  ${resp[key]} DeID Upload Excel file${resp[key] > 1 ? 's' : ''} ${desc}.`;
                     any = true;
                 }
             });
             if (!any) {
-                text += '  Nothing to import.';
+                text = 'Nothing to import.  Import folder is empty.';
             }
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
                 ['finished', 'exported'],
-                ['different', 'already present but different'],
-                ['present', 'already exported'],
-                ['quarantined', 'currently quarantined'],
-                ['rejected', 'with rejected status']
+                ['present', 'previously exported'],
+                ['different', 'already present but different.  Remove images from the export directory and select Export again'],
+                ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to Export folder'],
+                ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to Export folder']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
@@ -60,7 +61,7 @@ function performAction(action) {
                 }
             });
             if (!any) {
-                text += '  Nothing to export.';
+                text = 'Nothing to export.';
             }
         }
         events.trigger('g:alert', {
