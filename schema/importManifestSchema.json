@@ -29,7 +29,7 @@
         
         "TokenID": {
             "$id": "#/properties/TokenID",
-            "type": "string",
+            "pattern": "[0-9]{2}.{8}[0-9]{2}",
             "title": "TokenID",
             "description": "This ID should be used when communicating with IMS, in the Subject Manifest, DeID Upload File, and DeID Export File, and in the file names for the pathology reports and the WSIs.",
             "default": "",
@@ -37,7 +37,7 @@
         },
         "Proc_Seq": {
             "$id": "#/properties/Proc_Seq",
-            "type": "string",
+            "pattern": "[0-9]{2}",
             "title": "Proc_Seq",
             "description": "Sequence number of the procedure for the subject when available reports are in chronological order.",
             "default": "",
@@ -61,7 +61,7 @@
         },
         "Slide_ID": {
             "$id": "#/properties/Slide_ID",
-            "type": "string",
+            "pattern": "/d/d",
             "title": "Slide_ID",
             "description": "Indicates the sequence of the slides for a given subject across all specimens.",
             "default": "",
@@ -69,7 +69,7 @@
         },
         "ImageID": {
             "$id": "#/properties/ImageID",
-            "type": "string",
+            "pattern": "[0-9]{2}.{8}[0-9]{2}_[0-9]{2}_[0-9]{2}",
             "title": "ImageID",
             "description": "Concatenation of TokenID, Proc_Seq, and Slide_ID.",
             "default": "TokenID_Proc_Seq_Slide_ID",
