@@ -61,7 +61,7 @@
         },
         "Slide_ID": {
             "$id": "#/properties/Slide_ID",
-            "pattern": "/d/d",
+            "pattern": "[0-9]{2}",
             "title": "Slide_ID",
             "description": "Indicates the sequence of the slides for a given subject across all specimens.",
             "default": "",
