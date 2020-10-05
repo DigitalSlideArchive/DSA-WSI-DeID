@@ -2,100 +2,86 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "http://example.com/example.json",
     "type": "object",
-    "title": "The root schema",
-    "description": "The root schema comprises the entire JSON document.",
+    "title": "WSI_DeID SEER DeID Upload File schema",
+    "description": "The schema to validate the DeID Upload CSV file for the SEER WSI_DeID workflow.",
     "default": {},
     "examples": [
         {
-            "imageFilename": "meh.svs",
             "TokenID": "1234AB567001",
             "Proc_Seq": "01",
+            "Proc_Type": "Biopsy",
             "Spec_Site": "C44.7",
             "Slide_ID": "02",
-            "ImageID": "1234AB567001_01_01 Proc_Seq_ Slide_ID",
-            "PostDSAStatus": "Quarantined"
+            "ImageID": "1234AB567001_01_01",
+            "InputFileName": "08-A.svs"
         }
     ],
     "required": [
-        "InputFileName",
         "TokenID",
         "Proc_Seq",
         "Proc_Type",
         "Spec_Site",
         "Slide_ID",
-        "ImageID"
-        
+        "ImageID",
+        "InputFileName"
     ],
     "properties": {
+        
+        "TokenID": {
+            "$id": "#/properties/TokenID",
+            "type": "string",
+            "title": "TokenID",
+            "description": "This ID should be used when communicating with IMS, in the Subject Manifest, DeID Upload File, and DeID Export File, and in the file names for the pathology reports and the WSIs.",
+            "default": "",
+            "examples": ["1234AB567001"]
+        },
+        "Proc_Seq": {
+            "$id": "#/properties/Proc_Seq",
+            "type": "string",
+            "title": "Proc_Seq",
+            "description": "Sequence number of the procedure for the subject when available reports are in chronological order.",
+            "default": "",
+            "examples": ["01"]
+        },
+        "Proc_Type": {
+            "$id": "#/properties/Proc_Type",
+            "enum": ["Biopsy","Resection","Cytology Cell Block"],
+            "title": "Proc_Type",
+            "description": "Indicates the procedure type for the slides (i.e. Biopsy, Cytology Cell Block, Resection)",
+            "default": "",
+            "examples": ["Biopsy"]
+        },
+        "Spec_Site": {
+            "$id": "#/properties/Spec_Site",
+            "type": "string",
+            "title": "Spec_Site",
+            "description": "Indicates the specimen site for the slides requested/submitted.  This uses the ICD-0-3.2 Topography Code and text location",
+            "default": "",
+            "examples": ["C006-Commissure of lip"]
+        },
+        "Slide_ID": {
+            "$id": "#/properties/Slide_ID",
+            "type": "string",
+            "title": "Slide_ID",
+            "description": "Indicates the sequence of the slides for a given subject across all specimens.",
+            "default": "",
+            "examples": ["02"]
+        },
+        "ImageID": {
+            "$id": "#/properties/ImageID",
+            "type": "string",
+            "title": "ImageID",
+            "description": "Concatenation of TokenID, Proc_Seq, and Slide_ID.",
+            "default": "TokenID_Proc_Seq_Slide_ID",
+            "examples": ["1234AB567001_01_01 Proc_Seq_ Slide_ID"]
+        },
         "InputFileName": {
             "$id": "#/properties/InputFileName",
             "type": "string",
             "title": "InputFileName",
             "description": "Name of file and file type as received from scanning facility.",
             "default": "",
-            "examples": [
-                "129873425.svs or 12321312.ndpi"
-            ]
-        },
-        "TokenID": {
-            "$id": "#/properties/TokenID",
-            "type": "string",
-            "title": "The TokenID schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "1234AB567001"
-            ]
-        },
-        "Proc_Seq": {
-            "$id": "#/properties/Proc_Seq",
-            "type": "string",
-            "title": "The Proc_Seq schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "01"
-            ]
-        },
-        "Proc_Type": {
-            "$id": "#/properties/Proc_Type",
-            "type": "string",
-            "title": "The Proc_Type schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "01"
-            ]
-        },
-        "Spec_Site": {
-            "$id": "#/properties/Spec_Site",
-            "type": "string",
-            "title": "The Spec_Site schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "C44.7"
-            ]
-        },
-        "Slide_ID": {
-            "$id": "#/properties/Slide_ID",
-            "type": "string",
-            "title": "The Slide_ID schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "02"
-            ]
-        },
-        "ImageID": {
-            "$id": "#/properties/ImageID",
-            "type": "string",
-            "title": "The ImageID schema",
-            "description": "An explanation about the purpose of this instance.",
-            "default": "",
-            "examples": [
-                "1234AB567001_01_01 Proc_Seq_ Slide_ID"
-            ]
+            "examples": ["129873425.svs or 12321312.ndpi"]
         }
     },
     "additionalProperties": false
