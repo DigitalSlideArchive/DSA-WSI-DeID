@@ -20,14 +20,15 @@ export default class UploadMetadataView extends JetView {
 			view: "richselect",
 			tooltip: () => this.filesDropDown.getText(),
 			name: "filesDropDown",
-			css: "select-field ellipsis-text",
+			css: "files-dropdown select-field ellipsis-text",
 			label: "Files",
 			labelWidth: 70,
 			disabled: true,
 			width: 300,
 			options: {
 				body: {
-					template: obj => `<span title='${obj.name}'>${obj.name}</span>`,
+					css: "files-list",
+					template: obj => `<div class='ellipsis-text files-list-item'><span class='list-item-text' title='${obj.name}'>${obj.name}</span><i class='list-item-icon delete-icon fas fa-times'></i></div>`,
 					data: []
 				}
 			}
@@ -75,13 +76,17 @@ export default class UploadMetadataView extends JetView {
 						const valid = validate(obj);
 						if (!valid) {
 							errorsCollection[obj.id] = validate.errors;
+							validate.errors.forEach((err) => {
+								const dataPath = err.dataPath;
+								if (dataPath) {
+									const columnName = dataPath.slice(1);
+									this.metaDatatable.addCellCss(obj.id, columnName, "invalid-cell");
+								}
+							});
+							this.metaDatatable.refresh(obj.id);
 						}
-						return valid;
 					}
-					else {
-						webix.message("Schema is not defined");
-						return true;
-					}
+					return true;
 				}
 			}
 		};

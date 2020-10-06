@@ -59,3 +59,37 @@
   justify-content: center;
   align-items: center;
 }
+
+.files-dropdown {
+  .list-item-icon {
+    display: none;
+  }
+}
+
+.files-list .files-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .list-item-text {
+    flex-grow: 0;
+    flex-basis: 90%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .list-item-icon {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: 15px;
+    &:hover {
+      color: #1ca1c1;
+    }
+  }
+}
+
+.warning-icon {
+  color: #ff6656;
+}
+
+.webix_cell.invalid-cell {
+  background: #ffdedb;
+}

@@ -15,6 +15,7 @@ class MetadataUploadService {
 		this._uploadMetadataView = scope.uploadMetadataView;
 		this._sidebarTree = scope.sidebarTree;
 		this._filesDropDown = scope.filesDropDown;
+		this._filesList = this._filesDropDown.getList();
 		this._metaDatatable = scope.metaDatatable;
 		this._loadSchemaButton = scope.loadSchemaButton;
 		this._schemaStatusTemplate = scope.schemaStatusTemplate;
@@ -33,15 +34,24 @@ class MetadataUploadService {
 		this._filesDropDown.attachEvent("onChange", (id) => {
 			const list = this._filesDropDown.getList();
 			this._metaDatatable.clearAll();
-			const metaItem = list.getItem(id);
+			if (id) {
+				const metaItem = list.getItem(id);
 
-			const columnConfig = this._datatableService.getColumnConfig(metaItem.meta.fields);
+				const columnConfig = this._datatableService.getColumnConfig(metaItem.meta.fields);
+				this._metaDatatable.refreshColumns(columnConfig);
+				this._metaDatatable.parse(metaItem.data);
+				this._metaDatatable.validate();
+			}
+			else {
+				this._metaDatatable.refreshColumns([]);
+			}
+		});
 
-			this._metaDatatable.refreshColumns(columnConfig);
-
-			this._metaDatatable.parse(metaItem.data);
-
-			this._metaDatatable.validate();
+		this._filesList.attachEvent("onItemClick", (id, ev) => {
+			if (ev.target.classList.contains("delete-icon")) {
+				this._filesList.remove(id);
+				return false;
+			}
 		});
 
 		this._loadSchemaButton.attachEvent("onItemClick", () => {

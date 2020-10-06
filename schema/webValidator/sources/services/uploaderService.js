@@ -36,6 +36,12 @@ export default class UploaderService {
 		fileList.attachEvent("onAfterLoad", () => {
 			this.filesDropDown.enable();
 		});
+
+		fileList.attachEvent("onAfterDelete", () => {
+			if (!fileList.count()) {
+				this.filesDropDown.disable();
+			}
+		});
 	}
 
 	parseFile(file) {
