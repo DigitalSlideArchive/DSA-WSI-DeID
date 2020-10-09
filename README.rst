@@ -2,9 +2,9 @@
 DSA WSI DeID |build-status| |license-badge|
 ===========================================
 
-This builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), and Philips WSI files.
+This tool builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI/PII from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), and Philips WSI files.
 
-Developed by Kitware, Inc. with funding from The National Cancer Institute.
+Developed by Kitware, Inc. with funding from The National Cancer Institute of the National Institutes of Health.
 
 .. |build-status| image:: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID.png?style=shield
     :target: https://circleci.com/gh/DigitalSlideArchive/DSA-WSI-DeID
@@ -29,7 +29,7 @@ Install commands need to be run from the ``devops/wsi_deid`` directory.  Example
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
 
     ---
     version: '3'
@@ -62,7 +62,7 @@ or without the import and export paths, type::
     docker-compose up -d
 
 
-This will download some necessary files (pre-built docker images) and start the system.  The database, local files, and some logs are stored in docker volumes.
+This set up will download some necessary files (pre-built docker images) and start the system.  The database, local files, and some logs are stored in docker volumes.
 
 The system will be available from a web browser on http://localhost:8080.
 
@@ -145,7 +145,7 @@ By default, when the system is first installed, there is one user with Administr
 Redaction Business Rules
 ========================
 
-Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modications vary by WSI vendor format.
+Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modifications vary by WSI vendor format.
 
 To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specifc variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the [process.py](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py) source file.
 
