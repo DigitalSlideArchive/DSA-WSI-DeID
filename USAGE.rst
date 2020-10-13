@@ -1,10 +1,10 @@
-==================
-DSA WSI DeID Usage
-==================
+==============
+WSI DeID Usage
+==============
 
 See README.rst for installation and debugging instructions.
 
-This document describes how to use the DSA WSI DeID system with the major use case of de-identifying Whole Slide Images (WSIs).
+This document describes how to use the WSI DeID system with the major use case of de-identifying Whole Slide Images (WSIs).
 
 
 Reporting Bugs
