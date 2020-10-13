@@ -57,7 +57,7 @@ function performAction(action) {
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
                 ['finished', 'exported'],
-                ['present', 'previously exported and already exist in export folder'],
+                ['present', 'previously exported and already exist(s) in export folder'],
                 ['different', 'with the same ImageID but different WSI file size already present in export folder. Remove the corresponding image(s) from the export directory and select Export again'],
                 ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to export folder'],
                 ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to export folder']
