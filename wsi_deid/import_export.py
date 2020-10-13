@@ -132,7 +132,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     assetstore = Assetstore().getCurrent()
     name = record['ImageID'] + os.path.splitext(record['name'])[1]
     mimeType = 'image/tiff'
-    if Item().findOne({'folderId': parentFolder['_id'], 'name': name}):
+    if Item().findOne({'name': {'$regex': '^%s\\.' % record['ImageID']}}):
         return 'duplicate'
     item = Item().createItem(name=name, creator=user, folder=parentFolder)
     file = File().createFile(

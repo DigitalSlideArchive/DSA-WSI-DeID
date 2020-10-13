@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## Version 1.2.7
+
+### Changes
+- Updated import and export status messages (#142)
+- ImageIDs must now be unique in the system (#142)
+
 ## Version 1.2.6
 
 ### Changes

@@ -20,6 +20,9 @@ function performAction(action) {
         let text = actions[action].done;
         let any = false;
         if (resp.action === 'ingest') {
+            if (['duplicate', 'missing', 'unlisted', 'failed', 'notexcel'].some((key) => resp[key])) {
+                text = 'Import process completed with errors.';
+            }
             [
                 ['added', 'added'],
                 ['present', 'already present'],
@@ -27,10 +30,14 @@ function performAction(action) {
                 ['duplicate', 'with duplicate ImageID.  Check DeID Upload file'],
                 ['missing', 'missing from import folder.  Check DeID Upload File and WSI image filenames'],
                 ['unlisted', 'in the import folder, but not listed in a DeID Upload Excel/CSV file'],
-                ['failed', 'failed to import.  Check if image files is in an accepted WSI format']
+                ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
-                    text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    if (key === 'unlisted' && !resp.parsed && !resp.notexcel) {
+                        text += '  No DeID Upload file present.';
+                    } else {
+                        text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                    }
                     any = true;
                 }
             });
@@ -50,10 +57,10 @@ function performAction(action) {
         if (resp.action === 'export' || resp.action === 'exportall') {
             [
                 ['finished', 'exported'],
-                ['present', 'previously exported'],
-                ['different', 'already present but different.  Remove images from the export directory and select Export again'],
-                ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to Export folder'],
-                ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to Export folder']
+                ['present', 'previously exported and already exist(s) in export folder'],
+                ['different', 'with the same ImageID but different WSI file size already present in export folder. Remove the corresponding image(s) from the export directory and select Export again'],
+                ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to export folder'],
+                ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to export folder']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
