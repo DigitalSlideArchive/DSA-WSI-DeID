@@ -1,6 +1,6 @@
-# DSA WSI DeiD
+# WSI DeiD
 ---
-## Digital Slide Archive Whole-Slide Image DeIdentifier
+## Whole-Slide Image DeIdentifier
 
 ### Software Rationale
 
