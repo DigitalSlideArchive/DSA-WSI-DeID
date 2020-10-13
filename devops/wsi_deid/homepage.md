@@ -2,6 +2,10 @@
 ---
 ## Whole-Slide Image DeIdentifier
 
+
+# Note: This is a Work In Progress and has not been officially released.
+
+
 This Whole Slide Imaging Deidentification tool, WSI DeID, was developed with support provided by the Childhood Cancer Data Initiative (CCDI) for the Surveillance Research Program (SRP) at the National Cancer Institute (NCI), which funds and operates the Surveillance, Epidemiology, and End Results (SEER) cancer registry system.
 
 This tool is based on core Digital Slide Archive (DSA) components and provides a workflow for the deidentification of digital pathology slide image files from Leica Aperio, Hamamatsu, and Philips scanners, so that they may be shared for research. The WSI DeID Tool enables users to view all the associated metadata in the WSI, use automated business rules to redact or replace specific whole slide image (WSI) metadata fields, review the changes as part of deidentification quality control verification, and export the deidentified WSI files in the original vendor format.
