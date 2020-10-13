@@ -23,7 +23,7 @@ Installation
 Prerequisites
 -------------
 
-At a minimum, you need `Docker <https://docs.docker.com/install/>`_ and `docker-compose <https://docs.docker.com/compose/install/>`_.  You also need a copy of this repository, either obtained via ``git`` or downloaded directly.  If you have ``git`` installed, this can be::
+At a minimum, you will need `Docker <https://docs.docker.com/install/>`_ and `docker-compose <https://docs.docker.com/compose/install/>`_.  You also will need a copy of this repository, either obtained via ``git`` or downloaded directly.  If you have ``git`` installed, this can be::
 
     git clone https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git
 
@@ -32,7 +32,7 @@ Install commands need to be run from the ``devops/wsi_deid`` directory.  Example
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you'll need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
 
     ---
     version: '3'
