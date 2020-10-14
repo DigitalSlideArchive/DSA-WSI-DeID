@@ -31,10 +31,14 @@ WSI DeID Version: %s
     if Assetstore().findOne() is None:
         Assetstore().createFilesystemAssetstore('Assetstore', '/assetstore')
 
-    # Make sure we have the WSI DeiD collection
-    if Collection().findOne({'name': 'WSI DeiD'}) is None:
-        Collection().createCollection('WSI DeiD', adminUser)
-    wsi_deidCollection = Collection().findOne({'name': 'WSI DeiD'})
+    # Make sure we have the WSI DeID collection
+    collName = 'WSI DeID'
+    if Collection().findOne({'lowerName': collName.lower()}) is None:
+        Collection().createCollection(collName, adminUser)
+    wsi_deidCollection = Collection().findOne({'lowerName': collName.lower()})
+    if wsi_deidCollection['name'] != collName:
+        wsi_deidCollection['name'] = collName
+        wsi_deidCollection = Collection().save(wsi_deidCollection)
     # Create default folders.  Set the settings to those folders
     folders = {
         PluginSettings.HUI_INGEST_FOLDER: ('AvailableToProcess', True),
