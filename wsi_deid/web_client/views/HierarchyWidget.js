@@ -82,9 +82,11 @@ function performAction(action) {
         }
     }).fail((resp) => {
         let text = actions[action].fail;
+        /*
         if (resp.responseJSON && resp.responseJSON.message) {
             text += ' ' + resp.responseJSON.message;
         }
+        */
         events.trigger('g:alert', {
             icon: 'cancel',
             text: text,
