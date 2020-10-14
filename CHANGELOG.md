@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changes
+- Changed the case of the default deployed collection name (#146)
+- Don't percolate server error messages to client error messages (#147)
+
 ## Version 1.2.7
 
 ### Changes
