@@ -29,6 +29,8 @@ At a minimum, you will need `Docker <https://docs.docker.com/install/>`_ and `do
 
 Install commands need to be run from the ``devops/wsi_deid`` directory.  Examples are given via a command prompt, but a desktop version of Docker will work as well.
 
+To download the repository directly, go to the `Releases Page <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/releases>`_ and select the source code zip or tar.gz file for the desired version, or download the `master branch <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/archive/master.zip>`_.
+
 Import and Export Paths
 -----------------------
 
@@ -96,7 +98,7 @@ This uses ``git`` to update the repository, fetches the latest build from docker
 Complete Reset
 ~~~~~~~~~~~~~~
 
-Information about images is stored in a persistent database located in a docker volume.  Processed images are stored in a second docker volume.  When a system is updated, this data persists.  To reset the system completely, deleting all information including users and processed images, first stop the system via ``docker-compose down``, then delete the docker volumes via the command ``docker volume rm wsi_deid_dbdata wsi_deid_fsdata wsi_deid_logs``. 
+Information about images is stored in a persistent database located in a docker volume.  Processed images are stored in a second docker volume.  When a system is updated, this data persists.  To reset the system completely, deleting all information including users and processed images, first stop the system via ``docker-compose down``, then delete the docker volumes via the command ``docker volume rm wsi_deid_dbdata wsi_deid_fsdata wsi_deid_logs``.
 
 Using a Specific Version
 ------------------------
@@ -106,7 +108,7 @@ By default, `docker-compose up` will use the most recent stable version of the s
     git checkout v1.0.0
 
 Modify the version in your ``docker-compose.local.yml`` file.  For example, change the line which reads ``image: dsarchive/wsi_deid:stable`` to ``image: dsarchive/wsi_deid:v1.0.0``.  Now, when you do::
-    
+
     docker-compose pull
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
@@ -129,7 +131,7 @@ You can follow the logs and see them update as they change::
 
     docker-compose logs -f
     docker-compose exec girder tail -F /logs/info.log
-    
+
 Fixing Common Problems
 ----------------------
 
@@ -137,13 +139,20 @@ If you accidentally delete one of the ``WSI DeID`` collection folders, simply re
 
     docker-compose down
     docker-compose up
-    
+
 substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``WSI DeID`` collection folders that are tied to specific workflow states.
 
 Admin User
 ----------
 
 By default, when the system is first installed, there is one user with Administrator status with a default username of ``admin`` and password of ``password``.  It is strongly recommended that this be changed immediately, either by logging in and changing the password or by logging in, creating a new admin user and deleting the existing one.
+
+Sample Data
+===========
+
+A small set of sample WSI files and a sample DeID Upload excel file are available on `data.kitware.com <https://data.kitware.com/#item/5f87213d50a41e3d19ea89c2>`_.
+
+`Download a zip file of the sample files. <https://data.kitware.com/api/v1/file/5f87213d50a41e3d19ea89c4/download>`_
 
 Redaction Business Rules
 ========================
