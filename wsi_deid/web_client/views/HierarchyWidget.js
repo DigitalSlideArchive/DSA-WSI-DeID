@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import events from '@girder/core/events';
 import { getCurrentUser } from '@girder/core/auth';
 import { restRequest } from '@girder/core/rest';
@@ -71,6 +72,11 @@ function performAction(action) {
             if (!any) {
                 text = 'Nothing to export.';
             }
+        }
+        if (resp.fileId) {
+            events.once('g:alert', () => {
+                $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/api/v1/file/${resp.fileId}/download`));
+            }, this);
         }
         events.trigger('g:alert', {
             icon: 'ok',

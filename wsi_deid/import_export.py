@@ -279,8 +279,8 @@ def ingestData(ctx, user=None):  # noqa
     for image in imageFiles:
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
-    importReport(ctx, report, excelReport, user, importPath)
-    return reportSummary(report, excelReport)
+    file = importReport(ctx, report, excelReport, user, importPath)
+    return reportSummary(report, excelReport, file=file)
 
 
 def importReport(ctx, report, excelReport, user, importPath):
@@ -293,6 +293,7 @@ def importReport(ctx, report, excelReport, user, importPath):
     :param user: the user triggering this.
     :param importPath: the path of the import folder.  Used to show relative
         paths in the report.
+    :return: the Girder file with the report
     """
     ctx.update(message='Generating report')
     excelStatusDict = {
@@ -307,6 +308,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         'missing': 'File missing',
         'unlisted': 'Not in DeID Upload file',
         'badentry': 'Error in DeID Upload file',
+        'failed': 'Failed to import',
     }
     keyToColumns = {
         'excel': 'ExcelFilePath',
@@ -318,10 +320,13 @@ def importReport(ctx, report, excelReport, user, importPath):
             'Status': excelStatusDict.get(row['status'], row['status']),
             'FailureReason': row.get('reason'),
         }
+        if row['status'] == 'badformat' and not row.get('reason'):
+            data['FailureReason'] = 'No header row with ImageID, TokenID, and ImportFileName'
         dataList.append(data)
     for row in report:
         data = {
-            'FilePath': os.path.relpath(row['path'], importPath) if row.get('path') else None,
+            'FilePath': os.path.relpath(row['path'], importPath) if row.get(
+                'path') and row['status'] != 'missing' else row.get('path'),
             'Status': statusDict.get(row['status'], row['status']),
         }
         if row.get('record'):
@@ -334,6 +339,8 @@ def importReport(ctx, report, excelReport, user, importPath):
                     data[keyToColumns.get(k, k)] = v
             if row['record'].get('errors'):
                 data['FailureReason'] = '. '.join(row['record']['errors'])
+        if row['status'] == 'failed' and not data.get('FailureReason'):
+            data['FailureReason'] = 'File not an image format that can be handled'
         dataList.append(data)
     df = pd.DataFrame(dataList, columns=[
         'ExcelFilePath', 'FilePath', 'Status',
@@ -345,15 +352,28 @@ def importReport(ctx, report, excelReport, user, importPath):
         path = os.path.join(tempdir, reportName)
         ctx.update(message='Saving report')
         df.to_excel(path, index=False)
-        saveToReports(path, XLSX_MIMETYPE, user)
+        return saveToReports(path, XLSX_MIMETYPE, user)
 
 
-def reportSummary(*args):
+def reportSummary(*args, **kwargs):
+    """
+    Generate a summary of multiple reports.
+
+    :param *args: all other arguments are lists of results, each entry of which
+        is a dictionary with a 'status' field.  The overall summary is a
+        tally of the occurrences of each status.
+    :param **kwargs: if 'file' is specified, this is a Girder file model.  The
+        file id is returned as part of the results.
+    :returns: a dictionary of status values, each with a numerical tally, and
+        optionally a fileId field.
+    """
     result = {}
     for report in args:
         for entry in report:
             result.setdefault(entry['status'], 0)
             result[entry['status']] += 1
+    if kwargs.get('file'):
+        result['fileId'] = str(kwargs['file']['_id'])
     return result
 
 
@@ -409,8 +429,8 @@ def exportItems(ctx, user=None, all=False):
                 'time': exportedRecord[-1]['time'],
             })
     exportNoteRejected(report, user, all)
-    exportReport(ctx, exportPath, report, user)
-    return reportSummary(report)
+    file = exportReport(ctx, exportPath, report, user)
+    return reportSummary(report, file=file)
 
 
 def exportNoteRejected(report, user, all, allFiles=True):
@@ -468,6 +488,7 @@ def exportReport(ctx, exportPath, report, user):
     :param exportPath: directory for exports
     :param report: a list of files that were exported.
     :param user: the user triggering this.
+    :return: the Girder file with the report
     """
     ctx.update(message='Generating report')
     statusDict = {
@@ -568,7 +589,7 @@ def exportReport(ctx, exportPath, report, user):
     path = os.path.join(exportPath, exportName)
     ctx.update(message='Saving report')
     df.to_excel(path, index=False)
-    saveToReports(path, XLSX_MIMETYPE, user)
+    return saveToReports(path, XLSX_MIMETYPE, user)
 
 
 def saveToReports(path, mimetype=None, user=None):
@@ -578,13 +599,15 @@ def saveToReports(path, mimetype=None, user=None):
     :param path: path of the file to save.
     :param mimetype: the mimetype of the file.
     :param user: the user triggering this.
+    :return: the Girder file with the report
     """
     reportsFolderId = Setting().get(PluginSettings.HUI_REPORTS_FOLDER)
     reportsFolder = Folder().load(reportsFolderId, force=True, exc=False)
     if not reportsFolder:
         raise Exception('Reports folder not specified.')
     with open(path, 'rb') as f:
-        Upload().uploadFromFile(
+        file = Upload().uploadFromFile(
             f, size=os.path.getsize(path), name=os.path.basename(path),
             parentType='folder', parent=reportsFolder, user=user,
             mimeType=mimetype)
+        return file

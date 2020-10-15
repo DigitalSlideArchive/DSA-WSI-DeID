@@ -1,4 +1,4 @@
-TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,ScannedFileName
-0579XY112001,02,resection,C71.7,08,0579XY112001_02_08,aperio_jp2k.svs
-1234AB567001,01,biopsy,C44.7,01,1234AB567001_01_01,hamamatsu.ndpi
-1234AB567001,02,resection,C44.7,07,1234AB567001_02_07,philips.ptif
+TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
+0579XY112001,02,Resection,C717-Brain stem,08,0579XY112001_02_08,aperio_jp2k.svs
+1234AB567001,01,Biopsy,C447-Skin of lower limb and hip,01,1234AB567001_01_01,hamamatsu.ndpi
+1234AB567001,02,Resection,C447-Skin of lower limb and hip,07,1234AB567001_02_07,philips.ptif
