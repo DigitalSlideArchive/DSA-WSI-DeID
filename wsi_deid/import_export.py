@@ -58,7 +58,7 @@ def validateDataRow(validator, row, rowNumber, df):
     Validate a row from a dataframe with a jsonschema validator.
 
     :param validator: a jsonschema validator.
-    :param row: a dictionary of row information from teh dataframe excluding
+    :param row: a dictionary of row information from the dataframe excluding
         the Index.
     :param rowNumber: the 1-based row number within the file for error
         reporting.
@@ -309,25 +309,34 @@ def importReport(ctx, report, excelReport, user, importPath):
         'unlisted': 'Not in DeID Upload file',
         'badentry': 'Error in DeID Upload file',
         'failed': 'Failed to import',
+        'duplicate': 'Duplicate ImageID',
+    }
+    statusExplanation = {
+        'failed': 'Image file is not an accepted WSI format',
+        'duplicate': 'A different image with the same ImageID was previously imported',
+        'replaced': 'File size was different than that already present; '
+                    'existing image was replaced',
     }
     keyToColumns = {
         'excel': 'ExcelFilePath',
     }
     dataList = []
+    statusKey = 'SoftwareStatus'
+    reasonKey = 'Status/FailureReason'
     for row in excelReport:
         data = {
             'ExcelFilePath': os.path.relpath(row['path'], importPath),
-            'Status': excelStatusDict.get(row['status'], row['status']),
-            'FailureReason': row.get('reason'),
+            statusKey: excelStatusDict.get(row['status'], row['status']),
+            reasonKey: row.get('reason'),
         }
         if row['status'] == 'badformat' and not row.get('reason'):
-            data['FailureReason'] = 'No header row with ImageID, TokenID, and ImportFileName'
+            data[reasonKey] = 'No header row with ImageID, TokenID, and ImportFileName'
         dataList.append(data)
     for row in report:
         data = {
-            'FilePath': os.path.relpath(row['path'], importPath) if row.get(
+            'WSIFilePath': os.path.relpath(row['path'], importPath) if row.get(
                 'path') and row['status'] != 'missing' else row.get('path'),
-            'Status': statusDict.get(row['status'], row['status']),
+            statusKey: statusDict.get(row['status'], row['status']),
         }
         if row.get('record'):
             fields = row['record'].get('fields')
@@ -338,21 +347,29 @@ def importReport(ctx, report, excelReport, user, importPath):
                 if k != 'fields':
                     data[keyToColumns.get(k, k)] = v
             if row['record'].get('errors'):
-                data['FailureReason'] = '. '.join(row['record']['errors'])
-        if row['status'] == 'failed' and not data.get('FailureReason'):
-            data['FailureReason'] = 'File not an image format that can be handled'
+                data[reasonKey] = '. '.join(row['record']['errors'])
+        if not data.get(reasonKey) and row['status'] in statusExplanation:
+            data[reasonKey] = statusExplanation[row['status']]
         dataList.append(data)
+    anyErrors = any(row for row in dataList if row.get(reasonKey))
+    dataList.insert(0, {
+        reasonKey: 'Import process completed' if not anyErrors
+                   else 'Import process completed with errors'})
+    for row in dataList:
+        if not row.get(reasonKey) and row.get(statusKey):
+            row[reasonKey] = row[statusKey]
     df = pd.DataFrame(dataList, columns=[
-        'ExcelFilePath', 'FilePath', 'Status',
+        'ExcelFilePath', 'WSIFilePath', statusKey,
         'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
-        'FailureReason',
+        reasonKey
     ])
-    reportName = 'DeID Import %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    reportName = 'DeID Import Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    reportFolder = 'Import Job Reports'
     with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
         path = os.path.join(tempdir, reportName)
         ctx.update(message='Saving report')
         df.to_excel(path, index=False)
-        return saveToReports(path, XLSX_MIMETYPE, user)
+        return saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
 
 
 def reportSummary(*args, **kwargs):
@@ -585,26 +602,32 @@ def exportReport(ctx, exportPath, report, user):
         'UserIdentifiedPHIPII_Category_ImageComponents',
         'UserIdentifiedPHIPII_DetailedType_ImageComponents',
     ])
-    exportName = 'DeID Export %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    exportName = 'DeID Export Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    reportFolder = 'Import Job Reports'
     path = os.path.join(exportPath, exportName)
     ctx.update(message='Saving report')
     df.to_excel(path, index=False)
-    return saveToReports(path, XLSX_MIMETYPE, user)
+    return saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
 
 
-def saveToReports(path, mimetype=None, user=None):
+def saveToReports(path, mimetype=None, user=None, folderName=None):
     """
     Save a file to the reports folder.
 
     :param path: path of the file to save.
     :param mimetype: the mimetype of the file.
     :param user: the user triggering this.
+    :param folderName: if not None, create a folder in the reportsFolder with
+        this name and store the new report in that folder.
     :return: the Girder file with the report
     """
     reportsFolderId = Setting().get(PluginSettings.HUI_REPORTS_FOLDER)
     reportsFolder = Folder().load(reportsFolderId, force=True, exc=False)
     if not reportsFolder:
         raise Exception('Reports folder not specified.')
+    if folderName:
+        reportsFolder = Folder().createFolder(
+            reportsFolder, folderName, creator=user, reuseExisting=True)
     with open(path, 'rb') as f:
         file = Upload().uploadFromFile(
             f, size=os.path.getsize(path), name=os.path.basename(path),
