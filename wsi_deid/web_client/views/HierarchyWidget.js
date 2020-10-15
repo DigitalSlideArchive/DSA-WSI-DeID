@@ -20,7 +20,7 @@ function performAction(action) {
         let text = actions[action].done;
         let any = false;
         if (resp.action === 'ingest') {
-            if (['duplicate', 'missing', 'unlisted', 'failed', 'notexcel'].some((key) => resp[key])) {
+            if (['duplicate', 'missing', 'unlisted', 'failed', 'notexcel', 'badentry'].some((key) => resp[key])) {
                 text = 'Import process completed with errors.';
             }
             [
@@ -29,6 +29,7 @@ function performAction(action) {
                 ['replaced', 'replaced'],
                 ['duplicate', 'with duplicate ImageID.  Check DeID Upload file'],
                 ['missing', 'missing from import folder.  Check DeID Upload File and WSI image filenames'],
+                ['badentry', 'with invalid data in a DeID Upload File'],
                 ['unlisted', 'in the import folder, but not listed in a DeID Upload Excel/CSV file'],
                 ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format']
             ].forEach(([key, desc]) => {

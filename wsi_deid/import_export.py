@@ -1,5 +1,8 @@
 import datetime
+import json
+import jsonschema
 import magic
+import openpyxl
 import os
 import pandas as pd
 import shutil
@@ -29,13 +32,14 @@ def readExcelData(filepath):
 
     :param filepath: path to the excel file.
     :returns: a pandas dataframe of the excel data rows.
+    :returns: the header row number.
     """
     potential_header = 0
     reader = pd.read_csv
     mimetype = magic.from_file(filepath, mime=True)
     if 'excel' in mimetype or 'openxmlformats' in mimetype:
         reader = pd.read_excel
-    df = reader(filepath, header=potential_header)
+    df = reader(filepath, header=potential_header, dtype=str)
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
@@ -43,10 +47,41 @@ def readExcelData(filepath):
                 'TokenID' in df.columns and
                 'ImageID' in df.columns and
                 any(key in df.columns for key in {'ScannedFileName', 'InputFileName'})):
-            return df
+            return df, potential_header
         potential_header += 1
-        df = reader(filepath, header=potential_header)
+        df = reader(filepath, header=potential_header, dtype=str)
     raise ValueError(f'Excel file {filepath} lacks a header row')
+
+
+def validateDataRow(validator, row, rowNumber, df):
+    """
+    Validate a row from a dataframe with a jsonschema validator.
+
+    :param validator: a jsonschema validator.
+    :param row: a dictionary of row information from teh dataframe excluding
+        the Index.
+    :param rowNumber: the 1-based row number within the file for error
+        reporting.
+    :param df: the pandas dataframe.  Used to determine column number.
+    :returns: None for no errors, otherwise a list of error messages.
+    """
+    if validator.is_valid(row):
+        return
+    errors = []
+    for error in validator.iter_errors(row):
+        try:
+            columnName = error.path[0]
+            columnNumber = df.columns.get_loc(columnName)
+            cellName = openpyxl.utils.cell.get_column_letter(columnNumber + 1) + str(rowNumber)
+            errorMsg = f'Invalid {columnName} in {cellName}'
+        except Exception:
+            errorMsg = f'Invalid row {rowNumber} ({error.message})'
+            columnNumber = None
+        errors.append(errorMsg)
+    if row['ImageID'] != '%s_%s_%s' % (row['TokenID'], row['Proc_Seq'], row['Slide_ID']):
+        errors.append(
+            f'Invalid ImageID in row {rowNumber}; not composed of TokenID, Proc_Seq, and Slide_ID')
+    return errors
 
 
 def readExcelFiles(filelist, ctx):
@@ -62,10 +97,12 @@ def readExcelFiles(filelist, ctx):
     """
     manifest = {}
     report = []
+    validator = jsonschema.Draft6Validator(json.load(open(os.path.join(
+        os.path.dirname(__file__), 'schema', 'importManifestSchema.json'))))
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
-            df = readExcelData(filepath)
+            df, header_row_number = readExcelData(filepath)
         except Exception as exc:
             if isinstance(exc, ValueError):
                 message = 'Cannot read %s; it is not formatted correctly' % (
@@ -85,16 +122,24 @@ def readExcelFiles(filelist, ctx):
             continue
         timestamp = os.path.getmtime(filepath)
         count = 0
-        for row in df.itertuples():
+        totalErrors = []
+        for row_num, row in enumerate(df.itertuples()):
             rowAsDict = dict(row._asdict())
             rowAsDict.pop('Index')
+            errors = validateDataRow(validator, rowAsDict, header_row_number + 2 + row_num, df)
             name = None
             for key in {'ScannedFileName', 'InputFileName'}:
                 name = rowAsDict.pop(key, name)
-            if not name or not row.ImageID or not row.TokenID:
+            if errors:
+                for error in errors:
+                    message = 'Error in %s: %s' % (os.path.basename(filepath), error)
+                    ctx.update(message=message)
+                    logger.info(message)
+                totalErrors.append({'name': name, 'errors': errors})
+            if not name:
                 continue
             count += 1
-            if name not in manifest or timestamp > manifest[name]['timestamp']:
+            if name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
                 manifest[name] = {
                     'timestamp': timestamp,
                     'ImageID': row.ImageID,
@@ -102,17 +147,28 @@ def readExcelFiles(filelist, ctx):
                     'name': name,
                     'excel': filepath,
                     'fields': rowAsDict,
+                    'errors': errors,
                 }
         report.append({
             'path': filepath,
             'status': 'parsed',
             'count': count,
+            'errors': totalErrors,
         })
-        logger.info('Read %s; parsed %d rows' % (filepath, count))
+        logger.info('Read %s; parsed %d valid rows' % (filepath, count))
     return manifest, report
 
 
 def ingestOneItem(importFolder, imagePath, record, ctx, user):
+    """
+    Ingest a single image.
+
+    :param importFolder: the folder to store the image.
+    :param imagePath: the path of the image file.
+    :param record: a dictionary of information from the excel file.
+    :param ctx: a progress context.
+    :param user: the user triggering this.
+    """
     status = 'added'
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
@@ -187,7 +243,7 @@ def ingestData(ctx, user=None):  # noqa
             if ext.lower() in {'.xls', '.xlsx', '.csv'}:
                 excelFiles.append(filePath)
             # ignore some extensions
-            elif ext.lower() not in {'.zip', '.txt', '.xml'}:
+            elif ext.lower() not in {'.zip', '.txt', '.xml', '.swp'}:
                 imageFiles.append(filePath)
     if not len(excelFiles):
         ctx.update(message='Failed to find any excel files in import directory.')
@@ -197,30 +253,37 @@ def ingestData(ctx, user=None):  # noqa
     missingImages = []
     report = []
     for record in manifest.values():
-        imagePath = os.path.join(os.path.dirname(record['excel']), record['name'])
+        try:
+            imagePath = os.path.join(os.path.dirname(record['excel']), record['name'])
+        except TypeError:
+            imagePath = None
         if imagePath not in imageFiles:
             imagePath = None
             for testPath in imageFiles:
                 if os.path.basename(testPath) == record['name']:
                     imagePath = testPath
                     break
-        if imagePath is None:
+        if imagePath is None and not record.get('errors'):
             missingImages.append(record)
             status = 'missing'
             report.append({'record': record, 'status': status, 'path': record['name']})
             continue
-        imageFiles.remove(imagePath)
-        status = ingestOneItem(importFolder, imagePath, record, ctx, user)
+        if imagePath is not None:
+            imageFiles.remove(imagePath)
+        if record.get('errors'):
+            status = 'badentry'
+        else:
+            status = ingestOneItem(importFolder, imagePath, record, ctx, user)
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     for image in imageFiles:
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
-    importReport(ctx, report, excelReport, user)
+    importReport(ctx, report, excelReport, user, importPath)
     return reportSummary(report, excelReport)
 
 
-def importReport(ctx, report, excelReport, user):
+def importReport(ctx, report, excelReport, user, importPath):
     """
     Create an import report.
 
@@ -228,6 +291,8 @@ def importReport(ctx, report, excelReport, user):
     :param report: a list of files that were exported.
     :param excelReport: a list of excel files that were processed.
     :param user: the user triggering this.
+    :param importPath: the path of the import folder.  Used to show relative
+        paths in the report.
     """
     ctx.update(message='Generating report')
     excelStatusDict = {
@@ -241,6 +306,7 @@ def importReport(ctx, report, excelReport, user):
         'replaced': 'Updated',
         'missing': 'File missing',
         'unlisted': 'Not in DeID Upload file',
+        'badentry': 'Error in DeID Upload file',
     }
     keyToColumns = {
         'excel': 'ExcelFilePath',
@@ -248,22 +314,26 @@ def importReport(ctx, report, excelReport, user):
     dataList = []
     for row in excelReport:
         data = {
-            'ExcelFilePath': row['path'],
+            'ExcelFilePath': os.path.relpath(row['path'], importPath),
             'Status': excelStatusDict.get(row['status'], row['status']),
             'FailureReason': row.get('reason'),
         }
         dataList.append(data)
     for row in report:
         data = {
-            'FilePath': row.get('path'),
+            'FilePath': os.path.relpath(row['path'], importPath) if row.get('path') else None,
             'Status': statusDict.get(row['status'], row['status']),
         }
         if row.get('record'):
             fields = row['record'].get('fields')
             data.update(fields)
             for k, v in row['record'].items():
+                if k == 'excel' and v:
+                    v = os.path.relpath(v, importPath)
                 if k != 'fields':
                     data[keyToColumns.get(k, k)] = v
+            if row['record'].get('errors'):
+                data['FailureReason'] = '. '.join(row['record']['errors'])
         dataList.append(data)
     df = pd.DataFrame(dataList, columns=[
         'ExcelFilePath', 'FilePath', 'Status',

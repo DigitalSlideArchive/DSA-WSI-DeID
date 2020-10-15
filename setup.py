@@ -42,6 +42,7 @@ setup(
         'celery<5',
         'girder-homepage',
         'histomicsui',
+        'jsonschema',
         'large_image[tiff,openslide,memcached]',
         'openpyxl',
         'pandas',
