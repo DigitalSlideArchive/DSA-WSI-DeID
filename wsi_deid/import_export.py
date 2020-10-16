@@ -84,6 +84,16 @@ def validateDataRow(validator, row, rowNumber, df):
     return errors
 
 
+def getSchemaValidator():
+    """
+    Return a jsonschema validator.
+
+    :returns: a validator.
+    """
+    return jsonschema.Draft6Validator(json.load(open(os.path.join(
+        os.path.dirname(__file__), 'schema', 'importManifestSchema.json'))))
+
+
 def readExcelFiles(filelist, ctx):
     """
     Read each excel file, use pandas to parse it.  Collect the results, where,
@@ -97,8 +107,7 @@ def readExcelFiles(filelist, ctx):
     """
     manifest = {}
     report = []
-    validator = jsonschema.Draft6Validator(json.load(open(os.path.join(
-        os.path.dirname(__file__), 'schema', 'importManifestSchema.json'))))
+    validator = getSchemaValidator()
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
