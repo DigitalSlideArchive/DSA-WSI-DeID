@@ -10,9 +10,9 @@
       "TokenID": "1234AB567001",
       "Proc_Seq": "01",
       "Proc_Type": "Biopsy",
-      "Spec_Site": "C44.7",
+      "Spec_Site": "C447-Skin of lower limb and hip",
       "Slide_ID": "02",
-      "ImageID": "1234AB567001_01_01",
+      "ImageID": "1234AB567001_01_02",
       "InputFileName": "08-A.svs"
     }
   ],
@@ -63,7 +63,7 @@
     "Spec_Site": {
       "$id": "#/properties/Spec_Site",
       "title": "Spec_Site",
-      "description": "Indicates the specimen site for the slides requested/submitted.  This uses the ICD-0-3.2 Topography Code and text location",
+      "description": "Indicates the specimen site for the slides requested/submitted.  This uses the ICD-O-3.2 Topography Code and text location",
       "default": "",
       "examples": [
         "C006-Commissure of lip"
@@ -418,18 +418,19 @@
       "description": "Concatenation of TokenID, Proc_Seq, and Slide_ID.",
       "default": "",
       "examples": [
-        "1234AB567001_01_01"
+        "1234AB567001_01_02"
       ]
     },
     "InputFileName": {
       "$id": "#/properties/InputFileName",
       "type": "string",
-      "pattern": ".",
+      "pattern": "[^.]\\.[^.]",
       "title": "InputFileName",
       "description": "Name of file and file type as received from scanning facility.",
       "default": "",
       "examples": [
-        "129873425.svs or 12321312.ndpi"
+        "129873425.svs",
+        "12321312.ndpi"
       ]
     }
   },
