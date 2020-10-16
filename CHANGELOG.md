@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## Version 1.3.0
+
+### Features
+- Validate rows of the DeID Import file via a jsonschema (#149)
+
+### Changes
+- Reports are now in subfolders and have some formatting changes (#149)
+
 ## Version 1.2.8
 
 ### Changes
