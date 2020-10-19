@@ -5,7 +5,7 @@ Error Messages
 Possible Error Messages Encountered After Import
 ================================================
 
-.. csv-table:: Error Messages
+.. csv-table::
     :header-rows: 1
     :widths: 10, 25, 65
 
@@ -40,7 +40,7 @@ Possible Error Messages Encountered After Import
 Possible Messages In The Import Job Report
 ==========================================
 
-.. csv-table:: Status Descriptions and Errors
+.. csv-table::
     :header-rows: 1
     :widths: 10, 20, 15, 40, 15
 
