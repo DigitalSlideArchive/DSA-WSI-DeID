@@ -214,6 +214,8 @@ Files are automatically copied from the local import directory to the ``Availabl
 Import Process
 --------------
 
+TODO: Import Process needs to be revised
+
 From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, click on the ``Import`` button, as shown in the below screenshot.
 
 .. image:: screenshots/import_button_highlighted.png
@@ -230,12 +232,15 @@ A background process starts that scans through the mounted import directory, and
 
 After the image names and information in the metadata file are reconciled, the WSI DeID will classify images as one of the following:
 
-- ``present``: The image is listed in an Excel file and is already in the WSI DeID based on file path and matching file size. No action is performed.
-- ``added``: The image is listed in an Excel file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
-- ``replaced``: The image is listed in an Excel file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
-- ``missing``: The image is listed in an Excel file but is not in the import directory. No action is performed.
-- ``unlisted``: The image is not listed in an Excel file but is in the import directory. No action is performed.
-- ``failed``: The listed file cannot be read as an image file.
+- ``Already Imported``: The image is listed in an Excel file and is already in the WSI DeID based on file path and matching file size. No action is performed.
+- ``Imported``: The image is listed in an Excel file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
+- ``Updated``: The image is listed in an Excel file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
+- ``File missing``: The image is listed in an Excel file but is not in the import directory. No action is performed.
+- ``Not in DeID Upload file``: The image is not listed in an Excel file but is in the import directory. No action is performed.
+- ``Failed to import``: The listed file cannot be read as an image file.
+- ``Error in DeID Upload file``: The row in Excel failed to validate; the reason is shown in the report.
+- ``Duplicate ImageID``: The same image ID was repeated in the Excel file(s) for different filenames.
+
 
 After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report.
 
@@ -248,6 +253,9 @@ Below is a screenshot of a message presented to the user after an import. Ssee t
 
 Exporting Data
 ==============
+
+TODO: Export Process needs to be revised
+
 
 When images are in the ``WSI DeID`` collection, in the ``Approved`` folder, they can be exported out of the DSA WSI DeID for transfer. 
 
