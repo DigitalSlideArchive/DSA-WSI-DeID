@@ -21,7 +21,7 @@ function performAction(action) {
         let text = actions[action].done;
         let any = false;
         if (resp.action === 'ingest') {
-            if (['duplicate', 'missing', 'unlisted', 'failed', 'notexcel', 'badentry'].some((key) => resp[key])) {
+            if (['duplicate', 'missing', 'unlisted', 'failed', 'notexcel', 'badformat', 'badentry'].some((key) => resp[key])) {
                 text = 'Import process completed with errors.';
             }
             [
@@ -35,7 +35,7 @@ function performAction(action) {
                 ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
-                    if (key === 'unlisted' && !resp.parsed && !resp.notexcel) {
+                    if (key === 'unlisted' && !resp.parsed && !resp.notexcel && !resp.badformat) {
                         text += '  No DeID Upload file present.';
                     } else {
                         text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
@@ -45,7 +45,8 @@ function performAction(action) {
             });
             [
                 ['parsed', 'parsed'],
-                ['notexcel', 'could not be read']
+                ['notexcel', 'could not be read'],
+                ['badformat', 'incorrectly formatted']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     text += `  ${resp[key]} DeID Upload Excel file${resp[key] > 1 ? 's' : ''} ${desc}.`;
