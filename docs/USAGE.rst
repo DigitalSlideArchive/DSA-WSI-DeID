@@ -225,7 +225,7 @@ From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, clic
 
 A background process starts that scans through the mounted import directory, and does the following:
 
-- Each Excel file is parsed for a header row that has TokenID, ImageID, and ScannedFileName.
+- Each Excel file is parsed for a header row that has TokenID, ImageID, and InputFileName.
 - If there are any Excel files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
 - If the same ScannedFileName is listed in multiple Excel files, the newest file is used by preference.
 - The ScannedFileName is expected to be just the file name (e.g., no folder path).
@@ -241,7 +241,7 @@ After the image names and information in the metadata file are reconciled, the W
 
 After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report.
 
-Below is a screenshot of a message presented to the user after an import.
+Below is a screenshot of a message presented to the user after an import. Ssee the Error Messages section below for all possible results of performing the import action.
 
 .. image:: screenshots/import_message_highlighted.png
    :height: 100
@@ -276,7 +276,7 @@ At a high level in the Redaction process, the user can inspect the image and met
 
   1.2 Review the image(s) and metadata fields for PHI/PII.
 
-    1.2.1 Review the image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click XXX. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
+    1.2.1 Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
 
     TODO: what to do in this case? Reject?
 
