@@ -327,19 +327,19 @@ These rules apply only to Philips files:
 
 
 
-TODO: update below screenshots.
+TODO: What are the rules that say when to choose what value from the dropdown, for marking PHI/PII?
 
 Below is a screenshot of image PHI/PII redaction controls for metadata. 
 
 
-The ``aperio.AppMag`` field has been staged for redaction.
+The ``aperio.AppMag`` field has been marked for redaction.
 
 .. image:: screenshots/redact_metadata.png
    :height: 100
    :width: 200
    :alt: redact metadata controls
    
-Below is a screenshot of image PHI/PII redaction controls for Associated Images, with the ``Thumbnail`` image staged for redaction.
+Below is a screenshot of image PHI/PII redaction controls for Associated Images, with the ``Macro`` image marked for redaction.
 
 .. image:: screenshots/redact_images.png
    :height: 100
