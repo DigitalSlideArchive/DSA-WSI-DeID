@@ -154,9 +154,9 @@ Navigating the WSI DeID
 Navigating by Folder
 --------------------
 
-After logging in, from the home page click on the ``Collections`` link on the left menu and then click on the ``WSI DeID`` collection link, which is shown in the below screenshot.
+After logging in, from the home page click on the ``Collections`` link (1) on the left menu and then click on the ``WSI DeID`` collection link (2), which is shown in the screenshot below.
 
-.. image:: screenshots/wsideid_collection_link.png
+.. image:: screenshots/collection_navigation.png
    :height: 100
    :width: 200
    :alt: WSI DeID collection link
