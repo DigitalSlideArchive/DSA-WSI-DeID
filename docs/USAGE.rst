@@ -5,7 +5,7 @@ WSI DeID Usage
 Note: This is a Work In Progress and has not been officially released.
 ======================================================================
 
-* See README.rst for high level information about how to navigate the full documentation.
+* See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
 
 This document describes how to use the WSI DeID software with the major use case of deidentifying Whole Slide Images (WSIs).
 
@@ -29,7 +29,7 @@ It includes the following major sections:
 Installation
 ============
 
-See INSTALL.rst for installation instructions.
+See `INSTALL.rst <INSTALL.rst>`_ for installation instructions.
 
 Girder
 ======
@@ -356,7 +356,7 @@ Label images that are redacted are replaced with a black image that contains tex
 Error Messages
 ==============
 
-For explanations of error messages that the user may encounter, see ERROR-TABLES.rst.
+For explanations of error messages that the user may encounter, see `ERROR-TABLES.rst <ERROR-TABLES.rst>`_.
 
 Software Version
 ================
