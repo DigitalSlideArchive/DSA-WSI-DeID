@@ -239,11 +239,11 @@ After the image names and information in the metadata file are reconciled, the W
 - ``unlisted``: The image is not listed in an Excel file but is in the import directory. No action is performed.
 - ``failed``: The listed file cannot be read as an image file.
 
-After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import complete. 19 files added. 1 file missing from import folder"), and then UI is then refreshed.
+After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report.
 
 Below is a screenshot of a message presented to the user after an import.
 
-.. image:: screenshots/import_message.png
+.. image:: screenshots/import_message_highlighted.png
    :height: 100
    :width: 200
    :alt: import message
