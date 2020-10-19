@@ -18,7 +18,7 @@ You will see several links on the left hand side of the screen that will allow y
 User Types and Permissions
 --------------------------
 
-**Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
+**Admin User:** The first registered user of a WSI DeID system will be an admin user and will have super-user privileges, meaning that the user can take any actions on the system. Admin users can change permissions of other users in the system, and can reset users passwords. The Admin user should be tied to an IT support staff member, and users of the system should create Non-Super Users.
 
 **Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
