@@ -184,7 +184,7 @@ The WSI DeID is based on Girder (see GIRDER.rst for more information), which is 
 
 A folder in Girder may contain items, and an item always has to be in a folder. When looking at the WSI DeID, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``AvailableToProcess`` folder. In this case, the folder has zero children folders and ten items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``10`` in the screenshot.
 
-.. image:: screenshots/image_folder_view.png
+.. image:: screenshots/folder_view_highlighted.png
    :height: 100
    :width: 200
    :alt: image folder view
@@ -356,7 +356,7 @@ Label images that are redacted are replaced with a black image that contains tex
 Error Messages
 ==============
 
-* For explanations of error messages that the user may encounter, see ERROR-TABLES.rst.
+For explanations of error messages that the user may encounter, see ERROR-TABLES.rst.
 
 Software Version
 ================
