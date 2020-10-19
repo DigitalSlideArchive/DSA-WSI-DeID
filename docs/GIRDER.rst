@@ -2,6 +2,7 @@
 Background on Girder
 ====================
 
+See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
 
 Navigating in Girder
 --------------------
