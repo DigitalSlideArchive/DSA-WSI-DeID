@@ -255,7 +255,7 @@ When images are in the ``WSI DeID`` collection, in the ``Approved`` folder, they
 
 In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either copies files from the ``Approved`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
 
-.. image:: screenshots/export_buttons.png
+.. image:: screenshots/export_buttons_highlighted.png
    :height: 100
    :width: 200
    :alt: export buttons
