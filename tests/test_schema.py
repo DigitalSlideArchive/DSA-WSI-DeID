@@ -29,6 +29,14 @@ csv5 = """Some,unimportant,row
 TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,01,Biopsy,C717-Brain stem,01,0579XY112001_01_01,01-A.svs"""
 
+csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
+0579XY112001,00,Biopsy,C717-Brain stem,00,0579XY112001_00_00,01-A.svs
+0579XY112001,01,Biopsy,C717-Brain stem,01,0579XY112001_01_01,01-A.svs
+0579XY112001,02,Biopsy,C717-Brain stem,20,0579XY112001_02_20,01-A.svs
+0579XY112001,98,Biopsy,C717-Brain stem,21,0579XY112001_98_21,01-A.svs
+0579XY112001,99,Biopsy,C717-Brain stem,30,0579XY112001_99_30,01-A.svs"""
+
+
 
 @pytest.mark.parametrize('csv,errorlist', (
     (csv2, [None]),
@@ -45,6 +53,13 @@ TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
     (csv3, [["Invalid row 2 ('Spec_Site' is a required property)"]]),
     (csv4, [["Invalid row 2 (Additional properties are not allowed ('Extra' was unexpected))"]]),
     (csv5, [None]),
+    (csv6, [
+        ['Invalid Proc_Seq in B2', 'Invalid Slide_ID in E2'],
+        None,
+        None,
+        ['Invalid Slide_ID in E5'],
+        ['Invalid Slide_ID in E6'],
+    ]),
 ))
 def test_schema(tmp_path, csv, errorlist):
     validator = getSchemaValidator()

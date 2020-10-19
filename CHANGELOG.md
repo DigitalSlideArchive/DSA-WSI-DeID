@@ -1,6 +1,14 @@
 # Change Log
 
-## Unreleased
+## Version 1.3.1
+
+### Changes
+- The schema now restricts Proc_ID to 01-99 and Slide_ID to 01-20
+- Blank lines are now allowed in DeID Upload files.
+- Files starting with ~$ are ignored during import
+
+### Bug Fixes
+- The Export Jobs Folder wasn't being created
 
 ## Version 1.3.0
 

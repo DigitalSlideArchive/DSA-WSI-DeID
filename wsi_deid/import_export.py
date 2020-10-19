@@ -135,6 +135,8 @@ def readExcelFiles(filelist, ctx):
         for row_num, row in enumerate(df.itertuples()):
             rowAsDict = dict(row._asdict())
             rowAsDict.pop('Index')
+            if all(not val or str(val) == 'nan' for val in rowAsDict.values()):
+                continue
             errors = validateDataRow(validator, rowAsDict, header_row_number + 2 + row_num, df)
             name = None
             for key in {'ScannedFileName', 'InputFileName'}:
@@ -252,7 +254,8 @@ def ingestData(ctx, user=None):  # noqa
             if ext.lower() in {'.xls', '.xlsx', '.csv'}:
                 excelFiles.append(filePath)
             # ignore some extensions
-            elif ext.lower() not in {'.zip', '.txt', '.xml', '.swp'}:
+            elif (ext.lower() not in {'.zip', '.txt', '.xml', '.swp', '.xlk'} and
+                    not file.startswith('~$')):
                 imageFiles.append(filePath)
     if not len(excelFiles):
         ctx.update(message='Failed to find any excel files in import directory.')
@@ -332,6 +335,7 @@ def importReport(ctx, report, excelReport, user, importPath):
     dataList = []
     statusKey = 'SoftwareStatus'
     reasonKey = 'Status/FailureReason'
+    anyErrors = False
     for row in excelReport:
         data = {
             'ExcelFilePath': os.path.relpath(row['path'], importPath),
@@ -341,6 +345,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         if row['status'] == 'badformat' and not row.get('reason'):
             data[reasonKey] = 'No header row with ImageID, TokenID, and ImportFileName'
         dataList.append(data)
+        anyErrors = anyErrors or row['status'] in {'notexcel', 'badformat'}
     for row in report:
         data = {
             'WSIFilePath': os.path.relpath(row['path'], importPath) if row.get(
@@ -360,10 +365,15 @@ def importReport(ctx, report, excelReport, user, importPath):
         if not data.get(reasonKey) and row['status'] in statusExplanation:
             data[reasonKey] = statusExplanation[row['status']]
         dataList.append(data)
-    anyErrors = any(row for row in dataList if row.get(reasonKey))
-    dataList.insert(0, {
-        reasonKey: 'Import process completed' if not anyErrors
-                   else 'Import process completed with errors'})
+        anyErrors = anyErrors or row['status'] in {
+            'duplicate', 'missing', 'unlisted', 'failed', 'badentry'}
+    if not len(excelReport) and not len(report):
+        dataList.insert(0, {
+            reasonKey: 'Nothing to import.  Import folder is empty.'})
+    else:
+        dataList.insert(0, {
+            reasonKey: 'Import process completed' if not anyErrors
+                       else 'Import process completed with errors'})
     for row in dataList:
         if not row.get(reasonKey) and row.get(statusKey):
             row[reasonKey] = row[statusKey]
@@ -612,7 +622,7 @@ def exportReport(ctx, exportPath, report, user):
         'UserIdentifiedPHIPII_DetailedType_ImageComponents',
     ])
     exportName = 'DeID Export Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
-    reportFolder = 'Import Job Reports'
+    reportFolder = 'Export Job Reports'
     path = os.path.join(exportPath, exportName)
     ctx.update(message='Saving report')
     df.to_excel(path, index=False)
