@@ -27,6 +27,7 @@ Navigating the Documentation
 * docs/GIRDER.rst contains reference information on the Girder platform, which is the basis for the WSI DeID.
 * docs/USAGE.rst contains usage information, mostly focused on interacting with the system through a web browser.
 * docs/GLOSSARY.rst contains a glossary of technical terms.
+* docs/ERROR-TABLES.rst contains tables of explanations for error messages that users may encounter.
 * docs/rationale.md contains a rationale of the SEER WSI DeID pilot project.
 
 
