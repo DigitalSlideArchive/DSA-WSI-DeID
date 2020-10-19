@@ -161,7 +161,7 @@ After logging in, from the home page click on the ``Collections`` link (1) on th
    :width: 200
    :alt: WSI DeID collection link
 
-After clicking on the ``WSI DeID`` collection link, you will be in the ``WSI DeID`` collection and should see the ``WSI DeID`` specific folders.
+After clicking on the ``WSI DeID`` collection link, you will be in the ``WSI DeID`` collection and should see the ``WSI DeID`` specific folders, as shown in the screenshot below.
   
 .. image:: screenshots/wsideid_collection_folders.png
    :height: 100
