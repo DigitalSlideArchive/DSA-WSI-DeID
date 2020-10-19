@@ -136,9 +136,7 @@ Step 4b Users Review and Re-process Rejected Files After Software Updates
 
 The ``Rejected`` folder  is available at any time.
 
-If an image is determined to be impossible to fix--perhaps it is too difficult to confirm that PHI/PII has been removed, or if so much data would be removed to de-identify the image that the image data would be useless for research purposes--then the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
-
-TODO: provide specific examples of when an image should be rejected.
+There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
 
 Step 5 Users Export DeID Files
 ------------------------------
@@ -278,13 +276,11 @@ At a high level in the Redaction process, the user can inspect the image and met
 
     1.2.1 Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
 
-    TODO: what to do in this case? Reject?
-
     1.2.2 Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
 
-    The user can view metadata fields, and if any of these contain PHI/PII, the user should click the ``redact`` action for that field. The ``redact`` action will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
+    The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field. The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
 
-    1.2.3 Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, redact and process them.
+    1.2.3 Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
 
     1.2.4 When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
 
@@ -302,7 +298,7 @@ The following rules apply to all file formats:
 * Tiff DateTime (if present), set to 01:01:(year and time)
 * Copyright: removed
 * HostComputer: removed
-* tiff.Software: suffix with our custom tags
+* tiff.Software: modified by adding custom tags with data from the DeID Upload file
 
 These rules apply only to Aperio files:
 
@@ -323,11 +319,6 @@ These rules apply only to Philips files:
 * DICOM_DATE_OF_LAST_CALIBRATION (if present): set to (year)0101
 * DICOM_ACQUISITION_DATETIME (if present): set to (year)0101 (time)
 
-
-
-
-
-TODO: What are the rules that say when to choose what value from the dropdown, for marking PHI/PII?
 
 Below is a screenshot of image PHI/PII redaction controls for metadata. 
 
