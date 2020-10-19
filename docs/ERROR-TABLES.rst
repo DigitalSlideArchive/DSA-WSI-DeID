@@ -2,6 +2,9 @@
 Error Messages
 ==============
 
+See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
+
+
 Possible Error Messages Encountered After Import
 ================================================
 
