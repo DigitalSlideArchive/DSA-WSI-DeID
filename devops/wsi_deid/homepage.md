@@ -12,7 +12,7 @@ This tool is based on core Digital Slide Archive (DSA) components and provides a
 
 - **[Additional NCI background information on WSI DeID Tool](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/rationale.md)**: Additional background on the rationale and planned use of the WSI DeID Tool is found here.
 
-- **[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/USAGE.rst)**: This provides detailed instructions for navigating the WSI DeID Tool.
+- **[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/USAGE.rst)**: This provides detailed instructions for navigating the WSI DeID Tool.
 
 
 - **[WSI DeID Tool Introduction and Installation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst)**: This provides a technical introduction and installation instructions to the tool.
