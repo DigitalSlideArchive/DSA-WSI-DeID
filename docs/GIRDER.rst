@@ -20,7 +20,7 @@ User Types and Permissions
 
 **Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. All subsequently created users will be regular, non-super-users, but will have the ability to use the redaction workflows.
 
-**Non-Super Users:** All subsequently created users will be Non-Super Users, who wil have the ability to use the redaction workflows.
+**Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
 **Anonymous User:** If no user is logged in, you are said to be browsing the WSI DeID as the ``anonymous`` user. The ``anonymous`` user may browse data in the WSI DeID but cannot take any actions that redact data or change the state of data. When you are browsing as the ``anonymous`` user you will see the option to ``Register or Log In`` as in the below screenshot.
 
