@@ -1,7 +1,7 @@
 Installation
 ============
 
-See README.rst for high level information about how to navigate the full documentation.
+See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
 
 Prerequisites
 -------------
