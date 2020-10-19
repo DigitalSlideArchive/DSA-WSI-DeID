@@ -23,12 +23,12 @@ Navigating the Documentation
 ============================
 
 
-* docs/INSTALL.rst contains system installation and administration information, mostly focused on running terminal commands.
-* docs/GIRDER.rst contains reference information on the Girder platform, which is the basis for the WSI DeID.
-* docs/USAGE.rst contains usage information, mostly focused on interacting with the system through a web browser.
-* docs/GLOSSARY.rst contains a glossary of technical terms.
-* docs/ERROR-TABLES.rst contains tables of explanations for error messages that users may encounter.
-* docs/rationale.md contains a rationale of the SEER WSI DeID pilot project.
+* `docs/INSTALL.rst <docs/INSTALL.rst>`_ contains system installation and administration information, mostly focused on running terminal commands.
+* `docs/GIRDER.rst <docs/GIRDER.rst>`_ contains reference information on the Girder platform, which is the basis for the WSI DeID.
+* `docs/USAGE.rst <docs/USAGE.rst>`_ contains usage information, mostly focused on interacting with the system through a web browser.
+* `docs/GLOSSARY.rst <docs/GLOSSARY.rst>`_ contains a glossary of technical terms.
+* `docs/ERROR-TABLES.rst <docs/ERROR-TABLES.rst>`_ contains tables of explanations for error messages that users may encounter.
+* `docs/rationale.md <docs/rationale.md>`_ contains a rationale of the SEER WSI DeID pilot project.
 
 
 
