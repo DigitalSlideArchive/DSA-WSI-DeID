@@ -218,7 +218,7 @@ Import Process
 
 From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, click on the ``Import`` button, as shown in the below screenshot.
 
-.. image:: screenshots/import_button.png
+.. image:: screenshots/import_button_highlighted.png
    :height: 100
    :width: 200
    :alt: import button
