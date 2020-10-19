@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 1.3.2
+
+### Bug Fixes
+- Files starting with ~$ are properly ignored during import (#151)
+
 ## Version 1.3.1
 
 ### Changes

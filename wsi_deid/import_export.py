@@ -251,7 +251,7 @@ def ingestData(ctx, user=None):  # noqa
         for file in files:
             filePath = os.path.join(importPath, base, file)
             _, ext = os.path.splitext(file)
-            if ext.lower() in {'.xls', '.xlsx', '.csv'}:
+            if ext.lower() in {'.xls', '.xlsx', '.csv'} and not file.startswith('~$'):
                 excelFiles.append(filePath)
             # ignore some extensions
             elif (ext.lower() not in {'.zip', '.txt', '.xml', '.swp', '.xlk'} and
