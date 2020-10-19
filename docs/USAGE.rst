@@ -198,7 +198,7 @@ To see an item view of an image, click on the image/item's row in the folder vie
 
 Below is a screenshot of the action buttons available in the ``WSI DeID Workflow`` section of the ``AvailableToProcess`` folder. Different folders will present different combinations of buttons, see the Workflow Overview section above for details.
   
- .. image:: screenshots/wsideid_workflow_buttons.png
+ .. image:: screenshots/wsideid_workflow_buttons_highlighted.png
    :height: 100
    :width: 200
    :alt: WSI DeID workflow buttons
