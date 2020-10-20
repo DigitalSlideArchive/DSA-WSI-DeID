@@ -131,12 +131,21 @@ Step 4a Users Contact IMS and Reprocess for Potential Resolution
 
 The ``Quarantine`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantine`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
 
+Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them. 
+
 Step 4b Users Review and Re-process Rejected Files After Software Updates
 -------------------------------------------------------------------------
 
 The ``Rejected`` folder  is available at any time.
 
 There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
+
+There is a ``Reject`` button available near the zoomable WSI image as a convenience to quickly reject a WSI file, see the screenshot below.
+
+.. image:: screenshots/top_reject_button.png
+   :height: 100
+   :width: 200
+   :alt: top reject button
 
 Step 5 Users Export DeID Files
 ------------------------------
@@ -200,6 +209,16 @@ Below is a screenshot of the action buttons available in the ``WSI DeID Workflow
    :height: 100
    :width: 200
    :alt: WSI DeID workflow buttons
+   
+Files & links Actions
+---------------------
+
+There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section. These are shown in the screenshot below.
+
+ .. image:: screenshots/files_and_links_buttons_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: Files & links actions
 
 Importing Data
 ==============
@@ -294,7 +313,7 @@ After export, a message is shown indicating how many files were exported, and gi
 .. image:: screenshots/export_message_highlighted.png
    :height: 100
    :width: 200
-   :alt: export buttons
+   :alt: export message
 
 Redaction
 =========
