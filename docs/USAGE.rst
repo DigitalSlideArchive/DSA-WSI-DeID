@@ -212,16 +212,20 @@ WSI files will be copied from the local import directory to the ``AvailableToPro
 Imported File Types and Folder Structures
 -----------------------------------------
 
-The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined metadata file that describes each of the WSI files to be imported. The metadata file should be either an Excel file (identified by ending in .xls or .xlsx) or a CSV file (identified by ending in .csv). Any files other than WSI files and metadata files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
+The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined metadata file that describes each of the WSI files to be imported. The metadata file should be either an Excel file (identified by ending in .xls or .xlsx) or a CSV file (identified by ending in .csv). More than one metadata file may be placed in the mounted import directory, and all metadata files of the correct type will be used in the import process. Any files other than WSI files and metadata files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
 
+Step 1 Users Place Raw WSIs and Metadata Files in Local Folder
+--------------------------------------------------------------
 
+Place the WSIs and Metadata Files in the mounted import directory. The sections above describe how to set up the mounted import directory and valid input file types.
 
+Step 2 Navigate to the ``AvailableToProcess`` folder
+----------------------------------------------------
 
+See the Navigating the WSI DeID section above for more information.
 
-Import Process
---------------
-
-TODO: Import Process needs to be revised
+Step 3 Press the Import Button
+------------------------------
 
 From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, click on the ``Import`` button, as shown in the below screenshot.
 
@@ -230,26 +234,28 @@ From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, clic
    :width: 200
    :alt: import button
 
-A background process starts that scans through the mounted import directory, and does the following:
+Clicking on the ``Import`` button will trigger a scan of the mounted import directory, and will do the following:
 
-- Each Excel file is parsed for a header row that has TokenID, ImageID, and InputFileName.
-- If there are any Excel files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
-- If the same ScannedFileName is listed in multiple Excel files, the newest file is used by preference.
+- Each Metadata (Excel or CSV) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
+- If there are any Metadata files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
+- If the same ScannedFileName is listed in multiple Metadata files, the newest file is used by preference.
 - The ScannedFileName is expected to be just the file name (e.g., no folder path).
 
 After the image names and information in the metadata file are reconciled, the WSI DeID will classify images as one of the following:
 
-- ``Already Imported``: The image is listed in an Excel file and is already in the WSI DeID based on file path and matching file size. No action is performed.
-- ``Imported``: The image is listed in an Excel file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
-- ``Updated``: The image is listed in an Excel file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
-- ``File missing``: The image is listed in an Excel file but is not in the import directory. No action is performed.
-- ``Not in DeID Upload file``: The image is not listed in an Excel file but is in the import directory. No action is performed.
+- ``Already Imported``: The image is listed in a Metadata file and is already in the WSI DeID based on file path and matching file size. No action is performed.
+- ``Imported``: The image is listed in an= Metadata file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
+- ``Updated``: The image is listed in a Metadata file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
+- ``File missing``: The image is listed in a Metadata file but is not in the import directory. No action is performed.
+- ``Not in DeID Upload file``: The image is not listed in a Metadata file but is in the import directory. No action is performed.
 - ``Failed to import``: The listed file cannot be read as an image file.
-- ``Error in DeID Upload file``: The row in Excel failed to validate; the reason is shown in the report.
-- ``Duplicate ImageID``: The same image ID was repeated in the Excel file(s) for different filenames.
+- ``Error in DeID Upload file``: The row in the Metadata file failed to validate; the reason is shown in the report.
+- ``Duplicate ImageID``: The same image ID was repeated in the Metadata file(s) for different filenames.
 
+Step 4 Import Status is Displayed
+---------------------------------
 
-After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report.
+After all images and all Metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report, which will indicate which WSIs were imported or which failed to import and why.
 
 Below is a screenshot of a message presented to the user after an import. Ssee the Error Messages section below for all possible results of performing the import action.
 
