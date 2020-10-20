@@ -257,6 +257,8 @@ Step 4 Import Status is Displayed
 
 After all images and all Metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report, which will indicate which WSIs were imported or which failed to import and why.
 
+The user may then proceed with the redaction workflow, described in the Workflow Overview section above.
+
 Below is a screenshot of a message presented to the user after an import. Ssee the Error Messages section below for all possible results of performing the import action.
 
 .. image:: screenshots/import_message_highlighted.png
@@ -270,12 +272,15 @@ Exporting Data
 The export process assumes that the system has been configured with a mounted export directory, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. For more information on setting up the export directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
 
 
-TODO: Export Process needs to be revised
+Step 1 Users Process Images into ``Approved`` Folder
+----------------------------------------------------
 
+If users have followed the redaction workflow, described in the Workflow Overview section above, and have images in the ``Approved`` folder, they may proceed to export these files out of the DSA WSI DeID for transfer. 
 
-When images are in the ``WSI DeID`` collection, in the ``Approved`` folder, they can be exported out of the DSA WSI DeID for transfer. 
+Step 2 Users Click ``Export Recent`` or ``Export All`` Buttons
+--------------------------------------------------------------
 
-In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either copies files from the ``Approved`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either button copies files from the ``Approved`` folder to the mounted export folder. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
 
 .. image:: screenshots/export_buttons_highlighted.png
    :height: 100
@@ -284,8 +289,12 @@ In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and
 
 Recent exports are any items in the ``Approved`` folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
-After export, a message is shown indicating how many files were exported, how many were already present (based on having the same file name) and the same file size, and how many were already present and differed in file size.
+After export, a message is shown indicating how many files were exported, and giving the user a chance to download the Excel export report for more details. See the screenshot below to see an export message example.
 
+.. image:: screenshots/export_message_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: export buttons
 
 Redaction
 =========
