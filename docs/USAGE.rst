@@ -15,8 +15,8 @@ It includes the following major sections:
 * Workflow Overview
 * Navigating the WSI DeID
 * Importing Data
-* Exporting Data
 * Redaction
+* Exporting Data
 * Error Messages
 * Software Version
 
@@ -250,20 +250,20 @@ From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, clic
    :width: 200
    :alt: import button
 
-Clicking on the ``Import`` button will trigger a scan of the mounted import directory, and will do the following:
+Clicking on the ``Import`` button will trigger a scan of the mounted import directory (i.e., where the software is directed to find the files), and will do the following:
 
 - Each DeID Upload (Excel or CSV metadata) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
 - If there are any DeID Upload files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
 - If the same InputFileName is listed in multiple DeID Upload files, the information in the newest DeID Upload DeID Upload file is used by preference.
 - The InputFileName is expected to be just the file name (e.g., no folder path).
 
-After the image names and information in the DeID Upload file are reconciled, the WSI DeID will classify images as one of the following:
+After the WSI file names and information in the DeID Upload file are reconciled, the WSI DeID software will classify WSI files as one of the following:
 
-- ``Already Imported``: The image is listed in a DeID Upload file and is already in the WSI DeID based on file path and matching file size. No action is performed.
-- ``Imported``: The image is listed in a DeID Upload file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
-- ``Updated``: The image is listed in a DeID Upload file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
-- ``File missing``: The image is listed in a DeID Upload file but is not in the import directory. No action is performed.
-- ``Not in DeID Upload file``: The image is not listed in a DeID Upload file but is in the import directory. No action is performed.
+- ``Already Imported``: The file is listed in a DeID Upload file and is already in the WSI DeID based on file path and matching file size. No further action is needed.
+- ``Imported``: The file is listed in a DeID Upload file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<file extension>.
+- ``Updated``: The image is listed in a DeID Upload file and is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
+- ``File missing``: The image is listed in a DeID Upload file but is not in the import directory. No import action is performed.
+- ``Not in DeID Upload file``: The image is not listed in a DeID Upload file but is in the import directory. No import action is performed.
 - ``Failed to import``: The listed file cannot be read as an image file.
 - ``Error in DeID Upload file``: The row in the DeID Upload file failed to validate; the reason is shown in the report.
 - ``Duplicate ImageID``: The same image ID was repeated in the DeID Upload file(s) for different filenames.
@@ -281,6 +281,30 @@ Below is a screenshot of a message presented to the user after an import. Ssee t
    :height: 100
    :width: 200
    :alt: import message
+   
+
+Redaction
+=========
+
+At a high level in the Redaction process, the user can inspect the image and metadata for PHI/PII, and can indicate if any of these should be redacted. Redaction can occur from the ``Available To Process`` or ``Quarantined`` folder. Below are the specific steps to follow for the Redaction process. When a field is redacted so that it is changed, the original value in that redacted data field is completely replaced with the new value. When a field or image is redacted completely, it is removed and will not be available in the future.
+
+1. Reviewing the image(s) and metadata for PHI/PII.
+
+  1.1 Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
+
+  1.2 Review the image(s) and metadata fields for PHI/PII.
+
+    1.2.1 Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
+
+    1.2.2 Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
+
+    The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field. The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
+
+    1.2.3 Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
+
+    1.2.4 When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
+
+  1.3 If after redacting, all PHI/PII has been removed, click the green ``Approved`` button.
 
 Exporting Data
 ==============
@@ -311,30 +335,6 @@ After export, a message is shown indicating how many files were exported, and gi
    :height: 100
    :width: 200
    :alt: export message
-
-Redaction
-=========
-
-At a high level in the Redaction process, the user can inspect the image and metadata for PHI/PII, and can indicate if any of these should be redacted. Redaction can occur from the ``Available To Process`` or ``Quarantined`` folder. Below are the specific steps to follow for the Redaction process. When a field is redacted so that it is changed, the original value in that redacted data field is completely replaced with the new value. When a field or image is redacted completely, it is removed and will not be available in the future.
-
-1. Reviewing the image(s) and metadata for PHI/PII.
-
-  1.1 Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
-
-  1.2 Review the image(s) and metadata fields for PHI/PII.
-
-    1.2.1 Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
-
-    1.2.2 Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
-
-    The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field. The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
-
-    1.2.3 Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
-
-    1.2.4 When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
-
-  1.3 If after redacting, all PHI/PII has been removed, click the green ``Approved`` button.
-
 
 
 Business Rules for WSI DeID
