@@ -2,9 +2,6 @@
 WSI DeID Usage
 ==============
 
-Note: This is a Work In Progress and has not been officially released.
-======================================================================
-
 See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
 
 This document describes how to use the WSI DeID software with the major use case of deidentifying Whole Slide Images (WSIs).
