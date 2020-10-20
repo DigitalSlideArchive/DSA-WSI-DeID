@@ -128,12 +128,21 @@ Step 4a Users Contact IMS and Reprocess for Potential Resolution
 
 The ``Quarantine`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantine`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
 
+Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them. 
+
 Step 4b Users Review and Re-process Rejected Files After Software Updates
 -------------------------------------------------------------------------
 
 The ``Rejected`` folder  is available at any time.
 
 There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
+
+There is a ``Reject`` button available near the zoomable WSI image as a convenience to quickly reject a WSI file, see the screenshot below.
+
+.. image:: screenshots/top_reject_button.png
+   :height: 100
+   :width: 200
+   :alt: top reject button
 
 Step 5 Users Export DeID Files
 ------------------------------
@@ -197,21 +206,42 @@ Below is a screenshot of the action buttons available in the ``WSI DeID Workflow
    :height: 100
    :width: 200
    :alt: WSI DeID workflow buttons
+   
+Files & links Actions
+---------------------
+
+There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section unless you are intentionally performing low-level file management. These are shown in the screenshot below.
+
+ .. image:: screenshots/files_and_links_buttons_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: Files & links actions
 
 Importing Data
 ==============
 
-The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration.
+The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration. For more information on setting up the import directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
 
-Imported Files and Folders
---------------------------
+WSI files will be copied from the local import directory to the ``AvailableToProcess`` folder in the ``WSI DeID`` collection in the WSI DeID, after running the import process.
 
-Files are automatically copied from the local import directory to the ``AvailableToProcess`` folder in the ``WSI DeID`` collection in the WSI DeID. Files can have any folder structure; the folder structure is not significant in the import process. Excel files (identified by ending in .xls or .xlsx, or .csv for CSV files) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process -- this list can be easily changed.
 
-Import Process
---------------
+Imported File Types and Folder Structures
+-----------------------------------------
 
-TODO: Import Process needs to be revised
+The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx) or a CSV file (identified by ending in .csv). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
+
+Step 1 Users Place Raw WSIs and DeID Upload Files in Local Folder
+-----------------------------------------------------------------
+
+Place the WSIs and DeID Upload files in the mounted import directory. The sections above describe how to set up the mounted import directory and valid input file types.
+
+Step 2 Navigate to the ``AvailableToProcess`` folder
+----------------------------------------------------
+
+See the Navigating the WSI DeID section above for more information.
+
+Step 3 Press the Import Button
+------------------------------
 
 From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, click on the ``Import`` button, as shown in the below screenshot.
 
@@ -220,26 +250,30 @@ From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, clic
    :width: 200
    :alt: import button
 
-A background process starts that scans through the mounted import directory, and does the following:
+Clicking on the ``Import`` button will trigger a scan of the mounted import directory, and will do the following:
 
-- Each Excel file is parsed for a header row that has TokenID, ImageID, and InputFileName.
-- If there are any Excel files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
-- If the same ScannedFileName is listed in multiple Excel files, the newest file is used by preference.
-- The ScannedFileName is expected to be just the file name (e.g., no folder path).
+- Each DeID Upload (Excel or CSV metadata) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
+- If there are any DeID Upload files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
+- If the same InputFileName is listed in multiple DeID Upload files, the information in the newest DeID Upload DeID Upload file is used by preference.
+- The InputFileName is expected to be just the file name (e.g., no folder path).
 
-After the image names and information in the metadata file are reconciled, the WSI DeID will classify images as one of the following:
+After the image names and information in the DeID Upload file are reconciled, the WSI DeID will classify images as one of the following:
 
-- ``Already Imported``: The image is listed in an Excel file and is already in the WSI DeID based on file path and matching file size. No action is performed.
-- ``Imported``: The image is listed in an Excel file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
-- ``Updated``: The image is listed in an Excel file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
-- ``File missing``: The image is listed in an Excel file but is not in the import directory. No action is performed.
-- ``Not in DeID Upload file``: The image is not listed in an Excel file but is in the import directory. No action is performed.
+- ``Already Imported``: The image is listed in a DeID Upload file and is already in the WSI DeID based on file path and matching file size. No action is performed.
+- ``Imported``: The image is listed in a DeID Upload file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<extension>.
+- ``Updated``: The image is listed in a DeID Upload file, is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
+- ``File missing``: The image is listed in a DeID Upload file but is not in the import directory. No action is performed.
+- ``Not in DeID Upload file``: The image is not listed in a DeID Upload file but is in the import directory. No action is performed.
 - ``Failed to import``: The listed file cannot be read as an image file.
-- ``Error in DeID Upload file``: The row in Excel failed to validate; the reason is shown in the report.
-- ``Duplicate ImageID``: The same image ID was repeated in the Excel file(s) for different filenames.
+- ``Error in DeID Upload file``: The row in the DeID Upload file failed to validate; the reason is shown in the report.
+- ``Duplicate ImageID``: The same image ID was repeated in the DeID Upload file(s) for different filenames.
 
+Step 4 Import Status is Displayed
+---------------------------------
 
-After all images and Excel metadata files have been processed, a message is displayed summarizing what images were in each of the five classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report.
+After all images and all DeID Upload files have been processed, a message is displayed summarizing what images were in each of the classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report, which will indicate which WSIs were imported or which failed to import and why.
+
+The user may then proceed with the redaction workflow, described in the Workflow Overview section above.
 
 Below is a screenshot of a message presented to the user after an import. Ssee the Error Messages section below for all possible results of performing the import action.
 
@@ -251,12 +285,18 @@ Below is a screenshot of a message presented to the user after an import. Ssee t
 Exporting Data
 ==============
 
-TODO: Export Process needs to be revised
+The export process assumes that the system has been configured with a mounted export directory, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. For more information on setting up the export directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
 
 
-When images are in the ``WSI DeID`` collection, in the ``Approved`` folder, they can be exported out of the DSA WSI DeID for transfer. 
+Step 1 Users Process Images into ``Approved`` Folder
+----------------------------------------------------
 
-In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either copies files from the ``Approved`` folder to the mounted export folder, that is, to the local filesystem folder that was mounted as the export path in the docker-compose configuration. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+If users have followed the redaction workflow, described in the Workflow Overview section above, and have images in the ``Approved`` folder, they may proceed to export these files out of the DSA WSI DeID for transfer. 
+
+Step 2 Users Click ``Export Recent`` or ``Export All`` Buttons
+--------------------------------------------------------------
+
+In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either button copies files from the ``Approved`` folder to the mounted export folder. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
 
 .. image:: screenshots/export_buttons_highlighted.png
    :height: 100
@@ -265,8 +305,12 @@ In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and
 
 Recent exports are any items in the ``Approved`` folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
-After export, a message is shown indicating how many files were exported, how many were already present (based on having the same file name) and the same file size, and how many were already present and differed in file size.
+After export, a message is shown indicating how many files were exported, and giving the user a chance to download the Excel export report for more details. See the screenshot below to see an export message example.
 
+.. image:: screenshots/export_message_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: export message
 
 Redaction
 =========
