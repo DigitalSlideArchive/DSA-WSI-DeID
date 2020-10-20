@@ -204,12 +204,19 @@ Below is a screenshot of the action buttons available in the ``WSI DeID Workflow
 Importing Data
 ==============
 
-The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration.
+The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration. For more information on setting up the import directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
 
-Imported Files and Folders
---------------------------
+WSI files will be copied from the local import directory to the ``AvailableToProcess`` folder in the ``WSI DeID`` collection in the WSI DeID, after running the import process.
 
-Files are automatically copied from the local import directory to the ``AvailableToProcess`` folder in the ``WSI DeID`` collection in the WSI DeID. Files can have any folder structure; the folder structure is not significant in the import process. Excel files (identified by ending in .xls or .xlsx, or .csv for CSV files) and image files (anything else except for ignored files) will be imported. To facilitate bulk uploads, we ignore files ending in .txt, .xml, .zip from the import process -- this list can be easily changed.
+
+Imported File Types and Folder Structures
+-----------------------------------------
+
+The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined metadata file that describes each of the WSI files to be imported. The metadata file should be either an Excel file (identified by ending in .xls or .xlsx) or a CSV file (identified by ending in .csv). Any files other than WSI files and metadata files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
+
+
+
+
 
 Import Process
 --------------
@@ -253,6 +260,9 @@ Below is a screenshot of a message presented to the user after an import. Ssee t
 
 Exporting Data
 ==============
+
+The export process assumes that the system has been configured with a mounted export directory, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. For more information on setting up the export directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
+
 
 TODO: Export Process needs to be revised
 
