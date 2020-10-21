@@ -83,7 +83,7 @@ There are six Folders an image file can be in within the WSI DeID Tool, includin
 
 The workflow is depicted in the overall workflow diagram below.
 
-.. image:: screenshots/workflow_diagram.png
+.. image:: screenshots/workflow_diagram_v2.png
    :height: 100
    :width: 200
    :alt: workflow diagram
