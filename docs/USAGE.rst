@@ -11,16 +11,14 @@ It includes the following major sections:
 * Installation
 * Girder Background
 * User Management
-* PHI/PII Definitions and Types
 * Workflow Overview
 * Navigating the WSI DeID
 * Importing Data
 * Redaction
+* PHI/PII Definitions and Types
 * Exporting Data
 * Error Messages
 * Software Version
-
-
 
 
 Installation
@@ -45,7 +43,7 @@ When you first interact with the software through your browser, you will need to
    :height: 100
    :width: 200
    :alt: register or log in
- 
+
 
 If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen, like for the user named ``admin`` in the screenshot below.
 
@@ -53,7 +51,7 @@ If you are logged into the WSI DeID, your username will appear in the upper righ
    :height: 100
    :width: 200
    :alt: admin user logged in
-  
+
 User Types and Permissions
 --------------------------
 
@@ -63,11 +61,6 @@ See GIRDER.rst for more information.
 
 **Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
-  
-PHI/PII Definitions and Types
-=============================
-
-TODO: provide definitions and types of PHI/PII for the purposes of this study.
 
 Workflow Overview
 =================
@@ -108,7 +101,7 @@ Step 3 Users Process and Deidentify Files
 Once an image is in the ``Available To Process`` folder, the user can make the following UI selections:
 
 - "Redact Image" to redact it, sending it to the ``Redacted`` folder, and sending an original file to the ``Original`` folder (go to step 4)
-- "Quarantine" for more reprocessing, sending it to the ``Quarantine`` folder (go to step 4a)
+- "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
 - "Reject" to mark that it is impossible to fix, sending it to the ``Rejected`` folder (go to Step 4b)
 
 An image is copied into the ``Original`` folder before it will be redacted and will go into the ``Redacted`` folder, so that an unedited copy of the image is stored.
@@ -120,15 +113,15 @@ Images in the ``Redacted`` folder have gone through the redaction process, but s
 
 Once an image is in the ``Redacted`` folder, the user can approve the file. The user can make the following UI selections:
 
-- "Approve" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Approved`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu. 
-- "Quarantine" for more reprocessing, sending it to the ``Quarantine`` folder (go to step 4a)
+- "Approve" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Approved`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu.
+- "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
 
 Step 4a Users Contact IMS and Reprocess for Potential Resolution
 ----------------------------------------------------------------
 
-The ``Quarantine`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantine`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
+The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
 
-Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them. 
+Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
 
 Step 4b Users Review and Re-process Rejected Files After Software Updates
 -------------------------------------------------------------------------
@@ -151,7 +144,7 @@ When an image has been de-identified and is cleared for release, it will be in t
 
 In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, that will allow the user to export images.
 
-   
+
 Navigating the WSI DeID
 =======================
 
@@ -166,12 +159,12 @@ After logging in, from the home page click on the ``Collections`` link (1) on th
    :alt: WSI DeID collection link
 
 After clicking on the ``WSI DeID`` collection link, you will be in the ``WSI DeID`` collection and should see the ``WSI DeID`` specific folders, as shown in the screenshot below.
-  
+
 .. image:: screenshots/wsideid_collection_folders_highlighted.png
    :height: 100
    :width: 200
    :alt: WSI DeID collection folders
-   
+
 From this folder listing, you can navigate to any folder you wish by clicking on the folder name link. For example, if you want to import data, go to the ``AvailableToProcess`` folder, or if you want to export data, go to the ``Approved`` folder. See the Workflow Overview section above for a description of each folder.
 
 Next Item Action
@@ -192,7 +185,7 @@ A folder in Girder may contain items, and an item always has to be in a folder. 
    :height: 100
    :width: 200
    :alt: image folder view
-   
+
 To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
 
 .. image:: screenshots/example_image_item_view.png
@@ -201,18 +194,18 @@ To see an item view of an image, click on the image/item's row in the folder vie
    :alt: image item view
 
 Below is a screenshot of the action buttons available in the ``WSI DeID Workflow`` section of the ``AvailableToProcess`` folder. Different folders will present different combinations of buttons, see the Workflow Overview section above for details.
-  
- .. image:: screenshots/wsideid_workflow_buttons_highlighted.png
+
+.. image:: screenshots/wsideid_workflow_buttons_highlighted.png
    :height: 100
    :width: 200
    :alt: WSI DeID workflow buttons
-   
+
 Files & links Actions
 ---------------------
 
 There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section unless you are intentionally performing low-level file management. These are shown in the screenshot below.
 
- .. image:: screenshots/files_and_links_buttons_highlighted.png
+.. image:: screenshots/files_and_links_buttons_highlighted.png
    :height: 100
    :width: 200
    :alt: Files & links actions
@@ -220,7 +213,7 @@ There is a section of the WSI DeID that is titled ``Files & links``. Do not clic
 Importing Data
 ==============
 
-The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration. For more information on setting up the import directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
+The import process assumes that the system has been configured with a mounted import directory, that is, the local filesystem folder that was mounted as the import path in the docker-compose configuration. For more information on setting up the import directory, see `INSTALL.rst <INSTALL.rst#import-and-export-paths>`__.
 
 WSI files will be copied from the local import directory to the ``AvailableToProcess`` folder in the ``WSI DeID`` collection in the WSI DeID, after running the import process.
 
@@ -281,46 +274,87 @@ Below is a screenshot of a message presented to the user after an import. Ssee t
    :height: 100
    :width: 200
    :alt: import message
-   
+
 
 Redaction
 =========
 
 At a high level in the Redaction process, the user can inspect the image and metadata for PHI/PII, and can indicate if any of these should be redacted. Redaction can occur from the ``Available To Process`` or ``Quarantined`` folder. Below are the specific steps to follow for the Redaction process. When a field is redacted so that it is changed, the original value in that redacted data field is completely replaced with the new value. When a field or image is redacted completely, it is removed and will not be available in the future.
 
-1. Reviewing the image(s) and metadata for PHI/PII.
+Review Process for PHI/PII in Image(s) and Metadata
+---------------------------------------------------
+ 
+1. Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
 
-  1.1 Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
+2. Review the image(s) and metadata fields for PHI/PII.
 
-  1.2 Review the image(s) and metadata fields for PHI/PII.
+  2.1. Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
 
-    1.2.1 Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
+  2.2. Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
 
-    1.2.2 Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
+  The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field (see the PHI/PII Definitions and Types, below). The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
 
-    The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field. The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
+  2.3. Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
 
-    1.2.3 Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
+  2.4. When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
 
-    1.2.4 When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
+3. If after redacting, all PHI/PII has been removed, click the green ``Approved`` button.
 
-  1.3 If after redacting, all PHI/PII has been removed, click the green ``Approved`` button.
+PHI/PII Definitions and Types
+=============================
+
+The table below describes the redaction options and definitions of PHI/PII categories.
+
+.. csv-table::
+    :header-rows: 1
+    :widths: 20, 40, 40
+
+    PHI/PII Type,Redaction Selection,Definitions
+    Personal Information,Patient Name,
+    Personal Information,Patient Date of Birth,
+    Personal Information,Patient Social Security Number,
+    Personal Information,Other Personal,Patient's Maiden Name
+    Personal Information,Other Personal,Mother's Maiden Name
+    Personal Information,Other Personal,Family Member's Name
+    Personal Information,Other Personal,Full Face Photograph
+    Personal Information,Other Personal,Patient's E-mail Address
+    Personal Information,Other Personal,Patient's Phone or Fax Number
+    Demographics,Demographics,Patient's Age
+    Demographics,Demographics,Patient's Geopraphic Location (any)
+    Demographics,Demographics,Patient's Location of Birth
+    Facility/Physician Information,Facility/Physician Information,Facility Name or Address
+    Facility/Physician Information,Facility/Physician Information,Laboratory Name or Address
+    Facility/Physician Information,Facility/Physician Information,Physician Name or Address
+    Facility/Physician Information,Facility/Physician Information,Admission Date ``*``
+    Facility/Physician Information,Facility/Physician Information,Test/Procedure/Specimen Date ``*``
+    Facility/Physician Information,Facility/Physician Information,Date of Service ``*``
+    Facility/Physician Information,Facility/Physician Information,Facility Phone or Fax Number
+    Facility/Physician Information,Facility/Physician Information,Laboratory Phone or Fax Number
+    Facility/Physician Information,Facility/Physician Information,Internet Protocol (IP) addresses
+    Facility/Physician Information,Facility/Physician Information,Web Universal Resource Locators (URLs)
+    Other PHI/PII,Other PHI/PII,Medical Record Number
+    Other PHI/PII,Other PHI/PII,Financial Number
+    Other PHI/PII,Other PHI/PII,Account Number
+    Other PHI/PII,Other PHI/PII,Health Plan Beneficiary Number
+    Other PHI/PII,Other PHI/PII,Device Identifiers/Serial Numbers
+
+``*`` For these dates, year is permissible; however, full or partial date including the day and/or month is considered PHI/PII.
 
 Exporting Data
 ==============
 
-The export process assumes that the system has been configured with a mounted export directory, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. For more information on setting up the export directory, see  `INSTALL.rst <INSTALL.rst#import-and-export-paths>`_.
+The export process assumes that the system has been configured with a mounted export directory, that is, the local filesystem folder that was mounted as the export path in the docker-compose configuration. For more information on setting up the export directory, see `INSTALL.rst <INSTALL.rst#import-and-export-paths>`__.
 
 
 Step 1 Users Process Images into ``Approved`` Folder
 ----------------------------------------------------
 
-If users have followed the redaction workflow, described in the Workflow Overview section above, and have images in the ``Approved`` folder, they may proceed to export these files out of the DSA WSI DeID for transfer. 
+If users have followed the redaction workflow, described in the Workflow Overview section above, and have images in the ``Approved`` folder, they may proceed to export these files out of the DSA WSI DeID for transfer.
 
 Step 2 Users Click ``Export Recent`` or ``Export All`` Buttons
 --------------------------------------------------------------
 
-In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either button copies files from the ``Approved`` folder to the mounted export folder. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory. 
+In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either button copies files from the ``Approved`` folder to the mounted export folder. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory.
 
 .. image:: screenshots/export_buttons_highlighted.png
    :height: 100
@@ -369,7 +403,7 @@ These rules apply only to Philips files:
 * DICOM_ACQUISITION_DATETIME (if present): set to (year)0101 (time)
 
 
-Below is a screenshot of image PHI/PII redaction controls for metadata. 
+Below is a screenshot of image PHI/PII redaction controls for metadata.
 
 
 The ``aperio.AppMag`` field has been marked for redaction.
@@ -378,7 +412,7 @@ The ``aperio.AppMag`` field has been marked for redaction.
    :height: 100
    :width: 200
    :alt: redact metadata controls
-   
+
 Below is a screenshot of image PHI/PII redaction controls for Associated Images, with the ``Macro`` image marked for redaction.
 
 .. image:: screenshots/redact_images.png
@@ -387,12 +421,12 @@ Below is a screenshot of image PHI/PII redaction controls for Associated Images,
    :alt: redact images controls
 
 Label images that are redacted are replaced with a black image that contains text of the item's new name (for the purposes of the WSI Pilot this new name will be the ImageID), such as in the screenshot below.
-   
+
 .. image:: screenshots/redacted_label_image.png
    :height: 100
    :width: 200
    :alt: redacted label image
-   
+
 Error Messages
 ==============
 
