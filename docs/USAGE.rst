@@ -101,7 +101,7 @@ Step 3 Users Process and Deidentify Files
 Once an image is in the ``Available To Process`` folder, the user can make the following UI selections:
 
 - "Redact Image" to redact it, sending it to the ``Redacted`` folder, and sending an original file to the ``Original`` folder (go to step 4)
-- "Quarantine" for more reprocessing, sending it to the ``Quarantine`` folder (go to step 4a)
+- "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
 - "Reject" to mark that it is impossible to fix, sending it to the ``Rejected`` folder (go to Step 4b)
 
 An image is copied into the ``Original`` folder before it will be redacted and will go into the ``Redacted`` folder, so that an unedited copy of the image is stored.
@@ -114,12 +114,12 @@ Images in the ``Redacted`` folder have gone through the redaction process, but s
 Once an image is in the ``Redacted`` folder, the user can approve the file. The user can make the following UI selections:
 
 - "Approve" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Approved`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu.
-- "Quarantine" for more reprocessing, sending it to the ``Quarantine`` folder (go to step 4a)
+- "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
 
 Step 4a Users Contact IMS and Reprocess for Potential Resolution
 ----------------------------------------------------------------
 
-The ``Quarantine`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantine`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
+The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
 
 Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
 
