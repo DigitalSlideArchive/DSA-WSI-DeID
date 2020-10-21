@@ -67,8 +67,43 @@ See GIRDER.rst for more information.
 PHI/PII Definitions and Types
 =============================
 
-TODO: provide definitions and types of PHI/PII for the purposes of this study.
+The table below describes the redaction options and definitions of PHI/PII categories.
 
+.. csv-table::
+    :header-rows: 1
+    :widths: 20, 40, 40
+
+    PHI/PII Type,Redaction Selection,Definitions
+    Personal Information,Patient Name,
+    Personal Information,Patient Date of Birth,
+    Personal Information,Patient Social Security Number,
+    Personal Information,Other Personal,Patient's Maiden Name
+    Personal Information,Other Personal,Mother's Maiden Name
+    Personal Information,Other Personal,Family Member's Name
+    Personal Information,Other Personal,Full Face Photograph
+    Personal Information,Other Personal,Patient's E-mail Address
+    Personal Information,Other Personal,Patient's Phone or Fax Number
+    Demographics,Demographics,Patient's Age
+    Demographics,Demographics,Patient's Geopraphic Location (any)
+    Demographics,Demographics,Patient's Location of Birth
+    Facility/Physician Information,Facility/Physician Information,Facility Name or Address
+    Facility/Physician Information,Facility/Physician Information,Laboratory Name or Address
+    Facility/Physician Information,Facility/Physician Information,Physician Name or Address
+    Facility/Physician Information,Facility/Physician Information,Admission Date ``*``
+    Facility/Physician Information,Facility/Physician Information,Test/Procedure/Specimen Date ``*``
+    Facility/Physician Information,Facility/Physician Information,Date of Service ``*``
+    Facility/Physician Information,Facility/Physician Information,Facility Phone or Fax Number
+    Facility/Physician Information,Facility/Physician Information,Laboratory Phone or Fax Number
+    Facility/Physician Information,Facility/Physician Information,Internet Protocol (IP) addresses
+    Facility/Physician Information,Facility/Physician Information,Web Universal Resource Locators (URLs)
+    Other PHI/PII,Other PHI/PII,Medical Record Number
+    Other PHI/PII,Other PHI/PII,Financial Number
+    Other PHI/PII,Other PHI/PII,Account Number
+    Other PHI/PII,Other PHI/PII,Health Plan Beneficiary Number
+    Other PHI/PII,Other PHI/PII,Device Identifiers/Serial Numbers
+
+``*`` For these dates, year is permissible; however, full or partial date including the day and/or month is considered PHI/PII.   
+    
 Workflow Overview
 =================
 
