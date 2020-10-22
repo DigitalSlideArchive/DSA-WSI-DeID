@@ -7,12 +7,12 @@ This Whole Slide Imaging Deidentification tool, WSI DeID, was developed with sup
 
 This tool is based on core Digital Slide Archive (DSA) components and provides a workflow for the deidentification of digital pathology slide image files from Leica Aperio, Hamamatsu, and Philips scanners. This deidentification is critical, so that digital slide files may be shared for research. The WSI DeID Tool enables users to view all the associated metadata in the WSI, use automated business rules to redact or replace specific whole slide image (WSI) metadata fields, review the changes as part of deidentification quality control verification, and export the deidentified WSI files in the original vendor format.
 
-- **[Additional NCI background information on WSI DeID Tool](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/rationale.md)**: Additional background on the rationale and planned use of the WSI DeID Tool is found here.
+- **[Additional NCI background information on WSI DeID Tool](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/rationale.md#digital-slide-archive-whole-slide-image-deidentifier)**: Additional background on the rationale and planned use of the WSI DeID Tool is found here.
 
-- **[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/USAGE.rst)**: This provides detailed instructions for navigating the WSI DeID Tool.
+- **[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/USAGE.rst#wsi-deid-usage)**: This provides detailed instructions for navigating the WSI DeID Tool.
 
 
-- **[WSI DeID Tool Introduction](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst)**: This provides an introduction to the tool and links to installation and usage instructions.
+- **[WSI DeID Tool Introduction](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst#wsi-deid--)**: This provides an introduction to the tool and links to installation and usage instructions.
 
 - **[IT instructions to modify import and export folder locations specific to user’s computer drive locations.](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/INSTALL.rst#import-and-export-paths)**: For IT teams, instructions to customize the location of the WSI files where WSI DeID finds the import folder (original WSI files and Upload Excel file with deidentification replacement values) and the export folder (where the deidentified WSI files will be placed) are found here. These folders cannot be selected in the tool front-end itself, and must be done via configuration files, following these instructions.
 
