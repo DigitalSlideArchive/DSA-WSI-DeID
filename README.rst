@@ -14,7 +14,10 @@ Developed by Kitware, Inc. with funding from The National Cancer Institute of th
     :target: https://raw.githubusercontent.com/DigitalSlideArchive/DSA-WSI-DeID/master/LICENSE
     :alt: License
 
+Browser Support
+===============
 
+WSI DeID works best using recent versions of the Chrome browser.
 
 Navigating the Documentation
 ============================
