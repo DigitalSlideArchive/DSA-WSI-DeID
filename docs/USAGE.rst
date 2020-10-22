@@ -25,7 +25,7 @@ It includes the following major sections:
 Browser Support
 ===============
 
-WSI DeID works best using recent versions of the Chrome browser.
+WSI DeID works best using a recent version of the Chrome or Firefox browser.
 
 Installation
 ============
