@@ -45,7 +45,7 @@ When you first interact with the software through your browser, you will need to
    :alt: register or log in
 
 
-If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen, like for the user named ``admin`` in the screenshot below.
+If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen (highlighted in the yellow box), like for the user named ``admin`` in the screenshot below.
 
 .. image:: screenshots/admin_user.png
    :height: 100
@@ -57,7 +57,7 @@ User Types and Permissions
 
 See GIRDER.rst for more information.
 
-**Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. Admin users can change permissions of other users in the system, and can reset users passwords. The Admin user should be tied to an IT support staff member, and users of the system should create Non-Super Users.
+**Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. Admin users can change permissions of other users in the system, and can reset users' passwords. The Admin user should be tied to an IT support staff member, and users of the system should create Non-Super Users.
 
 **Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
@@ -86,7 +86,7 @@ This documentation will walk through the workflow following the steps of the wor
 Step 1 Users Place Raw WSIs in Local Folder
 -------------------------------------------
 
-The users will place raw WSIs along with an Excel or csv metadata file in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
+The users will place raw WSIs along with an Excel metadata file in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
 
 Step 2 Users Import Files
 -------------------------
@@ -221,7 +221,7 @@ WSI files will be copied from the local import directory to the ``AvailableToPro
 Imported File Types and Folder Structures
 -----------------------------------------
 
-The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx) or a CSV file (identified by ending in .csv). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
+The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
 
 Step 1 Users Place Raw WSIs and DeID Upload Files in Local Folder
 -----------------------------------------------------------------
@@ -245,7 +245,7 @@ From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, clic
 
 Clicking on the ``Import`` button will trigger a scan of the mounted import directory (i.e., where the software is directed to find the files), and will do the following:
 
-- Each DeID Upload (Excel or CSV metadata) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
+- Each DeID Upload (Excel metadata) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
 - If there are any DeID Upload files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
 - If the same InputFileName is listed in multiple DeID Upload files, the information in the newest DeID Upload DeID Upload file is used by preference.
 - The InputFileName is expected to be just the file name (e.g., no folder path).
