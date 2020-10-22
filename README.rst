@@ -17,7 +17,7 @@ Developed by Kitware, Inc. with funding from The National Cancer Institute of th
 Browser Support
 ===============
 
-WSI DeID works best using a recent versions of the Chrome or Firefox browser.
+WSI DeID works best using a recent version of the Chrome or Firefox browser.
 
 Navigating the Documentation
 ============================
