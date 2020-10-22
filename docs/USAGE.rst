@@ -45,7 +45,7 @@ When you first interact with the software through your browser, you will need to
    :alt: register or log in
 
 
-If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen, like for the user named ``admin`` in the screenshot below.
+If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen (highlighted in the yellow box), like for the user named ``admin`` in the screenshot below.
 
 .. image:: screenshots/admin_user.png
    :height: 100
@@ -86,7 +86,7 @@ This documentation will walk through the workflow following the steps of the wor
 Step 1 Users Place Raw WSIs in Local Folder
 -------------------------------------------
 
-The users will place raw WSIs along with an Excel or csv metadata file in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
+The users will place raw WSIs along with an Excel metadata file in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
 
 Step 2 Users Import Files
 -------------------------
