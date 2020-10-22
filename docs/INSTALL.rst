@@ -95,7 +95,7 @@ Modify the version in your ``docker-compose.local.yml`` file.  For example, chan
     docker-compose pull
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
-that version will be pullled and run.
+that version will be pulled and run.
 
 For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/wsi_deid``).  You can build the docker image locally by executing ``docker build --force-rm -t dsarchive/wsi_deid .`` in the top directory of the repository.
 
@@ -142,4 +142,4 @@ Redaction Business Rules
 
 Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modifications vary by WSI vendor format.
 
-To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specifc variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the [process.py](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py) source file.
+To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specific variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the [process.py](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py) source file.

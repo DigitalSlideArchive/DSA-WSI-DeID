@@ -127,7 +127,7 @@ Step 4a Users Contact IMS and Reprocess for Potential Resolution
 
 The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
 
-Any time a WSI file has been quarantied, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
+Any time a WSI file has been quarantined, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
 
 Step 4b Users Review and Re-process Rejected Files After Software Updates
 -------------------------------------------------------------------------
@@ -274,7 +274,7 @@ After all images and all DeID Upload files have been processed, a message is dis
 
 The user may then proceed with the redaction workflow, described in the Workflow Overview section above.
 
-Below is a screenshot of a message presented to the user after an import. Ssee the Error Messages section below for all possible results of performing the import action.
+Below is a screenshot of a message presented to the user after an import. See the Error Messages section below for all possible results of performing the import action.
 
 .. image:: screenshots/import_message_highlighted.png
    :height: 100
