@@ -8,6 +8,7 @@ This document describes how to use the WSI DeID software with the major use case
 
 It includes the following major sections:
 
+* Browser Support
 * Installation
 * Girder Background
 * User Management
@@ -20,6 +21,11 @@ It includes the following major sections:
 * Error Messages
 * Software Version
 
+
+Browser Support
+===============
+
+WSI DeID works best using recent versions of the Chrome browser.
 
 Installation
 ============
