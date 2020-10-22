@@ -1,5 +1,10 @@
 # Change Log
 
+## Version 2.0.0
+
+### Changes
+- Updated links in the homepage
+
 ## Version 1.3.2
 
 ### Bug Fixes
