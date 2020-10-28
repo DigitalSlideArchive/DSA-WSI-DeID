@@ -90,7 +90,7 @@ The workflow is depicted in the overall workflow diagram below.
 This documentation will walk through the workflow following the steps of the workflow diagram above.
 
 Step 1 Users Place Original WSIs in Local Folder
--------------------------------------------
+------------------------------------------------
 
 The users will place original WSIs along with an Excel metadata file (the DeID Upload File) in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
 
