@@ -8,18 +8,18 @@ This document describes how to use the WSI DeID software with the major use case
 
 It includes the following major sections:
 
-* Browser Support
-* Installation
-* Girder Background
-* User Management
-* Workflow Overview
-* Navigating the WSI DeID
-* Importing Data
-* Redaction
-* PHI/PII Definitions and Types
-* Exporting Data
-* Error Messages
-* Software Version
+* `Browser Support <#browser-support>`__
+* `Installation <#installation>`__
+* `Girder Background <#girder>`__
+* `User Management <#user-management>`__
+* `Workflow Overview <#workflow-overview>`__
+* `Navigating the WSI DeID <#navigating-the-wsi-deid>`__
+* `Importing Data <#importing-data>`__
+* `Redaction <#redaction>`__
+* `PHI/PII Definitions and Types <#phipii-definitions-and-types>`__
+* `Exporting Data <#exporting-data>`__
+* `Error Messages <#error-messages>`__
+* `Software Version <#software-version>`__
 
 
 Browser Support
@@ -43,7 +43,7 @@ User Management
 User Registration and Logins
 ----------------------------
 
-When you first interact with the software through your browser, you will need to create a user for that web application by clicking on ``Register or Log In`` as highlighted in the screenshot below, and then registering your user. After registration, you may use the user credentials you created to ``Login`` to the WSI DeID.
+When you first interact with the software through your browser, you will need to create a user for that web application by clicking on ``Register or Log In`` as highlighted in the yellow box in the screenshot below, and then registering your user. After registration, you may use the user credentials you created to ``Login`` to the WSI DeID.
 
 .. image:: screenshots/register_or_login.png
    :height: 100
@@ -63,7 +63,7 @@ User Types and Permissions
 
 See GIRDER.rst for more information.
 
-**Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. Admin users can change permissions of other users in the system, and can reset users' passwords. The Admin user should be tied to an IT support staff member, and users of the system should create Non-Super Users.
+**Admin User:** The first registered user of a WSI DeID system will be an ``admin`` user and will have super-user privileges, meaning that the user can take any actions on the system. Admin users can change permissions of other users in the system and can reset users' passwords. The Admin user should be tied to an IT support staff member, and users of the system should create Non-Super Users.
 
 **Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
@@ -89,22 +89,22 @@ The workflow is depicted in the overall workflow diagram below.
 
 This documentation will walk through the workflow following the steps of the workflow diagram above.
 
-Step 1 Users Place Raw WSIs in Local Folder
--------------------------------------------
+Step 1 Users Place Original WSIs in Local Folder
+------------------------------------------------
 
-The users will place raw WSIs along with an Excel metadata file in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
+The users will place original WSIs along with an Excel metadata file (the DeID Upload File) in their local import folder (a folder on their host filesystem). The metadata file should conform to the expected metadata file specification.
 
 Step 2 Users Import Files
 -------------------------
 
-Users navigate to the ``Available To Process`` folder in the WSI DeID and then follow the import process to import files into the system. See the Importing Data section for more information. If the images have import errors, then importing errors will be displayed and the files will not be imported. Corrective action must be taken to fix the files before they can be imported.
+Users navigate to the ``Available To Process`` folder in the WSI DeID and then follow the import process to import files into the system. See the Importing Data section for more information. If the images have import errors, then importing errors will be displayed, and the files will not be imported. Corrective action must be taken to fix the files before they can be imported.
 
 When an image is first imported into the WSI DeID from the host filesystem, it will be renamed according to the import process and will be in the ``Available To Process`` folder.
 
 Step 3 Users Process and Deidentify Files
 -----------------------------------------
 
-Once an image is in the ``Available To Process`` folder, the user can make the following UI selections:
+Once an image is in the ``Available To Process`` folder, the user can make the following selections in the User Interface (UI):
 
 - "Redact Image" to redact it, sending it to the ``Redacted`` folder, and sending an original file to the ``Original`` folder (go to step 4)
 - "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
@@ -115,17 +115,17 @@ An image is copied into the ``Original`` folder before it will be redacted and w
 Step 4 Users Approve Deidentified Files
 ---------------------------------------
 
-Images in the ``Redacted`` folder have gone through the redaction process, but should be inspected to determine if they still contain PHI/PII or are fully cleared and ready for release.
+Images in the ``Redacted`` folder have gone through the redaction process but should be inspected to determine if they still contain PHI/PII or are fully cleared and ready for release.
 
 Once an image is in the ``Redacted`` folder, the user can approve the file. The user can make the following UI selections:
 
-- "Approve" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Approved`` folder and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu.
+- "Approve" to approve it, once it has been fully cleared for release. If this is pressed, then the image will move to the ``Approved`` folder, and then the view will change to the next image to be processed, as if you had clicked on the ``Next Item`` action in the left menu.
 - "Quarantine" for more reprocessing, sending it to the ``Quarantined`` folder (go to step 4a)
 
 Step 4a Users Contact IMS and Reprocess for Potential Resolution
 ----------------------------------------------------------------
 
-The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing.
+The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS via Squish (`https://www.squishlist.com/seerdms/support/ <https://www.squishlist.com/seerdms/support/>`__) for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing. For definitions of PHI/PII categories available for recaction, refer to the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__ of these usage instructions below.
 
 Any time a WSI file has been quarantined, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
 
@@ -134,7 +134,7 @@ Step 4b Users Review and Re-process Rejected Files After Software Updates
 
 The ``Rejected`` folder  is available at any time.
 
-There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
+There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), or (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``rejected`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
 
 There is a ``Reject`` button available near the zoomable WSI image as a convenience to quickly reject a WSI file, see the screenshot below.
 
@@ -192,7 +192,7 @@ A folder in Girder may contain items, and an item always has to be in a folder. 
    :width: 200
    :alt: image folder view
 
-To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item (a WSI file) named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel, you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
 
 .. image:: screenshots/example_image_item_view.png
    :height: 100
@@ -209,7 +209,7 @@ Below is a screenshot of the action buttons available in the ``WSI DeID Workflow
 Files & links Actions
 ---------------------
 
-There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section unless you are intentionally performing low-level file management. These are shown in the screenshot below.
+There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section unless you are intentionally performing low-level file management. These buttons are shown yellow box highlighted in the screenshot below.
 
 .. image:: screenshots/files_and_links_buttons_highlighted.png
    :height: 100
@@ -229,8 +229,8 @@ Imported File Types and Folder Structures
 
 The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
 
-Step 1 Users Place Raw WSIs and DeID Upload Files in Local Folder
------------------------------------------------------------------
+Step 1 Users Place Original WSIs and DeID Upload File(s) in Local Folder
+------------------------------------------------------------------------
 
 Place the WSIs and DeID Upload files in the mounted import directory. The sections above describe how to set up the mounted import directory and valid input file types.
 
@@ -253,13 +253,13 @@ Clicking on the ``Import`` button will trigger a scan of the mounted import dire
 
 - Each DeID Upload (Excel metadata) file is parsed for a header row that has TokenID, ImageID, and InputFileName.
 - If there are any DeID Upload files that do not have a header row, an error is generated and appears on the screen, and files are not imported.
-- If the same InputFileName is listed in multiple DeID Upload files, the information in the newest DeID Upload DeID Upload file is used by preference.
+- If the same InputFileName is listed in multiple DeID Upload files, the information in the newest DeID Upload DeID Upload file is used by default.
 - The InputFileName is expected to be just the file name (e.g., no folder path).
 
 After the WSI file names and information in the DeID Upload file are reconciled, the WSI DeID software will classify WSI files as one of the following:
 
 - ``Already Imported``: The file is listed in a DeID Upload file and is already in the WSI DeID based on file path and matching file size. No further action is needed.
-- ``Imported``: The file is listed in a DeID Upload file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named TokenID with a filename ImageID.<file extension>.
+- ``Imported``: The file is listed in a DeID Upload file and is not in the WSI DeID. It is added in the ``AvailableToProcess`` directory in a folder named as the TokenID with a filename of ImageID.<file extension> (for Aperio files it will be ImageID.svs).
 - ``Updated``: The image is listed in a DeID Upload file and is in the WSI DeID, but has a different file size from the image in the WSI DeID. The existing file is removed from the WSI DeID and re-added.
 - ``File missing``: The image is listed in a DeID Upload file but is not in the import directory. No import action is performed.
 - ``Not in DeID Upload file``: The image is not listed in a DeID Upload file but is in the import directory. No import action is performed.
@@ -270,7 +270,7 @@ After the WSI file names and information in the DeID Upload file are reconciled,
 Step 4 Import Status is Displayed
 ---------------------------------
 
-After all images and all DeID Upload files have been processed, a message is displayed summarizing what images were in each of the classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report, which will indicate which WSIs were imported or which failed to import and why.
+After all images and all DeID Upload files have been processed, a message is displayed summarizing what images were in each of the classifications above (e.g., "Import completed. 3 images added. 1 DeID Upload Excel file parsed. See the Excel file report for more details.). If you click on the "See the Excel report for more details" link, it will download an import report, which will indicate which WSIs were imported or which failed to import and why. Users should review this report for any issues as outlined above.
 
 The user may then proceed with the redaction workflow, described in the Workflow Overview section above.
 
@@ -292,9 +292,9 @@ Review Process for PHI/PII in Image(s) and Metadata
  
 1. Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
 
-2. Review the image(s) and metadata fields for PHI/PII.
+2. Review the image(s) and metadata fields for PHI/PII. Definitions of PHI/PII categories in the redaction drop-down menu are listed in the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__.
 
-  2.1. Review the zoomable image. If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
+  2.1. Review the zoomable image (top image after opening the WSI file). If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
 
   2.2. Review metadata for PHI/PII, by scrolling down below the main image to the metadata section display. Some metadata fields will be automatically pre-redacted upon import, including titles and dates that are specific to each scanner manufacturer. See the Business Rules for WSI DeID section below for details.
 
@@ -326,7 +326,7 @@ The table below describes the redaction options and definitions of PHI/PII categ
     Personal Information,Other Personal,Patient's E-mail Address
     Personal Information,Other Personal,Patient's Phone or Fax Number
     Demographics,Demographics,Patient's Age
-    Demographics,Demographics,Patient's Geopraphic Location (any)
+    Demographics,Demographics,Patient's Geographic Location (any)
     Demographics,Demographics,Patient's Location of Birth
     Facility/Physician Information,Facility/Physician Information,Facility Name or Address
     Facility/Physician Information,Facility/Physician Information,Laboratory Name or Address
@@ -369,7 +369,7 @@ In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and
 
 Recent exports are any items in the ``Approved`` folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
 
-After export, a message is shown indicating how many files were exported, and giving the user a chance to download the Excel export report for more details. See the screenshot below to see an export message example.
+After export, a message is shown indicating how many files were exported and giving the user a chance to download the Excel export report (DeID Export File) for more details. See the screenshot below to see an export message example.
 
 .. image:: screenshots/export_message_highlighted.png
    :height: 100
@@ -441,6 +441,6 @@ For explanations of error messages that the user may encounter, see `ERROR-TABLE
 Software Version
 ================
 
-If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 1.3.0``. In this example the version string is ``1.3.0``, but you should expect a different version string for your WSI DeID instance.
+If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 2.0.0``. In this example the version string is ``2.0.0``, but you should expect a different version string for your WSI DeID instance.
 
 
