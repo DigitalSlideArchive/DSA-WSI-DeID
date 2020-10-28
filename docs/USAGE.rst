@@ -8,18 +8,18 @@ This document describes how to use the WSI DeID software with the major use case
 
 It includes the following major sections:
 
-* Browser Support
-* Installation
-* Girder Background
-* User Management
-* Workflow Overview
-* Navigating the WSI DeID
-* Importing Data
-* Redaction
-* PHI/PII Definitions and Types
-* Exporting Data
-* Error Messages
-* Software Version
+* `Browser Support <#browser-support>`__
+* `Installation <#installation>`__
+* `Girder Background <#girder>`__
+* `User Management <#user-management>`__
+* `Workflow Overview <#workflow-overview>`__
+* `Navigating the WSI DeID <#navigating-the-wsi-deid>`__
+* `Importing Data <#importing-data>`__
+* `Redaction <#redaction>`__
+* `PHI/PII Definitions and Types <#phipii-definitions-and-types>`__
+* `Exporting Data <#exporting-data>`__
+* `Error Messages <#error-messages>`__
+* `Software Version <#software-version>`__
 
 
 Browser Support
@@ -125,7 +125,7 @@ Once an image is in the ``Redacted`` folder, the user can approve the file. The 
 Step 4a Users Contact IMS and Reprocess for Potential Resolution
 ----------------------------------------------------------------
 
-The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS via Squish (https://www.squishlist.com/seerdms/support/) for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing. For definitions of PHI/PII categories available for recaction, refer to the PHI/PII Definitions and Types section of these usage instructions below.
+The ``Quarantined`` folder is for holding images that may hold PHI/PII. Users should contact IMS via Squish (`https://www.squishlist.com/seerdms/support/ <https://www.squishlist.com/seerdms/support/>`__) for any WSI files in the ``Quarantined`` folder, and then review files for reprocessing based on instructions from IMS. If PHI/PII is seen in an image or metadata field, that is somewhere other than the ``Available To Process`` folder, it should be quarantined for reprocessing. For definitions of PHI/PII categories available for recaction, refer to the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__ of these usage instructions below.
 
 Any time a WSI file has been quarantined, the source folder it was quarantined from will remain. This explains why some empty folders may be encountered in the system, that previously had WSI files in them.
 
@@ -192,7 +192,7 @@ A folder in Girder may contain items, and an item always has to be in a folder. 
    :width: 200
    :alt: image folder view
 
-To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item (a WI file) named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel, you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
+To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item (a WSI file) named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel, you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
 
 .. image:: screenshots/example_image_item_view.png
    :height: 100
@@ -292,7 +292,7 @@ Review Process for PHI/PII in Image(s) and Metadata
  
 1. Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
 
-2. Review the image(s) and metadata fields for PHI/PII.Definitions of PHI/PII categories in the redaction drop-down menu are listed in the PHI/PII Definitions and Types section below.
+2. Review the image(s) and metadata fields for PHI/PII. Definitions of PHI/PII categories in the redaction drop-down menu are listed in the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__.
 
   2.1. Review the zoomable image (top image after opening the WSI file). If the low-resolution image at the top of the screen (see screenshot below) contains PHI/PII, then click ``Reject``. If there is no PHI/PII, then go on to the next step. You may zoom and pan in the low-resolution image to see areas of the image in higher resolution.
 
@@ -441,6 +441,6 @@ For explanations of error messages that the user may encounter, see `ERROR-TABLE
 Software Version
 ================
 
-If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 1.3.0``. In this example the version string is ``1.3.0``, but you should expect a different version string for your WSI DeID instance.
+If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 2.0.0``. In this example the version string is ``2.0.0``, but you should expect a different version string for your WSI DeID instance.
 
 
