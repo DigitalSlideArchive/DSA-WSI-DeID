@@ -14,6 +14,16 @@ Install commands need to be run from the ``devops/wsi_deid`` directory.  Example
 
 To download the repository directly, go to the `Releases Page <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/releases>`_ and select the source code zip or tar.gz file for the desired version, or download the `master branch <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/archive/master.zip>`_.
 
+The software is known to work with a variety of operating systems:
+
+- Windows 10 with Windows Subsystem for Linux (WSL) installed and Docker Desktop
+
+- Ubuntu (version 16.04 and later)
+
+- CentOS (version 7 and later)
+
+- Windows Server 2019.  See `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
+
 Import and Export Paths
 -----------------------
 
@@ -129,6 +139,55 @@ Admin User
 ----------
 
 By default, when the system is first installed, there is one user with Administrator status with a default username of ``admin`` and password of ``password``.  It is strongly recommended that this be changed immediately, either by logging in and changing the password or by logging in, creating a new admin user and deleting the existing one.
+
+Windows Server 2019
+===================
+
+There are several versions of Docker available on Windows Server 2019.  The exact version and manner of installation can affect how the software is installed.  Once Docker and docker-compose are installed, the software can start, though there may need to be changes to the ``docker-compose.local.yml`` file.
+
+An example configuration file is provided, see ``docker-compose.example-ws2019.local.yml``.  There are some common issues that can occur which require uncommenting specific lines in the example file:
+
+- If you see an error that includes ``invalid volume specification: 'wsi_deid_dbdata:/data/db:rw'``, uncomment the line that begining with ``image: mongo@sha256:``.  This error occurs because Docker is trying to use a Windows image for part of the system and linux images for other parts.  Uncommenting the line forces Docker to use a specific linux image of the mongo database.
+
+- If after starting, monogo stops immediately (the command ``docker-compose logs`` will include a message containing ``aborting after fassert() failure``), uncomment the line beginning with ``command: "bash -c 'mongod``.
+
+Example Installation on WS 2019
+-------------------------------
+
+As an example of installing the software on a fresh install of Windows Server 2019 (tested on version 1809, OS Build 17763.737), the following powershell commands were used.
+
+Install Docker::
+
+    Install-Module DockerProvider
+    Install-Package Docker -ProviderName DockerProvider -RequiredVersion preview
+
+Enable linux images in docker::
+
+    [Environment]::SetEnvironmentVariable("LCOW_SUPPORTED", "1", "Machine")
+
+Restart the server::
+
+    shutdown /r
+
+Once it has restarted, ensure the docker service is running and install docker-compose::
+
+    Restart-Service docker
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Windows-x86_64.exe -UseBasicParsing -OutFile $Env:ProgramFiles\Docker\docker-compose.exe
+
+Install our software::
+
+    mkdir c:\project
+    Invoke-WebRequest https://github.com/DigitalSlideArchive/DSA-WSI-DeID/archive/master.zip -outfile c:\project\dsa.zip
+    Expand-Archive -LiteralPath c:\project\dsa.zip -DestinationPath c:\project
+    cd c:\project\DSA-WSI-DeID-master\devops\wsi_deid
+    copy docker-compose.example-ws2019.local.yml docker-compose.local.yml
+    
+If needed, edit ``docker-compose.local.yml``.  For this installation. the ``command:`` line was uncommented.
+
+Start the software::
+
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 Sample Data
 ===========

@@ -1,0 +1,25 @@
+---
+version: '3'
+services:
+  girder:
+    privileged: false
+    # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to
+    # to use a fixed version
+    image: dsarchive/wsi_deid:stable
+    volumes:
+      - c:\NCI_WSI:/import
+      - c:\DeID_WSI:/export
+  mongodb:
+    restart: unless-stopped
+
+    # If you get the error "invalid volume specification:
+    # 'wsi_deid_dbdata:/data/db:rw'", uncomment the "image:" line below.  This
+    # pins to a specific version of mongo for linux instead of using the latest
+    # available.
+    # image: mongo@sha256:efc408845bc917d0b7fd97a8590e9c8d3c314f58cee651bd3030c9cf2ce9032d
+
+    # If mongo fails to start and the errors show an issue with "aborting after
+    # fassert() failure", uncomment the "command:" line below.
+    # command: "bash -c 'mongod --nojournal --bind_ip_all'"
+  memcached:
+    command: -u root -m 4096
