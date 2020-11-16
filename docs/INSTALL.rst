@@ -22,12 +22,12 @@ The software is known to work with a variety of operating systems:
 
 - CentOS (version 7 and later)
 
-- Windows Server 2019.  See `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
+- Windows Server 2019.  This operating system require some additional changes beyond the default install configuration, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
 
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains::
+If you want to import and export data from your local filesystem into the Pilot, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains the following content (note that Windows Server 2019 may require changes to this file, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019)::
 
     ---
     version: '3'
