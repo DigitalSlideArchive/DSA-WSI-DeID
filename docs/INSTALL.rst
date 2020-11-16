@@ -145,7 +145,7 @@ Windows Server 2019
 
 There are several versions of Docker available on Windows Server 2019.  The exact version and manner of installation can affect how the software is installed.  Once Docker and docker-compose are installed, the software can start, though there may need to be changes to the ``docker-compose.local.yml`` file.
 
-An example configuration file is provided, see ``docker-compose.example-ws2019.local.yml``.  There are some common issues that can occur which require uncommenting specific lines in the example file:
+An example configuration file is provided, see `docker-compose.example-ws2019.local.yml <../devops/wsi_deid/docker-compose.example-ws2019.local.yml>`__.  There are some common issues that can occur which require uncommenting specific lines in the example file:
 
 - If you see an error that includes ``invalid volume specification: 'wsi_deid_dbdata:/data/db:rw'``, uncomment the line that begins with ``image: mongo@sha256:``.  This error occurs because Docker is trying to use a Windows image for part of the system and linux images for other parts.  Uncommenting the line forces Docker to use a specific linux image of the mongo database.
 
