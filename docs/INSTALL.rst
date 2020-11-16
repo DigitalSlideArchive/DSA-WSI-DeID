@@ -147,9 +147,9 @@ There are several versions of Docker available on Windows Server 2019.  The exac
 
 An example configuration file is provided, see ``docker-compose.example-ws2019.local.yml``.  There are some common issues that can occur which require uncommenting specific lines in the example file:
 
-- If you see an error that includes ``invalid volume specification: 'wsi_deid_dbdata:/data/db:rw'``, uncomment the line that begining with ``image: mongo@sha256:``.  This error occurs because Docker is trying to use a Windows image for part of the system and linux images for other parts.  Uncommenting the line forces Docker to use a specific linux image of the mongo database.
+- If you see an error that includes ``invalid volume specification: 'wsi_deid_dbdata:/data/db:rw'``, uncomment the line that begins with ``image: mongo@sha256:``.  This error occurs because Docker is trying to use a Windows image for part of the system and linux images for other parts.  Uncommenting the line forces Docker to use a specific linux image of the mongo database.
 
-- If after starting, monogo stops immediately (the command ``docker-compose logs`` will include a message containing ``aborting after fassert() failure``), uncomment the line beginning with ``command: "bash -c 'mongod``.
+- If after starting, mongo stops immediately (the command ``docker-compose logs`` will include a message containing ``aborting after fassert() failure``), uncomment the line beginning with ``command: "bash -c 'mongod``.
 
 Example Installation on WS 2019
 -------------------------------
