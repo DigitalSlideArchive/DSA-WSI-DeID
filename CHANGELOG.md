@@ -1,9 +1,14 @@
 # Change Log
 
+## Version 2.1.0
+
+### Changes
+- Added "C999–Undetermined specimen site" Spec_site code (#166)
+
 ## Version 2.0.0
 
 ### Changes
-- Updated links in the homepage
+- Updated links in the homepage (#153)
 
 ## Version 1.3.2
 
