@@ -1,9 +1,14 @@
 # Change Log
 
+## Version 2.1.1
+
+### Changes
+- Fixed the hyphen in "C999-Undetermined specimen site" (#167)
+
 ## Version 2.1.0
 
 ### Changes
-- Added "C999–Undetermined specimen site" Spec_site code (#166)
+- Added "C999-Undetermined specimen site" Spec_site code (#166)
 
 ## Version 2.0.0
 
