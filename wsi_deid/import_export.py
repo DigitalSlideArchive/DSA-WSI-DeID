@@ -6,6 +6,7 @@ import openpyxl
 import os
 import pandas as pd
 import shutil
+import subprocess
 import tempfile
 
 from girder import logger
@@ -451,7 +452,15 @@ def exportItems(ctx, user=None, all=False):
                 report.append({'item': item, 'status': 'different'})
         else:
             os.makedirs(destFolder, exist_ok=True)
-            shutil.copy2(sourcePath, destPath)
+            # When run in a docker in Windows, cp is around twice as fast as
+            # shutil.copy2 for Python < 3.8.  For Python >=3.8, shutil.copy2
+            # is even slow (by about a factor of 3 from shutil in Python <
+            # 3.8), seemingly because the internal call to posix.sendfile
+            # is terrible in a linux docker under Windows.
+            try:
+                subprocess.check_call(['cp', '--preserve=timestamps', sourcePath, destPath])
+            except Exception:
+                shutil.copy2(sourcePath, destPath)
             exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
             exportedRecord.append({
                 'time': datetime.datetime.utcnow().isoformat(),

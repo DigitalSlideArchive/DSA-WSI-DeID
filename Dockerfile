@@ -26,13 +26,13 @@ RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /
 RUN add-apt-repository ppa:deadsnakes/ppa && \
     apt-get update && \
     apt-get install --no-install-recommends --yes \
-    python3.7 \
-    python3.7-distutils && \
+    python3.9 \
+    python3.9-distutils && \
     curl --silent https://bootstrap.pypa.io/get-pip.py -O && \
-    python3.7 get-pip.py && \
+    python3.9 get-pip.py && \
     rm get-pip.py && \
     rm /usr/bin/python3 && \
-    ln -s /usr/bin/python3.7 /usr/bin/python3 && \
+    ln -s /usr/bin/python3.9 /usr/bin/python3 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
@@ -52,7 +52,7 @@ WORKDIR wsi_deid
 COPY . .
 
 # By using --no-cache-dir the Docker image is smaller
-RUN pip install --pre --no-cache-dir \
+RUN python3.9 -m pip install --pre --no-cache-dir \
     # Until https://github.com/cherrypy/cheroot/issues/312 is resolved.
     cheroot!=8.4.3,!=8.4.4 \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
@@ -67,11 +67,11 @@ RUN pip install --pre --no-cache-dir \
 # Build the girder web client
 RUN girder build && \
     # Git rid of unnecessary files to keep the docker image smaller \
-    find /usr/local/lib/python3.7 -name node_modules -exec rm -rf {} \+ && \
+    find /usr/local/lib/python3.9 -name node_modules -exec rm -rf {} \+ && \
     rm -rf /tmp/npm*
 
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD python3 /conf/provision.py && (girder mount /fuse || true) && girder serve
+CMD python3.9 /conf/provision.py && (girder mount /fuse || true) && girder serve

@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Improvements
+- Redaction and export are somewhat faster (#169)
+
 ## Version 2.1.1
 
 ### Changes
