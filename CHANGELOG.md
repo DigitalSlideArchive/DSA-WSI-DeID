@@ -1,9 +1,9 @@
 # Change Log
 
-## Unreleased
+## Version 2.1.2
 
 ### Improvements
-- Redaction and export are somewhat faster (#169)
+- Sped up some file transfers and redaction speed (#169)
 
 ## Version 2.1.1
 
