@@ -22,6 +22,6 @@ Between August 2020 and August 2021, NCI/SRP is conducting the SEER-Linked Pedia
 
 ### More Information
 
-[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/USAGE.rst)
+[Usage Documentation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/docs/USAGE.rst)
 
 [Introduction and Installation](https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/README.rst)
