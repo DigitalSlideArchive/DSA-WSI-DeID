@@ -5,6 +5,9 @@ commands:
     description: "Make built dockers available"
     steps:
       - run:
+          name: Upgrade pip
+          command: pip install -U pip
+      - run:
           name: Install dependencies
           command: pip install ansible requests docker
       - attach_workspace:
@@ -36,7 +39,8 @@ jobs:
           working_directory: wsi_deid/web_client
   docker-compose:
     working_directory: ~/project
-    machine: true
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
@@ -71,7 +75,8 @@ jobs:
             docker run dsarchive/wsi_deid bash -c 'python3 -c "import wsi_deid;print(wsi_deid.__version__)" 2>/dev/null'
   publish-docker:
     working_directory: ~/project
-    machine: true
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
       - usedockers
