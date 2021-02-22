@@ -6,6 +6,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
     apt-get install --no-install-recommends --yes \
     software-properties-common \
     gpg-agent \

@@ -113,6 +113,7 @@ def readExcelFiles(filelist, ctx):
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
             df, header_row_number = readExcelData(filepath)
+            df = df.dropna(how='all', axis='columns')
         except Exception as exc:
             if isinstance(exc, ValueError):
                 message = 'Cannot read %s; it is not formatted correctly' % (
