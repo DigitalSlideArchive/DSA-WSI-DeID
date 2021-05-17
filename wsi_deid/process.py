@@ -11,7 +11,6 @@ import xml.etree.ElementTree
 
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
-import large_image_source_tiff.girder_source
 import tifftools
 
 
@@ -426,6 +425,8 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
+    import large_image_source_tiff.girder_source
+
     tileSource = ImageItem().tileSource(item)
     sourcePath = tileSource._getLargeImagePath()
     tiffinfo = tifftools.read_tiff(sourcePath)
