@@ -136,9 +136,20 @@ Fixing Common Problems
 If you accidentally delete one of the ``WSI DeID`` collection folders, simply restart the system with::
 
     docker-compose down
-    docker-compose up
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 substituting whichever specific ``docker-compose up`` variant you normally use to run the system. This system restart will automatically recreate any of the ``WSI DeID`` collection folders that are tied to specific workflow states.
+
+Memory and Disk Space
+---------------------
+
+The main docker container should have at least 4 GBytes of memory available.  Some installations of Docker artificially limit memory to 1 or 2 GB, while other installations allows containers to use all of the computer's memory.
+
+By default, WSI images use space in the import directory.  When redacted, they use space in the assetstore directory.  On export, they use space in the export directory.  If deleted from the system, they will free space in the assetstore directory, but will not be removed from the import or export directories.  These directories can be set in the ``docker-compose.local.yml`` file.  If unset, the assetstore directory uses a Docker volume; some installations of Docker artificially limit the size of Docker volumes and using an explicit path will work around this.
+
+The latest version of the software (newer than version 2.1.2) will log the available memory and free disk space for the import, export, and assetstore directories.  If any of these are insufficient, edit the ``docker-compose.local.yml`` file to increase them.
+
+The system database also uses a Docker directory by default.  This tends to be relatively small, but it can also be moved to an explicit path.
 
 Admin User
 ----------

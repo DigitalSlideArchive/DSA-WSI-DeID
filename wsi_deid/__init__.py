@@ -1,5 +1,12 @@
+import psutil
+
+import girder
 from girder import plugin
+from girder.constants import AssetstoreType
+from girder.exceptions import GirderException
+from girder.models.assetstore import Assetstore
 from girder.models.folder import Folder
+from girder.models.setting import Setting
 from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
@@ -46,3 +53,23 @@ class GirderPlugin(plugin.GirderPlugin):
     def load(self, info):
         plugin.getPlugin('histomicsui').load(info)
         info['apiRoot'].wsi_deid = WSIDeIDResource()
+        memory = psutil.virtual_memory().total
+        girder.logprint.info('Total system memory: %3.1f GB' % (memory / 1024**3))
+        if memory < 3.5 * 1024**3:
+            girder.logprint.warning(
+                'Total system memory is lower than recommended.  Please '
+                'increase it to 4 GB or more.')
+        try:
+            assetstore = Assetstore().getCurrent()
+            assetstorePath = assetstore.get('root') if assetstore.get(
+                'type') == AssetstoreType.FILESYSTEM else None
+        except GirderException:
+            assetstorePath = None
+        for pathkey, path in (
+                ('import', Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)),
+                ('export', Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)),
+                ('assetstore', assetstorePath)):
+            if path is not None:
+                space = psutil.disk_usage(path).free
+                girder.logprint.info('Available disk space for %s: %3.1f GB' % (
+                    pathkey, space / 1024**3))
