@@ -17,7 +17,6 @@ RUN apt-get update && \
     # libsasl2-dev \
     curl \
     ca-certificates \
-    fuse \
     vim && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -41,9 +40,6 @@ RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
     apt-get install --no-install-recommends --yes \
     nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# add a directory for girder mount
-RUN mkdir -p /fuse --mode=a+rwx
 
 RUN mkdir -p wsi_deid && \
     mkdir -p /conf
@@ -75,4 +71,4 @@ COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD python3.9 /conf/provision.py && (girder mount /fuse || true) && girder serve
+CMD python3.9 /conf/provision.py && girder serve
