@@ -1,5 +1,14 @@
 # Change Log
 
+## Unreleased
+
+### Improvements
+- Remove FUSE from the Dockerfile (#183)
+- Report memory and disk space on start (#182)
+
+### Bug Fixes
+- Delay importing tile sources to ensure correct config (#173)
+
 ## Version 2.1.2
 
 ### Improvements

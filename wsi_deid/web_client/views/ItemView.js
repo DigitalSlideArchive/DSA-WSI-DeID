@@ -152,7 +152,7 @@ wrap(ItemView, 'render', function (render) {
         return false;
     };
 
-    const addRedactionControls = (showControls) => {
+    const addRedactionControls = (showControls, settings) => {
         /* if showControls is false, the tabs are still adjusted and some
          * fields may be hidden, but the actual redaction controls aren't
          * shown. */
@@ -194,6 +194,11 @@ wrap(ItemView, 'render', function (render) {
                 let keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
                 addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images');
+                if (keyname === 'macro' && settings.redact_macro_square) {
+                    elem.addClass('redact-square');
+                    let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out">&nbsp;</div>');
+                    elem.find('.g-widget-auximage-image').append(redactsquare);
+                }
                 let isRedacted = redactList.images[keyname] !== undefined;
                 elem.toggleClass('redacted', isRedacted);
             });
@@ -258,6 +263,23 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
+    const adjustControls = (folderType, settings) => {
+        addRedactionControls(folderType === 'ingest' || folderType === 'quarantine', settings || {});
+        /* Start with the metadata section collapsed */
+        this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
+        this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
+        /* Don't show the annotation list */
+        this.$el.find('.g-annotation-list-container').remove();
+        /* Show workflow buttons */
+        this.$el.append(ItemViewTemplate({
+            project_folder: folderType
+        }));
+        /* Place a copy of any reject buttons in the item header */
+        this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
+        this.events['click .g-workflow-button'] = workflowButton;
+        this.delegateEvents();
+    };
+
     this.once('g:largeImageItemViewRendered', function () {
         // if (this.model.get('largeImage') && this.model.get('largeImage').fileId && this.accessLevel >= AccessType.WRITE) {
         if (this.model.get('largeImage') && this.model.get('largeImage').fileId && getCurrentUser()) {
@@ -266,24 +288,17 @@ wrap(ItemView, 'render', function (render) {
                 error: null
             }).done((resp) => {
                 if (resp) {
-                    addRedactionControls(resp === 'ingest' || resp === 'quarantine');
-                    /* Start with the metadata section collapsed */
-                    this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
-                    this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
-                    /* Don't show the annotation list */
-                    this.$el.find('.g-annotation-list-container').remove();
-                    /* Show workflow buttons */
-                    this.$el.append(ItemViewTemplate({
-                        project_folder: resp
-                    }));
-                    /* Place a copy of any reject buttons in the item header */
-                    this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
-                    this.events['click .g-workflow-button'] = workflowButton;
-                    this.delegateEvents();
+                    restRequest({
+                        url: `wsi_deid/settings`,
+                        error: null
+                    }).done((settings) => {
+                        adjustControls(resp, settings);
+                    });
                 }
             });
         }
     });
+
     render.call(this);
 });
 

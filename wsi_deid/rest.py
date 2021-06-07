@@ -20,8 +20,9 @@ from girder_large_image.models.image_item import ImageItem
 import histomicsui.handlers
 
 from .constants import PluginSettings
-from . import process
+from . import config
 from . import import_export
+from . import process
 
 
 ProjectFolders = {
@@ -59,7 +60,7 @@ def create_folder_hierarchy(item, user, folder):
             itemFolder = None
         else:
             itemFolder = Folder().load(itemFolder['parentId'], force=True)
-    # create new folder structre
+    # create new folder structure
     for name in origPath:
         folder = Folder().createFolder(folder, name=name, creator=user, reuseExisting=True)
     return folder, origFolders
@@ -240,6 +241,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
+        self.route('GET', ('settings',), self.getSettings)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -342,3 +344,11 @@ class WSIDeIDResource(Resource):
             item = get_first_item(folder, user)
             if item is not None:
                 return str(item['_id'])
+
+    @autoDescribeRoute(
+        Description('Get settings that affect the UI.')
+        .errorResponse()
+    )
+    @access.public(scope=TokenScope.DATA_READ)
+    def getSettings(self):
+        return config.getConfig()
