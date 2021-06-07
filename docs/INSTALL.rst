@@ -107,7 +107,12 @@ Modify the version in your ``docker-compose.local.yml`` file.  For example, chan
 
 that version will be pulled and run.
 
-For testing the latest docker image or a local docker image, remove the version from the image (e.g., ``image: dsarchive/wsi_deid``).  You can build the docker image locally by executing ``docker build --force-rm -t dsarchive/wsi_deid .`` in the top directory of the repository.
+Testing Development Builds
+--------------------------
+
+For testing a development branch or the latest code, check out the appropriate branch from GitHub (e.g., ``git checkout <branch name>``).  Build the docker image locally by by executing ``docker build --force-rm -t dsarchive/wsi_deid .`` in the top directory of the repository.  Change the version of the image listed in the ``docker-compose.local.yml`` file to ``image: dsarchive/wsi_deid:latest``.  Remove the existing docker containers with ``docker-compose down``, then restart via ``docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d``.
+
+To go back to the latest stable version, change the version of the image back to ``image: dsarchive/wsi_deid:stable`` and repeat the down and up commands.
 
 Debugging
 ---------
