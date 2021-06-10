@@ -152,6 +152,21 @@ wrap(ItemView, 'render', function (render) {
         return false;
     };
 
+    const resizeRedactSquare = (elem) => {
+        let image = elem.find('.g-widget-auximage-image img');
+        if (!image.length) {
+            return;
+        }
+        let minwh = Math.min(image.width(), image.height());
+        if (minwh > 0) {
+            let redactsquare = elem.find('.g-widget-auximage-image-redact-square');
+            redactsquare.width(minwh);
+            redactsquare.height(minwh);
+            return;
+        }
+        window.setTimeout(() => resizeRedactSquare(elem), 1000);
+    };
+
     const addRedactionControls = (showControls, settings) => {
         /* if showControls is false, the tabs are still adjusted and some
          * fields may be hidden, but the actual redaction controls aren't
@@ -198,6 +213,7 @@ wrap(ItemView, 'render', function (render) {
                     elem.addClass('redact-square');
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out">&nbsp;</div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
+                    resizeRedactSquare(elem);
                 }
                 let isRedacted = redactList.images[keyname] !== undefined;
                 elem.toggleClass('redacted', isRedacted);
