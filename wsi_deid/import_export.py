@@ -425,39 +425,71 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
-    from . import __version__
-
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     if not exportPath or not exportFolderId:
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
-    for filepath, file in Folder().fileList(exportFolder, user, data=False):
-        item = Item().load(file['itemId'], force=True, exc=False)
-        try:
-            tileSource = ImageItem().tileSource(item)
-        except Exception:
-            continue
-        sourcePath = tileSource._getLargeImagePath()
-        if not all and item.get('meta', {}).get('wsi_deidExported'):
-            continue
-        filepath = filepath.split(os.path.sep, 1)[1]
-        ctx.update(message='Exporting %s' % filepath)
-        destPath = os.path.join(exportPath, filepath)
-        destFolder = os.path.dirname(destPath)
-        if os.path.exists(destPath):
+    totalByteCount = 0
+    for mode in ('measure', 'copy'):
+        byteCount = 0
+        for filepath, file in Folder().fileList(exportFolder, user, data=False):
+            byteCount += exportItemsNext(
+                mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
+        totalByteCount = byteCount
+    exportNoteRejected(report, user, all)
+    file = exportReport(ctx, exportPath, report, user)
+    return reportSummary(report, file=file)
+
+
+def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
+                    exportPath, user, report):
+    """
+    Export an item or report on its size.
+
+    :param mode: either 'measure' or 'copy'.
+    :param ctx: a progress context.
+    :param byteCount: the number of bytes copies so far.
+    :param totalByteCount: the total number of bytes needed to be copies.
+    :param filepath: the file path of this item.
+    :param file: the file document of this item.
+    :param exportPath: the destination for the export.
+    :param user: the user triggering this.
+    :param report: a collected report list.
+    :returns: the number of bytes that are copied.  If mode is measure, no
+        copying is actually done.
+    """
+    from . import __version__
+
+    item = Item().load(file['itemId'], force=True, exc=False)
+    try:
+        tileSource = ImageItem().tileSource(item)
+    except Exception:
+        return 0
+    sourcePath = tileSource._getLargeImagePath()
+    if not all and item.get('meta', {}).get('wsi_deidExported'):
+        return 0
+    filepath = filepath.split(os.path.sep, 1)[1]
+    if mode == 'copy':
+        ctx.update(message='Exporting %s' % filepath, total=totalByteCount, current=byteCount)
+    destPath = os.path.join(exportPath, filepath)
+    destFolder = os.path.dirname(destPath)
+    if os.path.exists(destPath):
+        if mode == 'copy':
             if os.path.getsize(destPath) == file['size']:
                 report.append({'item': item, 'status': 'present'})
             else:
                 report.append({'item': item, 'status': 'different'})
-        else:
+        return 0
+    else:
+        if mode == 'copy':
             os.makedirs(destFolder, exist_ok=True)
             # When run in a docker in Windows, cp is around twice as fast as
-            # shutil.copy2 for Python < 3.8.  For Python >=3.8, shutil.copy2
-            # is even slow (by about a factor of 3 from shutil in Python <
-            # 3.8), seemingly because the internal call to posix.sendfile
-            # is terrible in a linux docker under Windows.
+            # shutil.copy2 for Python < 3.8.  For Python >=3.8, shutil.copy2 is
+            # even slower (by about a factor of 3 from shutil in Python < 3.8),
+            # seemingly because the internal call to posix.sendfile is terrible
+            # in a linux docker under Windows.
             try:
                 subprocess.check_call(['cp', '--preserve=timestamps', sourcePath, destPath])
             except Exception:
@@ -474,9 +506,7 @@ def exportItems(ctx, user=None, all=False):
                 'status': 'finished',
                 'time': exportedRecord[-1]['time'],
             })
-    exportNoteRejected(report, user, all)
-    file = exportReport(ctx, exportPath, report, user)
-    return reportSummary(report, file=file)
+        return file['size']
 
 
 def exportNoteRejected(report, user, all, allFiles=True):
