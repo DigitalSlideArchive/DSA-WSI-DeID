@@ -5,6 +5,7 @@ import { restRequest } from '@girder/core/rest';
 import router from '@girder/core/router';
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
+import { formatCount } from '@girder/core/misc';
 
 function performAction(action) {
     const actions = {
@@ -139,5 +140,48 @@ wrap(HierarchyWidget, 'render', function (render) {
             }
         });
     }
+    return this;
+});
+
+wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount) {
+    let showSubtreeCounts = () => {
+        const folders = this.parentModel.get('nFolders') || 0;
+        const items = this.parentModel.get('nItems') || 0;
+        const subfolders = Math.max(folders, this.parentModel.get('nSubtreeCount').folders - 1 || 0);
+        const subitems = Math.max(items, this.parentModel.get('nSubtreeCount').items || 0);
+        let folderCount = formatCount(folders) + (subfolders > folders ? (' (' + formatCount(subfolders) + ')') : '');
+        let itemCount = formatCount(items) + (subitems > items ? (' (' + formatCount(subitems) + ')') : '');
+        let folderTooltip = (subfolders > folders ? `${folders} folder${folders === 1 ? '' : 's'}, ` : '') + `${subfolders} total folder${subfolders === 1 ? '' : 's'}`;
+        let itemTooltip = (subitems > items ? `${items} item${items === 1 ? '' : 's'}, ` : '') + `${subitems} total item${subitems === 1 ? '' : 's'}`;
+        if (!this.$('.g-item-count').length) {
+            this.$('.g-subfolder-count-container').after($('<div class="g-item-count-container"><i class="icon-doc-text-inv"></i><div class="g-item-count"></div></div>'));
+        }
+        this.$('.g-subfolder-count').text(folderCount);
+        this.$('.g-item-count').text(itemCount);
+        this.$('.g-subfolder-count-container').attr('title', folderTooltip);
+        this.$('.g-item-count-container').attr('title', itemTooltip);
+    };
+
+    let reshowSubtreeCounts = () => {
+        restRequest({
+            url: `wsi_deid/resource/${this.parentModel.id}/subtreeCount`,
+            data: { type: this.parentModel.get('_modelType') }
+        }).done((data) => {
+            this.parentModel.set('nSubtreeCount', data);
+            showSubtreeCounts();
+        });
+    };
+
+    fetchAndShowChildCount.call(this);
+    if (this.parentModel.has('nSubtreeCount')) {
+        showSubtreeCounts();
+    } else {
+        this.parentModel.set('nSubtreeCount', {}); // prevents fetching details twice
+        reshowSubtreeCounts();
+    }
+    this.parentModel.off('change:nItems', reshowSubtreeCounts, this)
+        .on('change:nItems', reshowSubtreeCounts, this)
+        .off('change:nFolders', reshowSubtreeCounts, this)
+        .on('change:nFolders', reshowSubtreeCounts, this);
     return this;
 });
