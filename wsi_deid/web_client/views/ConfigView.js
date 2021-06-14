@@ -13,7 +13,7 @@ import ConfigViewTemplate from '../templates/ConfigView.pug';
 import '../stylesheets/ConfigView.styl';
 
 /**
- * Show the default quota settings for users and collections.
+ * Show the plugin's settings.
  */
 var ConfigView = View.extend({
     events: {
