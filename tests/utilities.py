@@ -12,6 +12,15 @@ from .datastore import datastore
 
 @pytest.fixture
 def provisionServer(server, admin, fsAssetstore, tmp_path):
+    yield _provisionServer(tmp_path)
+
+
+@pytest.fixture
+def provisionBoundServer(boundServer, admin, fsAssetstore, tmp_path):
+    yield _provisionServer(tmp_path)
+
+
+def _provisionServer(tmp_path):
     sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'devops', 'wsi_deid'))
     import provision  # noqa
     provision.provision()
@@ -30,4 +39,4 @@ def provisionServer(server, admin, fsAssetstore, tmp_path):
     for filename in {'deidUpload.csv'}:
         path = os.path.join(dataPath, filename)
         shutil.copy(path, importPath / filename)
-    yield importPath, exportPath
+    return importPath, exportPath

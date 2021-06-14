@@ -61,4 +61,77 @@ describe('Test the WSI DeID plugin', function () {
         }, 'the plugins page to load');
         girderTest.waitForLoad();
     });
+
+    describe('test import', function () {
+        it('go to WSI DeID collections page', function () {
+            runs(function () {
+                $("a.g-nav-link[g-target='collections']").click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.g-collection-create-button:visible').length > 0;
+            }, 'navigate to collections page');
+            runs(function () {
+                $('.g-collection-list-entry .g-collection-link').click();
+            });
+            girderTest.waitForLoad();
+        });
+        it('go to the AvailbleToProcess folder', function () {
+            runs(function () {
+                expect($('.g-folder-list-link').eq(1).text()).toEqual('AvailableToProcess');
+                $('.g-folder-list-link').eq(1).click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.wsi_deid-import-button').length;
+            }, 'import button to appear');
+        });
+        it('click the import button', function () {
+            runs(function () {
+                $('.wsi_deid-import-button').click();
+            });
+            waitsFor(function () {
+                return $('.g-folder-list-link').length;
+            });
+            girderTest.waitForLoad();
+        });
+    });
+    describe('test redact one', function () {
+        it('click next item', function () {
+            runs(function () {
+                $('a.g-nav-next-unprocessed').click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.g-hui-redact').length;
+            });
+            waitsFor(function () {
+                return $('.g-workflow-button[action="process"]').length;
+            });
+            runs(function () {
+                expect($('.g-workflow-button[action="process"]').length).toBe(1);
+            });
+        });
+        it('click redact', function () {
+            runs(function () {
+                $('.g-workflow-button[action="process"]').click();
+            });
+            girderTest.waitForLoad();
+            runs(function () {
+                expect($('.g-workflow-button[action="finish"]').length).toBe(1);
+            });
+        });
+        it('click finish', function () {
+            runs(function () {
+                $('.g-workflow-button[action="finish"]').click();
+            });
+            waitsFor(function () {
+                return $('.g-workflow-button[action="process"]').length;
+            });
+            girderTest.waitForLoad();
+            runs(function () {
+                expect($('.g-workflow-button[action="process"]').length).toBe(1);
+            });
+        });
+    });
 });

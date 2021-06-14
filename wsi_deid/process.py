@@ -327,19 +327,6 @@ def aperio_value_list(item, redactList, title):
     return aperioValues
 
 
-def split_name(base, number):
-    """
-    Given a base name and a 0-based number, return the name that tiffsplit uses
-    for a specific directory number.
-
-    :param base: base path name passed to tiffsplit for the prefix.
-    :param number: 0-based directory number.
-    :returns: the split file path name.
-    """
-    let = 'abcdefghijklmnopqrstuvwxyz'
-    return base + let[number // 26 // 26] + let[(number // 26) % 26] + let[number % 26] + '.tif'
-
-
 def redact_tiff_tags(ifds, redactList, title):
     """
     Redact any tags of the form *;tiff.<tiff name name> from all IFDs.
