@@ -7,6 +7,8 @@ import { wrap } from '@girder/core/utilities/PluginUtils';
 import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 import { formatCount } from '@girder/core/misc';
 
+import '../stylesheets/HierarchyWidget.styl';
+
 function performAction(action) {
     const actions = {
         ingest: { done: 'Import completed.', fail: 'Failed to import.' },
@@ -160,6 +162,8 @@ wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount
         this.$('.g-item-count').text(itemCount);
         this.$('.g-subfolder-count-container').attr('title', folderTooltip);
         this.$('.g-item-count-container').attr('title', itemTooltip);
+        this.$('.g-subfolder-count-container').toggleClass('subtree-info', subfolders > folders);
+        this.$('.g-item-count-container').toggleClass('subtree-info', subitems > items);
     };
 
     let reshowSubtreeCounts = () => {
