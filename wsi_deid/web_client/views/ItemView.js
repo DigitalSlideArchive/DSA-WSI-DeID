@@ -211,7 +211,7 @@ wrap(ItemView, 'render', function (render) {
                 addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images');
                 if (keyname === 'macro' && settings.redact_macro_square) {
                     elem.addClass('redact-square');
-                    let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out">&nbsp;</div>');
+                    let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
                     resizeRedactSquare(elem);
                 }
