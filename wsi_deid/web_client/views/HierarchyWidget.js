@@ -153,8 +153,18 @@ wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount
         const subitems = Math.max(items, this.parentModel.get('nSubtreeCount').items || 0);
         let folderCount = formatCount(folders) + (subfolders > folders ? (' (' + formatCount(subfolders) + ')') : '');
         let itemCount = formatCount(items) + (subitems > items ? (' (' + formatCount(subitems) + ')') : '');
-        let folderTooltip = (subfolders > folders ? `${folders} folder${folders === 1 ? '' : 's'}, ` : '') + `${subfolders} total folder${subfolders === 1 ? '' : 's'}`;
-        let itemTooltip = (subitems > items ? `${items} item${items === 1 ? '' : 's'}, ` : '') + `${subitems} total item${subitems === 1 ? '' : 's'}`;
+        let folderTooltip = `${folders} folder${folders === 1 ? '' : 's'}`;
+        if (folders < subfolders) {
+            folderTooltip += ` (current folder), ${subfolders} total folder${subfolders === 1 ? '' : 's'} (including subfolders)`;
+        } else if (folders) {
+            folderTooltip += ' (all in current folder)';
+        }
+        let itemTooltip = `${items} file${items === 1 ? '' : 's'}`;
+        if (items < subitems) {
+            itemTooltip += ` (current folder), ${subitems} total file${subitems === 1 ? '' : 's'} (including in subfolders)`;
+        } else if (items) {
+            itemTooltip += ' (all in current folder)';
+        }
         if (!this.$('.g-item-count').length) {
             this.$('.g-subfolder-count-container').after($('<div class="g-item-count-container"><i class="icon-doc-text-inv"></i><div class="g-item-count"></div></div>'));
         }
