@@ -94,6 +94,7 @@
   top 0
   left 0
   background rgba(0, 0, 0, 0.3)
+  z-index 1000
   div
     font-size 60px
     position relative
@@ -102,10 +103,41 @@
     transform translate(-50%, -50%)
     text-align center
 
-.g-item-image-viewer-select .g-item-info-header .g-workflow-button
-  float right
+.g-item-image-viewer-select .g-item-info-header
+  .g-workflow-button
+    float right
+  .form-control.image-viewer-control
+    visibility hidden
 
 .g-widget-next-container
   padding-bottom 8px
   .h-next-image
     float right
+
+.g-item-info-header .g-widget-redact-area-container
+  float right
+  padding-right 10px
+
+.g-widget-redact-area-container
+  button
+    padding 3px 5px
+    .cancel-area, .unredact-area
+      display none
+  select.g-hui-redact
+    visibility hidden
+  select.g-hui-redact option[value="none"]
+    display none
+.g-widget-redact-area-container.area-adding
+  button
+    .redact-area
+      display none
+    .cancel-area
+      display unset
+.g-widget-redact-area-container.area-set
+  button
+    .redact-area
+      display none
+    .unredact-area
+      display unset
+  select.g-hui-redact
+    visibility unset

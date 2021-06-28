@@ -1,11 +1,10 @@
 import os
-import pytest
 
+import girder.utility.config
+import pytest
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
-import girder.utility.config
-
 
 from .utilities import provisionServer  # noqa
 
@@ -39,9 +38,9 @@ def test_workflow(server, provisionServer, user):  # noqa
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 def test_workflow_with_options(server, provisionServer, user):  # noqa
+    import wsi_deid.config
     from wsi_deid import rest
     from wsi_deid.constants import PluginSettings
-    import wsi_deid.config
 
     config = girder.utility.config.getConfig()
     config[wsi_deid.config.CONFIG_SECTION] = {

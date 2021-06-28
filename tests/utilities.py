@@ -1,8 +1,8 @@
 import os
-import pytest
 import shutil
 import sys
 
+import pytest
 from girder.models.setting import Setting
 
 from wsi_deid.constants import PluginSettings

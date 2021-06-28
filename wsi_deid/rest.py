@@ -2,6 +2,7 @@ import datetime
 import os
 import tempfile
 
+import histomicsui.handlers
 from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
@@ -15,16 +16,11 @@ from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
 from girder.utility.model_importer import ModelImporter
-from girder.utility.progress import setResponseTimeLimit, ProgressContext
-
+from girder.utility.progress import ProgressContext, setResponseTimeLimit
 from girder_large_image.models.image_item import ImageItem
-import histomicsui.handlers
 
+from . import config, import_export, process
 from .constants import PluginSettings
-from . import config
-from . import import_export
-from . import process
-
 
 ProjectFolders = {
     'ingest': PluginSettings.HUI_INGEST_FOLDER,

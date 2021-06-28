@@ -3,8 +3,7 @@
 
 import pytest
 
-from wsi_deid.import_export import getSchemaValidator, validateDataRow, readExcelData
-
+from wsi_deid.import_export import getSchemaValidator, readExcelData, validateDataRow
 
 csv1 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,01,Biopsy,C717-Brain stem,01,0579XY112001_01_01,01-A.svs

@@ -6,7 +6,6 @@ from girder.models.folder import Folder
 from girder.models.setting import Setting
 from girder.models.user import User
 from girder.utility.server import configureServer
-
 from girder_large_image.constants import PluginSettings as liSettings
 
 
