@@ -465,11 +465,11 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
         key = None
         keyparts = ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
             'data', '').split('\n', 1)[-1].strip().split()
-        if len(keyparts) and keyparts[0].lower():
+        if len(keyparts) and keyparts[0].lower() and not keyparts[0][0].isdigit():
             key = keyparts[0].lower()
         if (key is None and ifd['tags'].get(tifftools.Tag.NewSubfileType.value) and
                 ifd['tags'][tifftools.Tag.NewSubfileType.value]['data'][0] &
-                tifftools.Tag.NewSubfileType.bitfield.Page.value):
+                tifftools.Tag.NewSubfileType.bitfield.ReducedImage.value):
             key = 'label' if ifd['tags'][
                 tifftools.Tag.NewSubfileType.value]['data'][0] == 1 else 'macro'
         if key in redactList['images'] or key == 'label':
