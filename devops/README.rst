@@ -4,7 +4,7 @@ WSI DeID via Docker Compose
 
 This directory contains a docker-compose set up for the WSI DeID project.
 
-Database files and local assertsore files are persistently stored in docker volumes.  You may want to extend the docker-compose.yml file to mount external file system directories for easier import and export.
+Database files and local assetstore files are persistently stored in docker volumes.  You may want to extend the docker-compose.yml file to mount external file system directories for easier import and export.
 
 Prerequsities:
 --------------
