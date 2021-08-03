@@ -3,16 +3,16 @@ import copy
 import io
 import math
 import os
+import re
+import xml.etree.ElementTree
+
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 import pyvips
-import re
-import xml.etree.ElementTree
-
+import tifftools
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
-import tifftools
 
 from . import config
 
@@ -263,7 +263,8 @@ def redact_item(item, tempdir):
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
         except Exception:
             pass
-    labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
+    if config.getConfig('add_title_to_label'):
+        labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
     macroImage = None
     if ('macro' not in redactList['images'] and config.getConfig('redact_macro_square')):
         try:
@@ -477,8 +478,9 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
     if macroImage:
         redact_format_aperio_add_image(
             'macro', macroImage, ifds, firstAssociatedIdx, tempdir, aperioValues)
-    redact_format_aperio_add_image(
-        'label', labelImage, ifds, firstAssociatedIdx, tempdir, aperioValues)
+    if labelImage:
+        redact_format_aperio_add_image(
+            'label', labelImage, ifds, firstAssociatedIdx, tempdir, aperioValues)
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
@@ -655,6 +657,20 @@ PhilipsTagElements = {  # Group, Element, Format
 
 
 def philips_tag(dict, key, value=None, subkey=None, subvalue=None):
+    """
+    Given an xml dictionary and a key, return information about the philips
+    tag in the dictionary.
+
+    :param dict: an xml dictionary.
+    :param key: the key to match.
+    :param value: the value to match.  None to match any value.  Ignored if
+        subkey is specified.
+    :param subkey: the subkey to match.  None to not match a subkey.
+    :param subvalue: the value of the subkey to match.
+    :returns: None if no match, otherwise a dictionary object, the index of the
+        dictionary object, the tag list, the index in the tag list, and the tag
+        entry or subkey entry.
+    """
     dobjs = dict['DataObject']
     if not isinstance(dobjs, list):
         dobjs = [dobjs]
@@ -739,38 +755,39 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
                 'text': value,
             }
             plist.insert(0, entry)
-    # Insert label image
-    labelPath = os.path.join(tempdir, 'label.tiff')
-    labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
-    labelinfo = tifftools.read_tiff(labelPath)
-    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'datatype': tifftools.Datatype.ASCII,
-        'data': 'Label'
-    }
-    labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
-        'data': [1], 'datatype': tifftools.Datatype.LONG}
-    ifds.extend(labelinfo['ifds'])
-    jpeg = io.BytesIO()
-    labelImage.save(jpeg, format='jpeg', quality=90)
     tag = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
     redact_format_philips_replace_macro(
         macroImage, ifds, tempdir, tag[2][tag[3]]['Array']['DataObject'])
-    tag[2][tag[3]]['Array']['DataObject'].append({
-        'Attribute': [{
-            'Name': 'PIM_DP_IMAGE_TYPE',
-            'Group': '0x301D',
-            'Element': '0x1004',
-            'PMSVR': 'IString',
-            'text': 'LABELIMAGE',
-        }, {
-            'Name': 'PIM_DP_IMAGE_DATA',
-            'Group': '0x301D',
-            'Element': '0x1005',
-            'PMSVR': 'IString',
-            'text': base64.b64encode(jpeg.getvalue()).decode(),
-        }],
-        'ObjectType': 'DPScannedImage',
-    })
+    # Insert label image
+    if labelImage:
+        labelPath = os.path.join(tempdir, 'label.tiff')
+        labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
+        labelinfo = tifftools.read_tiff(labelPath)
+        labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
+            'datatype': tifftools.Datatype.ASCII,
+            'data': 'Label'
+        }
+        labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
+            'data': [1], 'datatype': tifftools.Datatype.LONG}
+        ifds.extend(labelinfo['ifds'])
+        jpeg = io.BytesIO()
+        labelImage.save(jpeg, format='jpeg', quality=90)
+        tag[2][tag[3]]['Array']['DataObject'].append({
+            'Attribute': [{
+                'Name': 'PIM_DP_IMAGE_TYPE',
+                'Group': '0x301D',
+                'Element': '0x1004',
+                'PMSVR': 'IString',
+                'text': 'LABELIMAGE',
+            }, {
+                'Name': 'PIM_DP_IMAGE_DATA',
+                'Group': '0x301D',
+                'Element': '0x1005',
+                'PMSVR': 'IString',
+                'text': base64.b64encode(jpeg.getvalue()).decode(),
+            }],
+            'ObjectType': 'DPScannedImage',
+        })
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
         'datatype': tifftools.Datatype.ASCII,
         'data': xml.etree.ElementTree.tostring(
@@ -785,7 +802,7 @@ def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
     """
     Modify a macro image in a philips file.
 
-    :param macrosImage: a PIL image or None to not change.
+    :param macroImage: a PIL image or None to not change.
     :param ifds: ifds of output file.
     :param tempdir: a directory for work files and the final result.
     :param pdo: Philips DataObject array.
