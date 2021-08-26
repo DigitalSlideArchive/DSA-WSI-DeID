@@ -258,7 +258,7 @@ def redact_item(item, tempdir):
     newTitle = get_generated_title(item)
     tileSource = ImageItem().tileSource(item)
     labelImage = None
-    if 'label' not in redactList['images']:
+    if 'label' not in redactList['images'] and not config.getConfig('always_redact_label'):
         try:
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
         except Exception:

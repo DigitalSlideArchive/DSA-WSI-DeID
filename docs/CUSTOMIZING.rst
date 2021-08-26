@@ -22,4 +22,7 @@ Redaction Catgories
 
 By default, when metadata or images are redacted, the user must pick the typoe of PHI/PII that is present and the reason for the redaction.  If the ``require_redact_category`` is set to ``False``, then, instead of requiring a reason, the user interface will show a ``REDACT`` button that toggles redaction on and off for the metadata or image.  The export file will contain ``No Reason Collected`` in these cases.
 
+Redacting the Label Image
++++++++++++++++++++++++++
 
+The label image can be redacted by default if the ``always_redact_label`` value is set to ``True``.  If the label image is redacted, it is repalced with a black square with the output filename printed in it.  The label image is not redacted, the output filename is added to the top of the image.

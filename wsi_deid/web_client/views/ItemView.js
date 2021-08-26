@@ -221,14 +221,18 @@ wrap(ItemView, 'render', function (render) {
                 elem = $(elem);
                 let keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
-                addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
+                let isRedacted = redactList.images[keyname] !== undefined;
+                if (keyname !== 'label' || !settings.always_redact_label) {
+                    addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
+                } else {
+                    isRedacted = true;
+                }
                 if (keyname === 'macro' && settings.redact_macro_square) {
                     elem.addClass('redact-square');
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
                     resizeRedactSquare(elem);
                 }
-                let isRedacted = redactList.images[keyname] !== undefined;
                 elem.toggleClass('redacted', isRedacted);
             });
             this.events['input .g-hui-redact'] = flagRedaction;
