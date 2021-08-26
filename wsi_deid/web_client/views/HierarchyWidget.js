@@ -134,11 +134,20 @@ wrap(HierarchyWidget, 'render', function (render) {
             error: null
         }).done((resp) => {
             if (resp) {
-                if (resp === 'ingest') {
-                    addIngestControls.call(this);
-                } else if (resp === 'finished') {
-                    addExportControls.call(this);
-                }
+                restRequest({
+                    url: `wsi_deid/settings`,
+                    error: null
+                }).done((settings) => {
+                    if (resp === 'ingest') {
+                        if (settings.show_import_button !== false) {
+                            addIngestControls.call(this);
+                        }
+                    } else if (resp === 'finished') {
+                        if (settings.show_export_button !== false) {
+                            addExportControls.call(this);
+                        }
+                    }
+                });
             }
         });
     }
