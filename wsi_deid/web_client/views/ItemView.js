@@ -11,6 +11,7 @@ import { wrap } from '@girder/core/utilities/PluginUtils';
 import ItemViewWidget from '@girder/large_image/views/itemViewWidget';
 
 import ItemViewTemplate from '../templates/ItemView.pug';
+import ItemViewNextTemplate from '../templates/ItemViewNext.pug';
 import '../stylesheets/ItemView.styl';
 import { goToNextUnprocessedItem } from '../utils';
 
@@ -305,7 +306,7 @@ wrap(ItemView, 'render', function (render) {
         /* Don't show the annotation list */
         this.$el.find('.g-annotation-list-container').remove();
         /* Show workflow buttons */
-        this.$el.append(ItemViewTemplate({
+        $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType
         }));
         /* Place a copy of any reject buttons in the item header */
@@ -336,6 +337,24 @@ wrap(ItemView, 'render', function (render) {
     render.call(this);
 });
 
+function _setNextPreviousImage(parent) {
+    const model = parent.model;
+    if (parent._nextPrevious.fetch) {
+        parent._nextPrevious.fetch = false;
+        const folder = model.parent ? model.parent.id : '';
+        restRequest({
+            url: `item/${model.id}/adjacent_images`,
+            param: { folder: folder }
+        }).done((images) => {
+            parent._previousImage = images.index !== 0 ? images.previous._id : null;
+            parent._previousName = images.previous.name;
+            parent._nextImage = images.index + 1 !== images.count ? images.next._id : null;
+            parent._nextName = images.next.name;
+            parent.render();
+        });
+    }
+}
+
 wrap(ItemViewWidget, 'render', function (render) {
     /* Add any internal metadata items that will be added but don't already
      * exist. */
@@ -355,6 +374,21 @@ wrap(ItemViewWidget, 'render', function (render) {
         });
         internal[parts[1]] = sorted;
     });
+    if (!this._nextPrevious) {
+        this._nextPrevious = { fetch: true };
+        _setNextPreviousImage(this);
+    }
     render.call(this);
+    this.parentView.$el.find('.g-widget-next-container').remove();
+    const nextImageLink = this._nextImage ? `#item/${this._nextImage}` : null;
+    const previousImageLink = this._previousImage ? `#item/${this._previousImage}` : null;
+    const next = ItemViewNextTemplate({
+        previousImageLink: previousImageLink,
+        previousImageName: this._previousName,
+        nextImageLink: nextImageLink,
+        nextImageName: this._nextName
+    });
+    this.parentView.$el.find('.g-item-breadcrumb-container').eq(0).after(next);
+    this.parentView.$el.children().last().after(next);
 });
 ItemViewWidget._deid = true;

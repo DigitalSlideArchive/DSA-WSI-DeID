@@ -1,0 +1,16 @@
+-
+  var titlePre = '', titleNext = '';
+  if (previousImageLink) {
+    titlePre = 'Previous image - ' + previousImageName;
+  }
+  if (nextImageLink) {
+    titleNext ='Next image - ' + nextImageName;
+  }
+
+.g-widget-next-container
+  a.h-previous-image.btn.btn-default(href=previousImageLink, title=titlePre, disabled=!previousImageLink)
+    i.icon-left-open
+    |  Previous
+  a.h-next-image.btn.btn-default(href=nextImageLink, title=titleNext, disabled=!nextImageLink)
+    i.icon-right-open
+    |  Next
