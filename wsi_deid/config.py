@@ -3,8 +3,8 @@ import girder.utility.config
 CONFIG_SECTION = 'wsi_deid'
 
 defaultConfig = {
-    'redact_macro_square': True,
-    'always_redact_label': True,
+    'redact_macro_square': False,
+    'always_redact_label': False,
     'require_redact_category': True,
 }
 

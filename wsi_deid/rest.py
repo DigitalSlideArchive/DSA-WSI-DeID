@@ -14,6 +14,7 @@ from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
+from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import setResponseTimeLimit, ProgressContext
 
 from girder_large_image.models.image_item import ImageItem
@@ -242,6 +243,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
         self.route('GET', ('settings',), self.getSettings)
+        self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -352,3 +354,19 @@ class WSIDeIDResource(Resource):
     @access.public(scope=TokenScope.DATA_READ)
     def getSettings(self):
         return config.getConfig()
+
+    @access.user
+    @autoDescribeRoute(
+        Description('Get total subtree folder and item counts of a resource by ID.')
+        .param('id', 'The ID of the resource.', paramType='path')
+        .param('type', 'The type of the resource (folder, user, collection).')
+        .errorResponse('ID was invalid.')
+        .errorResponse('Read access was denied for the resource.', 403)
+    )
+    def getSubtreeCount(self, id, type):
+        user = self.getCurrentUser()
+        model = ModelImporter.model(type)
+        doc = model.load(id=id, user=self.getCurrentUser(), level=AccessType.READ)
+        folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
+        totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
+        return {'folders': folderCount, 'items': totalCount - folderCount, 'total': totalCount}
