@@ -9,8 +9,19 @@ services:
     volumes:
       - c:\NCI_WSI:/import
       - c:\DeID_WSI:/export
+      # Uncomment to use a specific directory for redacted and processed WSI
+      # - c:\Processed_WSI:/assetstore
+    # Use a specific quantity of memory; this is necessary on some Windows/OSX
+    # deployments.  Uncomment if needed.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 4g
   mongodb:
     restart: unless-stopped
+    # Uncomment this to specify an explicit database directory
+    # volumes:
+    #   - c:\WSI_Database:/data/db
 
     # If you get the error "invalid volume specification:
     # 'wsi_deid_dbdata:/data/db:rw'", uncomment the "image:" line below.  This
