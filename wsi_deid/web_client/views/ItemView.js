@@ -57,14 +57,17 @@ wrap(ItemView, 'render', function (render) {
         const target = $(event.currentTarget);
         const keyname = target.attr('keyname');
         const category = target.attr('category');
-        const reason = target.val();
+        let reason = target.val();
         const redactList = this.getRedactList();
         let isRedacted = redactList[category][keyname] !== undefined;
+        if (target.is('a')) { // button, not select
+            reason = isRedacted ? 'none' : 'No_Reason_Collected';
+        }
         if (isRedacted && (!reason || reason === 'none')) {
             delete redactList[category][keyname];
             isRedacted = false;
         } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
-            redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') };
+            redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') || reason };
             isRedacted = true;
         } else {
             // no change
@@ -100,41 +103,51 @@ wrap(ItemView, 'render', function (render) {
         return true;
     };
 
-    const addRedactButton = (parentElem, keyname, redactRecord, category) => {
-        let elem = $('<select class="g-hui-redact"/>');
-        elem.attr({
-            keyname: keyname,
-            category: category,
-            title: 'Redact this ' + category
-        });
-        elem.append($('<option value="none">Keep (do not redact)</option>'));
-        let matched = false;
-        PHIPIITypes.forEach((cat) => {
-            if (cat.types) {
-                let optgroup = $('<optgroup/>');
-                optgroup.attr({ label: cat.text });
-                cat.types.forEach((phitype) => {
-                    let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
-                    if (redactRecord && redactRecord.reason === phitype.key) {
+    const addRedactButton = (parentElem, keyname, redactRecord, category, settings) => {
+        let elem;
+        if (settings.require_redact_category !== false) {
+            elem = $('<select class="g-hui-redact"/>');
+            elem.attr({
+                keyname: keyname,
+                category: category,
+                title: 'Redact this ' + category
+            });
+            elem.append($('<option value="none">Keep (do not redact)</option>'));
+            let matched = false;
+            PHIPIITypes.forEach((cat) => {
+                if (cat.types) {
+                    let optgroup = $('<optgroup/>');
+                    optgroup.attr({ label: cat.text });
+                    cat.types.forEach((phitype) => {
+                        let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
+                        if (redactRecord && redactRecord.reason === phitype.key) {
+                            opt.attr('selected', 'selected');
+                            matched = true;
+                        }
+                        optgroup.append(opt);
+                    });
+                    elem.append(optgroup);
+                } else {
+                    let opt = $('<option/>').attr({ value: cat.key, category: cat.category }).text(cat.text);
+                    if (redactRecord && redactRecord.reason === cat.key) {
                         opt.attr('selected', 'selected');
                         matched = true;
                     }
-                    optgroup.append(opt);
-                });
-                elem.append(optgroup);
-            } else {
-                let opt = $('<option/>').attr({ value: cat.key, category: cat.category }).text(cat.text);
-                if (redactRecord && redactRecord.reason === cat.key) {
-                    opt.attr('selected', 'selected');
-                    matched = true;
+                    elem.append(opt);
                 }
-                elem.append(opt);
+            });
+            if (!matched && redactRecord) {
+                $('[value="Other_PHIPII"]', elem).attr('selected', 'selected');
             }
-        });
-        if (!matched && redactRecord) {
-            $('[value="Other_PHIPII"]', elem).attr('selected', 'selected');
+            elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
+        } else {
+            elem = $('<a class="g-hui-redact' + (redactRecord && redactRecord.reason ? ' undo' : '') + '"><span>Redact</span></a>').attr({
+                keyname: keyname,
+                category: category,
+                title: 'Toggle redacting this ' + category
+            });
+            elem = $('<span class="g-hui-redact-label"></span>').append(elem);
         }
-        elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
         parentElem.append(elem);
     };
 
@@ -194,7 +207,7 @@ wrap(ItemView, 'render', function (render) {
                     redactButtonAllowed = false;
                 }
                 if (showRedactButton(keyname) && redactButtonAllowed) {
-                    addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata');
+                    addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
             }
@@ -208,7 +221,7 @@ wrap(ItemView, 'render', function (render) {
                 elem = $(elem);
                 let keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
-                addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images');
+                addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
                 if (keyname === 'macro' && settings.redact_macro_square) {
                     elem.addClass('redact-square');
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
@@ -220,6 +233,7 @@ wrap(ItemView, 'render', function (render) {
             });
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
+            this.events['click a.g-hui-redact'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {
                 event.stopPropagation();
                 return false;

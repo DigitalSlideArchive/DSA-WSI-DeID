@@ -28,6 +28,7 @@ Navigating the Documentation
 * `docs/USAGE.rst <docs/USAGE.rst>`_ contains usage information, mostly focused on interacting with the system through a web browser.
 * `docs/GLOSSARY.rst <docs/GLOSSARY.rst>`_ contains a glossary of technical terms.
 * `docs/ERROR-TABLES.rst <docs/ERROR-TABLES.rst>`_ contains tables of explanations for error messages that users may encounter.
+* `docs/CUSTOMIZING.rst <docs/CUSTOMIZING.rst>`_ contains details on customizing the workflow for different use cases.
 * `docs/rationale.md <docs/rationale.md>`_ contains a rationale of the SEER WSI DeID pilot project.
 
 
