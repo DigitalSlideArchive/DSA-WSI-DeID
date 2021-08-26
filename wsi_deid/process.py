@@ -1,17 +1,20 @@
 import base64
 import copy
-from io import BytesIO
+import io
 import math
 import os
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
+import pyvips
 import re
 import xml.etree.ElementTree
 
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 import tifftools
+
+from . import config
 
 
 def get_redact_list(item):
@@ -138,8 +141,8 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
     }
     for key in {'Created', 'Updated'}:
         if metadata['openslide'].get('hamamatsu.%s' % key):
-            redactList['metadata']['internal;openslide;hamamatsu.%s' % key] = {
-                'value': metadata['openslide']['hamamatsu.%s' % key][:4] + '/01/01'}
+            redactList['metadata']['internal;openslide;hamamatsu.%s' % key] = \
+                metadata['openslide']['hamamatsu.%s' % key][:4] + '/01/01'
     return redactList
 
 
@@ -257,17 +260,24 @@ def redact_item(item, tempdir):
     labelImage = None
     if 'label' not in redactList['images']:
         try:
-            labelImage = PIL.Image.open(BytesIO(tileSource.getAssociatedImage('label')[0]))
+            labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
         except Exception:
             pass
     labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
+    macroImage = None
+    if ('macro' not in redactList['images'] and config.getConfig('redact_macro_square')):
+        try:
+            macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
+            macroImage = redact_topleft_square(macroImage)
+        except Exception:
+            pass
     format = determine_format(tileSource)
     func = None
     if format is not None:
         func = globals().get('redact_format_' + format)
     if func is None:
         raise Exception('Cannot redact this format.')
-    file, mimetype = func(item, tempdir, redactList, newTitle, labelImage)
+    file, mimetype = func(item, tempdir, redactList, newTitle, labelImage, macroImage)
     info = {
         'format': format,
         'model': model_information(tileSource, format),
@@ -413,7 +423,7 @@ def add_deid_metadata(item, ifds):
     }
 
 
-def redact_format_aperio(item, tempdir, redactList, title, labelImage):
+def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImage):
     """
     Redact aperio files.
 
@@ -422,6 +432,8 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     :param redactList: the list of redactions (see get_redact_list).
     :param title: the new title for the item.
     :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
@@ -472,23 +484,14 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
                 tifftools.Tag.NewSubfileType.bitfield.ReducedImage.value):
             key = 'label' if ifd['tags'][
                 tifftools.Tag.NewSubfileType.value]['data'][0] == 1 else 'macro'
-        if key in redactList['images'] or key == 'label':
+        if key in redactList['images'] or key == 'label' or (key == 'macro' and macroImage):
             ifds.pop(idx)
-    # Add back label image
-    labelPath = os.path.join(tempdir, 'label.tiff')
-    labelImage.save(labelPath, format='tiff', compression='jpeg', quality=90)
-    labelinfo = tifftools.read_tiff(labelPath)
-    labelDescription = aperioValues[0].split('\n', 1)[1] + '\nlabel %dx%d' % (
-        labelImage.width, labelImage.height)
-    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'datatype': tifftools.Datatype.ASCII,
-        'data': labelDescription
-    }
-    labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
-        'data': [1], 'datatype': tifftools.Datatype.LONG}
-    labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDepth] = {
-        'data': [1], 'datatype': tifftools.Datatype.SHORT}
-    ifds[firstAssociatedIdx:firstAssociatedIdx] = labelinfo['ifds']
+    # Add back label and macro image
+    if macroImage:
+        redact_format_aperio_add_image(
+            'macro', macroImage, ifds, firstAssociatedIdx, tempdir, aperioValues)
+    redact_format_aperio_add_image(
+        'label', labelImage, ifds, firstAssociatedIdx, tempdir, aperioValues)
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
@@ -497,7 +500,34 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage):
     return outputPath, 'image/tiff'
 
 
-def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
+def redact_format_aperio_add_image(key, image, ifds, firstAssociatedIdx, tempdir, aperioValues):
+    """
+    Add a label or macro image to an aperio file.
+
+    :param key: either 'label' or 'macro'
+    :param image: a PIL image.
+    :param ifds: ifds of output file.
+    :param firstAssociatedIdx: ifd index of first associated image.
+    :param tempdir: a directory for work files and the final result.
+    :param aperioValues: a list of aperio metadata values.
+    """
+    imagePath = os.path.join(tempdir, '%s.tiff' % key)
+    image.save(imagePath, format='tiff', compression='jpeg', quality=90)
+    imageinfo = tifftools.read_tiff(imagePath)
+    imageDescription = aperioValues[0].split('\n', 1)[1] + '\n%s %dx%d' % (
+        key, image.width, image.height)
+    imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'datatype': tifftools.Datatype.ASCII,
+        'data': imageDescription
+    }
+    imageinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
+        'data': [9 if key == 'macro' else 1], 'datatype': tifftools.Datatype.LONG}
+    imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDepth] = {
+        'data': [1], 'datatype': tifftools.Datatype.SHORT}
+    ifds[firstAssociatedIdx:firstAssociatedIdx] = imageinfo['ifds']
+
+
+def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage, macroImage):
     """
     Redact hamamatsu files.
 
@@ -506,6 +536,8 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
     :param redactList: the list of redactions (see get_redact_list).
     :param title: the new title for the item.
     :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
@@ -531,7 +563,8 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
                 if value is None:
                     del ndpiProperties[key]
                 else:
-                    ndpiProperties[key] = value
+                    ndpiProperties[key] = value['value'] if isinstance(
+                        value, dict) and 'value' in value else value
     propertyList = ['%s=%s\r\n' % (k, v) for k, v in ndpiProperties.items()]
     propertyMap = ''.join(propertyList)
     for ifd in ifds:
@@ -543,9 +576,40 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage):
             'datatype': tifftools.Datatype.ASCII,
             'data': propertyMap,
         }
+    redact_format_hamamatsu_replace_macro(macroImage, ifds, tempdir)
     outputPath = os.path.join(tempdir, 'hamamatsu.ndpi')
     tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
+
+
+def redact_format_hamamatsu_replace_macro(macroImage, ifds, tempdir):
+    """
+    Modify a macro image in a hamamatsu file.
+
+    :param macrosImage: a PIL image or None to not change.
+    :param ifds: ifds of output file.
+    :param tempdir: a directory for work files and the final result.
+    """
+    macroifd = None
+    for idx, ifd in enumerate(ifds):
+        if (tifftools.Tag.NDPI_SOURCELENS.value in ifd['tags'] and
+                ifd['tags'][tifftools.Tag.NDPI_SOURCELENS.value]['data'][0] == -1):
+            macroifd = idx
+            break
+    if not macroImage or macroifd is None:
+        return
+    imagePath = os.path.join(tempdir, 'macro.tiff')
+    tifftools.write_tiff(ifds[macroifd], imagePath)
+    image = io.BytesIO()
+    macroImage.save(image, 'jpeg', qaulity=90)
+    jpos = os.path.getsize(imagePath)
+    jlen = len(image.getvalue())
+    imageifd = tifftools.read_tiff(imagePath)['ifds'][0]
+    open(imagePath, 'ab').write(image.getvalue())
+    imageifd['tags'][tifftools.Tag.StripOffsets.value]['data'][0] = jpos
+    imageifd['tags'][tifftools.Tag.StripByteCounts.value]['data'][0] = jlen
+    imageifd['size'] += jlen
+    ifds[macroifd] = imageifd
 
 
 PhilipsTagElements = {  # Group, Element, Format
@@ -622,7 +686,7 @@ def philips_tag(dict, key, value=None, subkey=None, subvalue=None):
     return None
 
 
-def redact_format_philips(item, tempdir, redactList, title, labelImage):
+def redact_format_philips(item, tempdir, redactList, title, labelImage, macroImage):
     """
     Redact philips files.
 
@@ -631,6 +695,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     :param redactList: the list of redactions (see get_redact_list).
     :param title: the new title for the item.
     :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
@@ -697,9 +763,11 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
         'data': [1], 'datatype': tifftools.Datatype.LONG}
     ifds.extend(labelinfo['ifds'])
-    jpeg = BytesIO()
+    jpeg = io.BytesIO()
     labelImage.save(jpeg, format='jpeg', quality=90)
     tag = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
+    redact_format_philips_replace_macro(
+        macroImage, ifds, tempdir, tag[2][tag[3]]['Array']['DataObject'])
     tag[2][tag[3]]['Array']['DataObject'].append({
         'Attribute': [{
             'Name': 'PIM_DP_IMAGE_TYPE',
@@ -724,6 +792,47 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage):
     outputPath = os.path.join(tempdir, 'philips.tiff')
     tifftools.write_tiff(ifds, outputPath)
     return outputPath, 'image/tiff'
+
+
+def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
+    """
+    Modify a macro image in a philips file.
+
+    :param macrosImage: a PIL image or None to not change.
+    :param ifds: ifds of output file.
+    :param tempdir: a directory for work files and the final result.
+    :param pdo: Philips DataObject array.
+    """
+    macroifd = None
+    for idx, ifd in enumerate(ifds):
+        if ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
+                'data', '').split()[0].lower() == 'macro':
+            macroifd = idx
+            break
+    if not macroImage or macroifd is None:
+        return
+    imagePath = os.path.join(tempdir, 'macro.tiff')
+    image = io.BytesIO()
+    macroImage.save(image, 'TIFF')
+    image = pyvips.Image.new_from_buffer(image.getvalue(), '')
+    image.write_to_file(imagePath, Q=85, compression='jpeg')
+    imageifd = tifftools.read_tiff(imagePath)['ifds'][0]
+    imageifd['tags'][tifftools.Tag.ImageDescription.value] = ifds[
+        macroifd]['tags'][tifftools.Tag.ImageDescription.value]
+    ifds[macroifd] = imageifd
+
+    for dobj in pdo:
+        if 'Attribute' in dobj:
+            used = False
+            for attr in dobj['Attribute']:
+                if attr['Name'] == 'PIM_DP_IMAGE_TYPE' and attr['text'] == 'MACROIMAGE':
+                    used = True
+            if used:
+                for attr in dobj['Attribute']:
+                    if attr['Name'] == 'PIM_DP_IMAGE_DATA':
+                        jpeg = io.BytesIO()
+                        macroImage.save(jpeg, 'jpeg', quality=85)
+                        attr['text'] = base64.b64encode(jpeg.getvalue()).decode()
 
 
 def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
@@ -789,4 +898,20 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         text=title,
         fill=textColor,
         font=imageDrawFont)
+    return newImage
+
+
+def redact_topleft_square(image):
+    """
+    Replace the top left square of an image with black.
+
+    :param image: a PIL image to adjust.
+    :returns: an adjusted PIL image.
+    """
+    mode = 'RGB'
+    newImage = image.convert(mode)
+    w, h = image.size
+    background = PIL.ImageColor.getcolor('#000000', mode)
+    imageDraw = PIL.ImageDraw.Draw(newImage)
+    imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage

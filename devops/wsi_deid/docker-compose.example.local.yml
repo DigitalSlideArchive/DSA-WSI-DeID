@@ -10,6 +10,9 @@ services:
       - c:\DeID_WSI:/export
       # Uncomment to use a specific directory for redacted and processed WSI
       # - c:\Processed_WSI:/assetstore
+      # Uncomment to use a custom girder configuration file.  This can be a
+      # relative path or an absolute path.
+      # - ./girder.local.conf:/conf/girder.local.conf
     # Use a specific quantity of memory; this is necessary on some Windows/OSX
     # deployments.  Uncomment if needed.
     # deploy:
