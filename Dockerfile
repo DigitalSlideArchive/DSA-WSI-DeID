@@ -49,9 +49,7 @@ WORKDIR wsi_deid
 COPY . .
 
 # By using --no-cache-dir the Docker image is smaller
-RUN python3.9 -m pip install --pre --no-cache-dir \
-    # Until https://github.com/cherrypy/cheroot/issues/312 is resolved.
-    cheroot!=8.4.3,!=8.4.4 \
+RUN python3.9 -m pip install --no-cache-dir \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
