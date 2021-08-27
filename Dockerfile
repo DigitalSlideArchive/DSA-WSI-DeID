@@ -63,6 +63,7 @@ RUN python3.9 -m pip install --no-cache-dir \
 RUN girder build && \
     # Git rid of unnecessary files to keep the docker image smaller \
     find /usr/local/lib/python3.9 -name node_modules -exec rm -rf {} \+ && \
+    find /usr/local/lib/python3.9 -name package-lock.json -exec rm -f {} \+ && \
     rm -rf /tmp/npm*
 
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
