@@ -1,10 +1,20 @@
 # Change Log
 
-## Unreleased
+## Version 2.2.0
+
+### Features
+- Blank top/left square of the macro image (#184)
+- Add a setting so that redaction reasons are not required (#185)
+- Add an option to always redact the label image (#186)
+- Add a next and previous button to images (#189)
 
 ### Improvements
 - Remove FUSE from the Dockerfile (#183)
 - Report memory and disk space on start (#182)
+- Improve macro image detection (#191)
+- Better export progress (#187)
+- Show folder and item counts (#188)
+- Add more configuration options (#193)
 
 ### Bug Fixes
 - Delay importing tile sources to ensure correct config (#173)
