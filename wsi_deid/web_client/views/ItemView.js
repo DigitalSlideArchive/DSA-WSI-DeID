@@ -55,25 +55,34 @@ wrap(ItemView, 'render', function (render) {
 
     const flagRedaction = (event) => {
         event.stopPropagation();
-        const target = $(event.currentTarget);
+        let target = $(event.currentTarget);
+        const isSquare = target.is('.g-hui-redact-square,.g-hui-redact-square-span');
+        if (isSquare) {
+            target = target.closest('.g-hui-redact-label').find('.g-hui-redact');
+        }
         const keyname = target.attr('keyname');
         const category = target.attr('category');
         let reason = target.val();
         const redactList = this.getRedactList();
         let isRedacted = redactList[category][keyname] !== undefined;
-        if (target.is('a')) { // button, not select
-            reason = isRedacted ? 'none' : 'No_Reason_Collected';
-        }
-        if (isRedacted && (!reason || reason === 'none')) {
-            delete redactList[category][keyname];
-            isRedacted = false;
-        } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
-            redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') || reason };
-            isRedacted = true;
+        if (isSquare) {
+            redactList[category][keyname].square = !redactList[category][keyname].square;
         } else {
-            // no change
-            return;
+            if (target.is('a')) { // button, not select
+                reason = isRedacted ? 'none' : 'No_Reason_Collected';
+            }
+            if (isRedacted && (!reason || reason === 'none')) {
+                delete redactList[category][keyname];
+                isRedacted = false;
+            } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
+                redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') || reason };
+                isRedacted = true;
+            } else {
+                // no change
+                return;
+            }
         }
+        const redactSquare = (redactList[category][keyname] || {}).square || (!isRedacted && target.closest('.g-widget-auximage').hasClass('always-redact-square'));
         restRequest({
             method: 'PUT',
             url: 'wsi_deid/item/' + this.model.id + '/redactList',
@@ -87,8 +96,10 @@ wrap(ItemView, 'render', function (render) {
         this.model.get('meta').redactList = redactList;
         target.closest('td.large_image_metadata_value').toggleClass('redacted', isRedacted);
         target.closest('td.large_image_metadata_value').find('.redact-replacement').remove();
-        target.closest('.g-widget-auximage').toggleClass('redacted', isRedacted);
-        return false;
+        target.closest('.g-widget-auximage').toggleClass('redacted', isRedacted && !redactSquare);
+        target.closest('.g-widget-auximage').toggleClass('redact-square', !!redactSquare);
+        target.closest('.g-widget-auximage').find('input[type="checkbox"]').prop('checked', !!redactSquare);
+        return isSquare && $(event.currentTarget).is('input[type="checkbox"]');
     };
 
     const showRedactButton = (keyname) => {
@@ -228,17 +239,32 @@ wrap(ItemView, 'render', function (render) {
                 } else {
                     isRedacted = true;
                 }
-                if (keyname === 'macro' && settings.redact_macro_square) {
-                    elem.addClass('redact-square');
+                let redactSquare = false;
+                if (keyname === 'macro') {
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
                     resizeRedactSquare(elem);
+                    if (!settings.redact_macro_square) {
+                        let check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
+                        if ((redactList.images[keyname] || {}).square) {
+                            check.find('input[type="checkbox"]').prop('checked', true);
+                            redactSquare = true;
+                        }
+                        elem.find('.g-widget-auximage-title .g-hui-redact-label').append(check);
+                    } else {
+                        redactSquare = true;
+                        elem.addClass('always-redact-square');
+                    }
+                    if (redactSquare) {
+                        elem.addClass('redact-square');
+                    }
                 }
-                elem.toggleClass('redacted', isRedacted);
+                elem.toggleClass('redacted', isRedacted && !redactSquare);
             });
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
+            this.events['click .g-hui-redact-square-span'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {
                 event.stopPropagation();
                 return false;

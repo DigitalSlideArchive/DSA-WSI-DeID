@@ -266,7 +266,8 @@ def redact_item(item, tempdir):
     if config.getConfig('add_title_to_label'):
         labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
     macroImage = None
-    if ('macro' not in redactList['images'] and config.getConfig('redact_macro_square')):
+    if (('macro' not in redactList['images'] and config.getConfig('redact_macro_square')) or
+            ('macro' in redactList['images'] and redactList['images']['macro'].get('square'))):
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
             macroImage = redact_topleft_square(macroImage)
@@ -285,7 +286,7 @@ def redact_item(item, tempdir):
         'mimetype': mimetype,
         'redactionCount': {
             key: len([k for k, v in redactList[key].items() if v['value'] is None])
-            for key in redactList},
+            for key in redactList if key != 'area'},
         'fieldCount': {
             'metadata': metadata_field_count(tileSource, format, redactList),
             'images': len(tileSource.getAssociatedImagesList()),
@@ -536,6 +537,8 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage, macroI
     ifds = tiffinfo['ifds']
     sourceLensTag = tifftools.Tag.NDPI_SOURCELENS.value
     for key in redactList['images']:
+        if key == 'macro' and macroImage:
+            continue
         lensval = {'macro': -1, 'nonempty': -2}
         ifds = [ifd for ifd in ifds
                 if sourceLensTag not in ifd['tags'] or
@@ -712,6 +715,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     images = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
     for key, pkey in [('macro', 'MACROIMAGE'), ('label', 'LABELIMAGE')]:
         if key in redactList['images'] and images:
+            if key == 'macro' and macroImage:
+                continue
             tag = philips_tag(
                 xmldict, 'PIM_DP_SCANNED_IMAGES', None, 'PIM_DP_IMAGE_TYPE', pkey)
             if tag:
