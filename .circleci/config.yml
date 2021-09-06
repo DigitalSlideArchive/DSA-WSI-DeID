@@ -91,6 +91,25 @@ jobs:
               docker tag dsarchive/wsi_deid:latest dsarchive/wsi_deid:stable
               docker push dsarchive/wsi_deid:stable
               fi
+  scan-docker:
+    docker:
+      - image: docker:stable-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install trivy
+          command: |
+            apk add --update-cache --upgrade curl
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - run:
+          name: Scan the local image with trivy; fail on high or critical vulnerabilities
+          command: trivy image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 1 --severity HIGH,CRITICAL --no-progress
+      - run:
+          name: Scan the local image with trivy; report low and medium vulnerabilities, but don't fail
+          command: trivy image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 0 --severity LOW,MEDIUM,UNKNOWN --no-progress
 
 workflows:
   version: 2
@@ -104,10 +123,17 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+      - scan-docker:
+          requires:
+            - docker-compose
+          filters:
+            tags:
+              only: /^v.*/
       - publish-docker:
           requires:
             - test
             - docker-compose
+            - scan-docker
           filters:
             tags:
               only: /^v.*/
@@ -125,7 +151,11 @@ workflows:
     jobs:
       - test
       - docker-compose
+      - scan-docker:
+          requires:
+            - docker-compose
       - publish-docker:
           requires:
             - test
             - docker-compose
+            - scan-docker

@@ -230,3 +230,12 @@ Redaction Business Rules
 Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modifications vary by WSI vendor format.
 
 To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specific variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the `process.py <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py>`_ source file.
+
+Vulnerability Security
+======================
+
+Since the program is installed and run using Docker, most of its security is dependent on Docker.  The standard deployment uses some standard docker images including MongoDB and Memcached.  These imagess are produced by external sources and are scanned for vulnerabilities by Docker.  There is one custom image used by this program that is created as part of a Continuous Integration (CI) pipeline.  As part of the CI process, this container is scanned for vulnerabilities.
+
+The CI process uses `trivy <https://aquasecurity.github.io/trivy>`_ to scan the generated docker image for vulnerabilities.  This uses standard public databases of known problems (see the list of Data Sources on Trivy).  Other tools, such as ``docker scan`` use these same databases of issues.  The CI process ensures that there are no high- or critical-level issues before publishing the docker image.  Low- and medium- level issues are periodically reviewed to ensure that they are either inapplicable or guarded in an alternate manner.  For example, there are warnings about nodejs server, but this is not used -- nodejs is used internally as part of the build process, but the server is not part of the running software and therefore issues with the nodejs server cannot affect the final program.
+
+Although due diligence is made to check for security issues, no guarantee is made.  Future exploits may be discovered or go unreported and could affect the packaged image.
