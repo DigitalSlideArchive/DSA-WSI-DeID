@@ -210,7 +210,7 @@ Install our software::
     Expand-Archive -LiteralPath c:\project\dsa.zip -DestinationPath c:\project
     cd c:\project\DSA-WSI-DeID-master\devops\wsi_deid
     copy docker-compose.example-ws2019.local.yml docker-compose.local.yml
-    
+
 If needed, edit ``docker-compose.local.yml``.  For this installation. the ``command:`` line was uncommented.
 
 Start the software::
