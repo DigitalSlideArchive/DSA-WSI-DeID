@@ -1,5 +1,6 @@
 import os
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -41,7 +42,7 @@ setup(
     install_requires=[
         'celery<5',
         'girder-homepage',
-        'histomicsui',
+        'histomicsui>=1.0.1dev46',
         'jsonschema',
         'large_image[tiff,openslide,memcached]',
         'openpyxl',
