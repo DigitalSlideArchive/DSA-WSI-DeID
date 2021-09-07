@@ -99,7 +99,7 @@ wrap(ItemView, 'render', function (render) {
         target.closest('.g-widget-auximage').toggleClass('redacted', isRedacted && !redactSquare);
         target.closest('.g-widget-auximage').toggleClass('redact-square', !!redactSquare);
         target.closest('.g-widget-auximage').find('input[type="checkbox"]').prop('checked', !!redactSquare);
-        return isSquare && $(event.currentTarget).is('input[type="checkbox"]');
+        return isSquare && $(event.target).is('input[type="checkbox"]');
     };
 
     const showRedactButton = (keyname) => {
@@ -192,6 +192,21 @@ wrap(ItemView, 'render', function (render) {
         window.setTimeout(() => resizeRedactSquare(elem), 1000);
     };
 
+    const resizeRedactBackground = (elem) => {
+        let image = elem.find('.g-widget-auximage-image img');
+        if (!image.length) {
+            return;
+        }
+        let minwh = Math.min(image.width(), image.height());
+        if (minwh > 0) {
+            let redact = elem.find('.g-widget-auximage-image');
+            redact.width(image.width());
+            redact.height(image.height());
+            return;
+        }
+        window.setTimeout(() => resizeRedactBackground(elem), 1000);
+    };
+
     const addRedactionControls = (showControls, settings) => {
         /* if showControls is false, the tabs are still adjusted and some
          * fields may be hidden, but the actual redaction controls aren't
@@ -233,6 +248,7 @@ wrap(ItemView, 'render', function (render) {
                 elem = $(elem);
                 let keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
+                resizeRedactBackground(elem);
                 let isRedacted = redactList.images[keyname] !== undefined;
                 if (keyname !== 'label' || !settings.always_redact_label) {
                     addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
