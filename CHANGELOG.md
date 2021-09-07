@@ -1,5 +1,16 @@
 # Change Log
 
+## Version 2.2.1
+
+### Improvements
+- Make redacting a square on the macro an option (#198)
+
+### Bug fixes
+- Require newer version of HistomicsUI plugin (#197)
+
+### Build Improvements
+- Use trivy to scan docker image (#199)
+
 ## Version 2.2.0
 
 ### Features
