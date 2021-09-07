@@ -1,0 +1,38 @@
+# bash: Default CMD is not bash
+CVE-2019-18276
+
+# coreutils: Not explicitly using chroot in coreutils 
+CVE-2016-2781
+
+# gcc-8-base: Not building for ARM
+CVE-2020-13844
+
+# git/git-man: Not using git as part of running command
+CVE-2018-1000021
+CVE-2021-40330
+
+# gpg/gpg-agent: Not using a keyserver
+CVE-2019-13050
+
+# libasn1-8-heimdal: not using Kerberos for external communications
+CVE-2019-12098
+
+# libc-bin: Not using ARM
+CVE-2020-6096
+
+# libdbus-1-3: We don't add users
+CVE-2020-35512
+
+# nodejs: We only use nodejs for building, not for serving
+CVE-2018-12115
+CVE-2018-12116
+CVE-2018-12121
+CVE-2018-12122
+CVE-2018-7160
+CVE-2018-7167
+CVE-2019-5737
+CVE-2018-12123
+CVE-2018-7159
+
+# python3.6: We are using Python 3.9
+CVE-2021-23336
