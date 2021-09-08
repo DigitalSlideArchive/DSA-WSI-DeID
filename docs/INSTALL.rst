@@ -176,22 +176,16 @@ The Girder platform has the ability perform some user management tasks through e
 To perform these steps, your user must have access to the Admin console. From the landing page, navigate to the Admin console, and then select ``Server configuration``.
 
 .. image:: screenshots/server_configuration_highlighted.png
-   :height: 100
-   :width: 200
    :alt: server configuration
 
 Scroll down to the ``Administrative Policy`` section. Here you can require admin approval for new users, and configure email verification.
 
 .. image:: screenshots/administrative_policy_highlighted.png
-   :height: 100
-   :width: 200
    :alt: administrative policy
 
 Scroll down further to the ``Email Delivery`` section. This is where you specify what email server and credentials Girder should use to send emails to users.
 
 .. image:: screenshots/email_delivery_highlighted.png
-   :height: 100
-   :width: 200
    :alt: email delivery settings
 
 Here you can specify the name of the mail server, as well as an encryption method supported by that server, and credentials for a user of that mail server. The user whose credentials you enter here will be the sender of emails from Girder.
@@ -206,22 +200,16 @@ Girder offers three registration policies.
 **Closed registration:** New user accounts must be created by existing admin users. Functionality to register an account by clicking ``Register`` on the homepage is disabled. Administrators can create users by navigating to ``Users`` from the left menu, and selecting ``Create user``.
 
 .. image:: screenshots/create_user_highlighted.png
-    :height: 100
-    :width: 200
     :alt: create user
 
 **Admin approval required:** User accounts can be created through the ``Register`` link on the homepage, but require administrator approval before access is granted. When a user registers under this policy, an email will be sent to all administrators with a link to the new user's account. An administrator can follow this link, and select ``Approve`` from the ``Actions`` menu.
 
 .. image:: screenshots/approve_account_highlighted.png
-    :height: 100
-    :width: 200
     :alt: approve user
 
 Alternatively, administrators can click on ``Users`` from the left menu, select the user to approve, and select ``Approve`` from the ``Actions`` menu. Users waiting for approval will be marked as such.
 
 .. image:: screenshots/pending_approval_highlighted.png
-    :height: 100
-    :width: 200
     :alt: user pending approval
 
 Windows Server 2019
