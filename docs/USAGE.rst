@@ -46,16 +46,12 @@ User Registration and Logins
 When you first interact with the software through your browser, you will need to create a user for that web application by clicking on ``Register or Log In`` as highlighted in the yellow box in the screenshot below, and then registering your user. After registration, you may use the user credentials you created to ``Login`` to the WSI DeID.
 
 .. image:: screenshots/register_or_login.png
-   :height: 100
-   :width: 200
    :alt: register or log in
 
 
 If you are logged into the WSI DeID, your username will appear in the upper right-hand corner of the screen (highlighted in the yellow box), like for the user named ``admin`` in the screenshot below.
 
 .. image:: screenshots/admin_user.png
-   :height: 100
-   :width: 200
    :alt: admin user logged in
 
 User Types and Permissions
@@ -83,8 +79,6 @@ There are six Folders an image file can be in within the WSI DeID Tool, includin
 The workflow is depicted in the overall workflow diagram below.
 
 .. image:: screenshots/workflow_diagram_v2.png
-   :height: 100
-   :width: 200
    :alt: workflow diagram
 
 This documentation will walk through the workflow following the steps of the workflow diagram above.
@@ -139,8 +133,6 @@ There are two ways an image needs to be rejected: (a) there is PHI in the zoomab
 There is a ``Reject`` button available near the zoomable WSI image as a convenience to quickly reject a WSI file, see the screenshot below.
 
 .. image:: screenshots/top_reject_button.png
-   :height: 100
-   :width: 200
    :alt: top reject button
 
 Step 5 Users Export DeID Files
@@ -160,15 +152,11 @@ Navigating by Folder
 After logging in, from the home page click on the ``Collections`` link (1) on the left menu and then click on the ``WSI DeID`` collection link (2), which is shown in the screenshot below.
 
 .. image:: screenshots/collection_navigation.png
-   :height: 100
-   :width: 200
    :alt: WSI DeID collection link
 
 After clicking on the ``WSI DeID`` collection link, you will be in the ``WSI DeID`` collection and should see the ``WSI DeID`` specific folders, as shown in the screenshot below.
 
 .. image:: screenshots/wsideid_collection_folders_highlighted.png
-   :height: 100
-   :width: 200
    :alt: WSI DeID collection folders
 
 From this folder listing, you can navigate to any folder you wish by clicking on the folder name link. For example, if you want to import data, go to the ``AvailableToProcess`` folder, or if you want to export data, go to the ``Approved`` folder. See the Workflow Overview section above for a description of each folder.
@@ -188,22 +176,16 @@ The WSI DeID is based on Girder (see GIRDER.rst for more information), which is 
 A folder in Girder may contain items, and an item always has to be in a folder. When looking at the WSI DeID, if you are in a folder, you will see the folder icon on the upper right of the screen, as shown in the screenshot below taken from an ``AvailableToProcess`` folder. In this case, the folder has zero children folders and two items within the folder, which is why there is an icon of a folder with a ``0`` and an icon of a document with a ``2`` in the screenshot.
 
 .. image:: screenshots/folder_view_highlighted.png
-   :height: 100
-   :width: 200
    :alt: image folder view
 
 To see an item view of an image, click on the image/item's row in the folder view. You will then go to the item view, which looks like the below screenshot, of an item (a WSI file) named ``0579XY112001_01_13.svs`` that is located in the ``AvailableToProcess`` folder. In the info panel, you can see some metadata such as the image size and WSI DeID creation date. The item view will present you with subsections for a panning/zooming ``Image Viewer``, a listing of ``Large Image Metadata``, the set of ``Associated Images``, and image/item specific ``WSI DeID Workflow`` actions.
 
 .. image:: screenshots/example_image_item_view.png
-   :height: 100
-   :width: 200
    :alt: image item view
 
 Below is a screenshot of the action buttons available in the ``WSI DeID Workflow`` section of the ``AvailableToProcess`` folder. Different folders will present different combinations of buttons, see the Workflow Overview section above for details.
 
 .. image:: screenshots/wsideid_workflow_buttons_highlighted.png
-   :height: 100
-   :width: 200
    :alt: WSI DeID workflow buttons
 
 Files & links Actions
@@ -212,8 +194,6 @@ Files & links Actions
 There is a section of the WSI DeID that is titled ``Files & links``. Do not click on any of the buttons in this section unless you are intentionally performing low-level file management. These buttons are shown yellow box highlighted in the screenshot below.
 
 .. image:: screenshots/files_and_links_buttons_highlighted.png
-   :height: 100
-   :width: 200
    :alt: Files & links actions
 
 Importing Data
@@ -245,8 +225,6 @@ Step 3 Press the Import Button
 From the ``AvailableToProcess`` folder (or any sub folder) in the WSI DeID, click on the ``Import`` button, as shown in the below screenshot.
 
 .. image:: screenshots/import_button_highlighted.png
-   :height: 100
-   :width: 200
    :alt: import button
 
 Clicking on the ``Import`` button will trigger a scan of the mounted import directory (i.e., where the software is directed to find the files), and will do the following:
@@ -277,8 +255,6 @@ The user may then proceed with the redaction workflow, described in the Workflow
 Below is a screenshot of a message presented to the user after an import. See the Error Messages section below for all possible results of performing the import action.
 
 .. image:: screenshots/import_message_highlighted.png
-   :height: 100
-   :width: 200
    :alt: import message
 
 
@@ -289,7 +265,7 @@ At a high level in the Redaction process, the user can inspect the image and met
 
 Review Process for PHI/PII in Image(s) and Metadata
 ---------------------------------------------------
- 
+
 1. Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
 
 2. Review the image(s) and metadata fields for PHI/PII. Definitions of PHI/PII categories in the redaction drop-down menu are listed in the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__.
@@ -363,8 +339,6 @@ Step 2 Users Click ``Export Recent`` or ``Export All`` Buttons
 In the ``Approved`` folder, two buttons appear at the top: ``Export Recent`` and ``Export All``, as shown in the screenshot below. Clicking either button copies files from the ``Approved`` folder to the mounted export folder. The subfolder structure within the ``Approved`` folder is maintained as part of the export. If a file already exists in the export folder, then that file will be skipped during the export process so as to not overwrite the existing file in the export directory.
 
 .. image:: screenshots/export_buttons_highlighted.png
-   :height: 100
-   :width: 200
    :alt: export buttons
 
 Recent exports are any items in the ``Approved`` folder that have not been exported before. After each export, items are tagged with metadata indicating that they have been exported.
@@ -372,8 +346,6 @@ Recent exports are any items in the ``Approved`` folder that have not been expor
 After export, a message is shown indicating how many files were exported and giving the user a chance to download the Excel export report (DeID Export File) for more details. See the screenshot below to see an export message example.
 
 .. image:: screenshots/export_message_highlighted.png
-   :height: 100
-   :width: 200
    :alt: export message
 
 
@@ -415,22 +387,16 @@ Below is a screenshot of image PHI/PII redaction controls for metadata.
 The ``aperio.AppMag`` field has been marked for redaction.
 
 .. image:: screenshots/redact_metadata.png
-   :height: 100
-   :width: 200
    :alt: redact metadata controls
 
 Below is a screenshot of image PHI/PII redaction controls for Associated Images, with the ``Macro`` image marked for redaction.
 
 .. image:: screenshots/redact_images.png
-   :height: 100
-   :width: 200
    :alt: redact images controls
 
 Label images that are redacted are replaced with a black image that contains text of the item's new name (for the purposes of the WSI Pilot this new name will be the ImageID), such as in the screenshot below.
 
 .. image:: screenshots/redacted_label_image.png
-   :height: 100
-   :width: 200
    :alt: redacted label image
 
 Error Messages
@@ -442,5 +408,3 @@ Software Version
 ================
 
 If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 2.0.0``. In this example the version string is ``2.0.0``, but you should expect a different version string for your WSI DeID instance.
-
-
