@@ -168,6 +168,34 @@ Admin User
 
 By default, when the system is first installed, there is one user with Administrator status with a default username of ``admin`` and password of ``password``.  It is strongly recommended that this be changed immediately, either by logging in and changing the password or by logging in, creating a new admin user and deleting the existing one.
 
+Email Configuration
+-------------------
+
+The Girder platform has the ability perform some user management tasks through email. This includes requesting a password reset, user email verification, and more. If your organization manages its own mail server, you can specify that as the Email Delivery service.
+
+To perform these steps, your user must have access to the Admin console. From the landing page, navigate to the Admin console, and then select ``Server configuration``.
+
+.. image:: screenshots/server_configuration_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: server configuration
+
+Scroll down to the ``Administrative Policy`` section. Here you can require admin approval for new users, and configure email verification.
+
+.. image:: screenshots/administrative_policy_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: administrative policy
+
+Scroll down further to the ``Email Delivery`` section. This is where you specify what email server and credentials Girder should use to send emails to users.
+
+.. image:: screenshots/email_delivery_highlighted.png
+   :height: 100
+   :width: 200
+   :alt: email delivery settings
+
+Here you can specify the name of the mail server, as well as an encryption method supported by that server, and credentials for a user of that mail server. The user whose credentials you enter here will be the sender of emails from Girder.
+
 Windows Server 2019
 ===================
 
@@ -210,7 +238,7 @@ Install our software::
     Expand-Archive -LiteralPath c:\project\dsa.zip -DestinationPath c:\project
     cd c:\project\DSA-WSI-DeID-master\devops\wsi_deid
     copy docker-compose.example-ws2019.local.yml docker-compose.local.yml
-    
+
 If needed, edit ``docker-compose.local.yml``.  For this installation. the ``command:`` line was uncommented.
 
 Start the software::
