@@ -67,33 +67,6 @@ See GIRDER.rst for more information.
 
 **Non-Super Users:** All subsequently created users will be Non-Super Users, who will have the ability to use the redaction workflows.
 
-Email Configuration
--------------------
-
-The Girder platform has the ability perform some user management tasks through email. This includes requesting a password reset, user email verification, and more. If your organization manages its own mail server, you can specify that as the Email Delivery service.
-
-To perform these steps, your user must have access to the Admin console. From the landing page, navigate to the Admin console, and then select ``Server configuration``.
-
-.. image:: screenshots/server_configuration_highlighted.png
-   :height: 100
-   :width: 200
-   :alt: server configuration
-
-Scroll down to the ``Administrative Policy`` section. Here you can require admin approval for new users, and configure email verification.
-
-.. image:: screenshots/administrative_policy_highlighted.png
-   :height: 100
-   :width: 200
-   :alt: administrative policy
-
-Scroll down further to the ``Email Delivery`` section. This is where you specify what email server and credentials Girder should use to send emails to users.
-
-.. image:: screenshots/email_delivery_highlighted.png
-   :height: 100
-   :width: 200
-   :alt: email delivery settings
-
-Here you can specify the name of the mail server, as well as an encryption method supported by that server, and credentials for a user of that mail server. The user whose credentials you enter here will be the sender of emails from Girder.
 
 Workflow Overview
 =================
@@ -316,7 +289,7 @@ At a high level in the Redaction process, the user can inspect the image and met
 
 Review Process for PHI/PII in Image(s) and Metadata
 ---------------------------------------------------
-
+ 
 1. Open the WSI file, either by clicking on a specific Item or clicking the ``Next Item`` action.
 
 2. Review the image(s) and metadata fields for PHI/PII. Definitions of PHI/PII categories in the redaction drop-down menu are listed in the `PHI/PII Definitions and Types section <#phipii-definitions-and-types>`__.
@@ -469,3 +442,5 @@ Software Version
 ================
 
 If you have found a bug, it is helpful to know what the software version is when you report the bug to your support channels. The software version can be found on the front page of the web application and will be in the section that looks like ``WSI DeID Version: 2.0.0``. In this example the version string is ``2.0.0``, but you should expect a different version string for your WSI DeID instance.
+
+
