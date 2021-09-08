@@ -35,7 +35,7 @@ See `INSTALL.rst <INSTALL.rst>`_ for installation instructions.
 Girder
 ======
 
-The WSI DeID is based on the Girder platform. For background on Girder concepts and navigation, see GIRDER.rst.
+The WSI DeID is based on the Girder platform. For background on Girder concepts and navigation, see `GIRDER.rst <GIRDER.rst>`_.
 
 User Management
 ===============
