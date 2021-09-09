@@ -356,9 +356,9 @@ These business rules will be automatically applied at the time of data import to
 
 The following rules apply to all file formats:
 
-* Tiff ``DateTime`` (if present), set to 01:01:(year and time)
-* ``Copyright``: removed
-* ``HostComputer``: removed
+* ``tiff.DateTime`` (if present), set to 01:01:(year and time)
+* ``tiff.Copyright``: removed
+* ``tiff.HostComputer``: removed
 * ``tiff.Software``: modified by adding custom tags with data from the DeID Upload file
 
 These rules apply only to Aperio files:
