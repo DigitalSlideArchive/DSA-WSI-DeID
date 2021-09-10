@@ -38,6 +38,13 @@ let PHIPIITypes = [{
     text: 'Other PHI/PII'
 }];
 
+const formats = {
+    aperio: 'aperio',
+    hamamatsu: 'hamamatsu',
+    philips: 'philips',
+    none: '',
+}
+
 wrap(ItemView, 'render', function (render) {
     this.getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
@@ -100,6 +107,54 @@ wrap(ItemView, 'render', function (render) {
         target.closest('.g-widget-auximage').toggleClass('redact-square', !!redactSquare);
         target.closest('.g-widget-auximage').find('input[type="checkbox"]').prop('checked', !!redactSquare);
         return isSquare && $(event.target).is('input[type="checkbox"]');
+    };
+
+    const getFormat = () => {
+        if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;aperio."]').length > 0) {
+            return formats.aperio;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;hamamatsu."]').length > 0) {
+            return formats.hamamatsu;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;xml;PIM_DP_"]').length > 0) {
+            return formats.philips;
+        } else {
+            return formats.none;
+        }
+    };
+
+    const getRedactionDisabledPatterns = (settings) => {
+        const format = getFormat();
+        let patterns = settings.disable_redaction_for_metadata;
+        switch (format) {
+            case formats.aperio:
+                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_aperio);
+                break;
+            case formats.hamamatsu:
+                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_hamamatsu);
+                break;
+            case formats.philips:
+                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_philips);
+            default:
+                break;
+        }
+        return patterns;
+    };
+
+    const getHiddenMetadataPatterns = (settings) => {
+        const format = getFormat();
+        let patterns = settings.hide_metadata;
+        switch (format) {
+            case formats.aperio:
+                patterns = patterns.concat(settings.hide_metadata_format_aperio);
+                break;
+            case formats.hamamatsu:
+                patterns = patterns.concat(settings.hide_metadata_format_hamamatsu);
+                break;
+            case formats.philips:
+                patterns = patterns.concat(settings.hide_metadata_format_philips);
+            default:
+                break;
+        }
+        return patterns;
     };
 
     const showRedactButton = (keyname) => {
@@ -218,6 +273,8 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.li-metadata-tabs .tab-pane').last().addClass('active');
 
         const redactList = this.getRedactList();
+        const redactionDiabledPatterns = getRedactionDisabledPatterns();
+        const hideFieldPatterns = getHiddenMetadataPatterns();
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
@@ -233,12 +290,12 @@ wrap(ItemView, 'render', function (render) {
                     elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname].value));
                     redactButtonAllowed = false;
                 }
-                if (showRedactButton(keyname) && redactButtonAllowed) {
+                if (showRedactButton(keyname, redactionDiabledPatterns) && redactButtonAllowed) {
                     addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
             }
-            if (hideField(keyname)) {
+            if (hideField(keyname, hideFieldPatterns)) {
                 elem.closest('tr').css('display', 'none');
             }
         });

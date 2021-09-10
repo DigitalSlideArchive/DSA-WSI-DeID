@@ -10,6 +10,22 @@ defaultConfig = {
     'show_import_button': True,
     'show_export_button': True,
     'show_next_item': True,
+    'disable_redaction_for_metadata': [
+        r'^internal;aperio_version$',
+        r'internal;openslide;openslide\.(?!comments$)',
+        r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$',
+    ],
+    'disable_redaction_for_metadata_format_aperio': [],
+    'disable_redaction_for_metadata_format_hamamatsu': [],
+    'disable_redaction_for_metadata_format_philips': [],
+    'hide_metadata': [
+        r'^internal;openslide;openslide.level\[',
+        r'^internal;openslide;hamamatsu.(AHEX|MHLN)\[',
+        r'^internal;openslide;(openslide.comment|tiff.ImageDescription)$',
+    ],
+    'hide_metadata_format_aperio': [],
+    'hide_metadata_format_hamamatsu': [],
+    'hide_metadata_format_philips': [],
 }
 
 
