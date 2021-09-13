@@ -12,7 +12,7 @@ defaultConfig = {
     'show_next_item': True,
     'disable_redaction_for_metadata': [
         r'^internal;aperio_version$',
-        r'internal;openslide;openslide\.(?!comments$)',
+        r'^internal;openslide;openslide\.(?!comment$)',
         r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$',
     ],
     'disable_redaction_for_metadata_format_aperio': [],

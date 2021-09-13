@@ -42,8 +42,8 @@ const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
     philips: 'philips',
-    none: '',
-}
+    none: ''
+};
 
 wrap(ItemView, 'render', function (render) {
     this.getRedactList = () => {
@@ -133,6 +133,7 @@ wrap(ItemView, 'render', function (render) {
                 break;
             case formats.philips:
                 patterns = patterns.concat(settings.disable_redaction_for_metadata_format_philips);
+                break;
             default:
                 break;
         }
@@ -151,21 +152,18 @@ wrap(ItemView, 'render', function (render) {
                 break;
             case formats.philips:
                 patterns = patterns.concat(settings.hide_metadata_format_philips);
+                break;
             default:
                 break;
         }
         return patterns;
     };
 
-    const showRedactButton = (keyname) => {
-        if (keyname.match(/^internal;aperio_version$/)) {
-            return false;
-        }
-        if (keyname.match(/^internal;openslide;openslide\.(?!comment$)/)) {
-            return false;
-        }
-        if (keyname.match(/^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$/)) {
-            return false;
+    const showRedactButton = (keyname, redactionDisabledPatterns) => {
+        for (const pattern of redactionDisabledPatterns) {
+            if (keyname.match(new RegExp(pattern))) {
+                return false;
+            }
         }
         return true;
     };
@@ -218,16 +216,11 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(elem);
     };
 
-    const hideField = (keyname) => {
-        const isAperio = this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;aperio."]').length > 0;
-        if (isAperio && keyname.match(/^internal;openslide;(openslide.comment|tiff.ImageDescription)$/)) {
-            return true;
-        }
-        if (keyname.match(/^internal;openslide;openslide.level\[/)) {
-            return true;
-        }
-        if (keyname.match(/^internal;openslide;hamamatsu.(AHEX|MHLN)\[/)) {
-            return true;
+    const hideField = (keyname, hideFieldPatterns) => {
+        for (const pattern of hideFieldPatterns) {
+            if (keyname.match(new RegExp(pattern))) {
+                return true;
+            }
         }
         return false;
     };
@@ -273,8 +266,8 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.li-metadata-tabs .tab-pane').last().addClass('active');
 
         const redactList = this.getRedactList();
-        const redactionDiabledPatterns = getRedactionDisabledPatterns();
-        const hideFieldPatterns = getHiddenMetadataPatterns();
+        const redactionDiabledPatterns = getRedactionDisabledPatterns(settings);
+        const hideFieldPatterns = getHiddenMetadataPatterns(settings);
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
