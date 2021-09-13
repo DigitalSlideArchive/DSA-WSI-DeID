@@ -123,16 +123,16 @@ wrap(ItemView, 'render', function (render) {
 
     const getRedactionDisabledPatterns = (settings) => {
         const format = getFormat();
-        let patterns = settings.disable_redaction_for_metadata;
+        let patterns = settings.no_redact_control_keys;
         switch (format) {
             case formats.aperio:
-                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_aperio);
+                patterns = patterns.concat(settings.no_redact_control_keys_format_aperio);
                 break;
             case formats.hamamatsu:
-                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_hamamatsu);
+                patterns = patterns.concat(settings.no_redact_control_keys_format_hamamatsu);
                 break;
             case formats.philips:
-                patterns = patterns.concat(settings.disable_redaction_for_metadata_format_philips);
+                patterns = patterns.concat(settings.no_redact_control_keys_format_philips);
                 break;
             default:
                 break;
@@ -142,16 +142,16 @@ wrap(ItemView, 'render', function (render) {
 
     const getHiddenMetadataPatterns = (settings) => {
         const format = getFormat();
-        let patterns = settings.hide_metadata;
+        let patterns = settings.hide_metadata_keys;
         switch (format) {
             case formats.aperio:
-                patterns = patterns.concat(settings.hide_metadata_format_aperio);
+                patterns = patterns.concat(settings.hide_metadata_keys_format_aperio);
                 break;
             case formats.hamamatsu:
-                patterns = patterns.concat(settings.hide_metadata_format_hamamatsu);
+                patterns = patterns.concat(settings.hide_metadata_keys_format_hamamatsu);
                 break;
             case formats.philips:
-                patterns = patterns.concat(settings.hide_metadata_format_philips);
+                patterns = patterns.concat(settings.hide_metadata_keys_format_philips);
                 break;
             default:
                 break;

@@ -10,22 +10,26 @@ defaultConfig = {
     'show_import_button': True,
     'show_export_button': True,
     'show_next_item': True,
-    'disable_redaction_for_metadata': [
+    'no_redact_control_keys': [
         r'^internal;aperio_version$',
         r'^internal;openslide;openslide\.(?!comment$)',
         r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$',
     ],
-    'disable_redaction_for_metadata_format_aperio': [],
-    'disable_redaction_for_metadata_format_hamamatsu': [],
-    'disable_redaction_for_metadata_format_philips': [],
-    'hide_metadata': [
+    'no_redact_control_keys_format_aperio': [
+        r'^internal;openslide;aperio.AppMag',
+    ],
+    'no_redact_control_keys_format_hamamatsu': [],
+    'no_redact_control_keys_format_philips': [],
+    'hide_metadata_keys': [
         r'^internal;openslide;openslide.level\[',
-        r'^internal;openslide;hamamatsu.(AHEX|MHLN)\[',
+    ],
+    'hide_metadata_keys_format_aperio': [
         r'^internal;openslide;(openslide.comment|tiff.ImageDescription)$',
     ],
-    'hide_metadata_format_aperio': [],
-    'hide_metadata_format_hamamatsu': [],
-    'hide_metadata_format_philips': [],
+    'hide_metadata_keys_format_hamamatsu': [
+        r'^internal;openslide;hamamatsu.(AHEX|MHLN)\[',
+    ],
+    'hide_metadata_keys_format_philips': [],
 }
 
 
