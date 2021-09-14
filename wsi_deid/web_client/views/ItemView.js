@@ -159,8 +159,8 @@ wrap(ItemView, 'render', function (render) {
         return patterns;
     };
 
-    const showRedactButton = (keyname, redactionDisabledPatterns) => {
-        for (const pattern of redactionDisabledPatterns) {
+    const showRedactButton = (keyname, disableRedactionPatterns) => {
+        for (const pattern of disableRedactionPatterns) {
             if (keyname.match(new RegExp(pattern))) {
                 return false;
             }
@@ -266,7 +266,7 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.li-metadata-tabs .tab-pane').last().addClass('active');
 
         const redactList = this.getRedactList();
-        const redactionDiabledPatterns = getRedactionDisabledPatterns(settings);
+        const disableRedactionPatterns = getRedactionDisabledPatterns(settings);
         const hideFieldPatterns = getHiddenMetadataPatterns(settings);
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
@@ -283,7 +283,7 @@ wrap(ItemView, 'render', function (render) {
                     elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname].value));
                     redactButtonAllowed = false;
                 }
-                if (showRedactButton(keyname, redactionDiabledPatterns) && redactButtonAllowed) {
+                if (showRedactButton(keyname, disableRedactionPatterns) && redactButtonAllowed) {
                     addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
