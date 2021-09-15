@@ -53,6 +53,7 @@ setup(
         'pyvips',
         'tifftools',
         'xlrd',
+        'pytesseract',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
