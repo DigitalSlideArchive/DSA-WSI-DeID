@@ -403,7 +403,8 @@ wrap(ItemView, 'render', function (render) {
             unquarantine: { done: 'Item unquarantined.', fail: 'Failed to unquarantine item.' },
             process: { done: 'Item redacted.', fail: 'Failed to redact item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
-            finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' }
+            finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' },
+            ocr: {done: 'Ran OCR.', failed: 'Failed to run OCR.'}
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
@@ -428,6 +429,8 @@ wrap(ItemView, 'render', function (render) {
                         this.model.fetch({ success: () => this.render() });
                     }
                 });
+            } else if (action === 'ocr') {
+                alert(JSON.stringify(resp));
             } else {
                 this.model.fetch({ success: () => this.render() });
             }

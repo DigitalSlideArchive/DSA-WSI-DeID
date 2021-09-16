@@ -189,6 +189,14 @@ def process_item(item, user=None):
     return item
 
 
+def ocr_item(item, user=None):
+    return {
+        'ocr_reesults': 'Not implemented yet',
+        'item': str(item['_id']),
+        'user': str(user['_id']),
+    }
+
+
 def get_first_item(folder, user):
     """
     Get the first item in a folder or any subfolder of that folder.  The items
@@ -243,7 +251,6 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'exportall'), self.exportAll)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
-        self.route('GET', ('item', ':id', 'ocr'), self.getOCRResults)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -269,7 +276,7 @@ class WSIDeIDResource(Resource):
         .modelParam('id', model=Item, level=AccessType.READ)
         .param('action', 'Action to perform on the item.  One of process, '
                'reject, quarantine, unquarantine, finish.', paramType='path',
-               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish'])
+               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
         .errorResponse()
         .errorResponse('Write access was denied on the item.', 403)
     )
@@ -283,6 +290,7 @@ class WSIDeIDResource(Resource):
             'reject': (move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER)),
             'finish': (move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER)),
             'process': (process_item, (item, user)),
+            'ocr': (ocr_item, (item, user)),
         }
         actionfunc, actionargs = actionmap[action]
         return actionfunc(*actionargs)
@@ -370,16 +378,3 @@ class WSIDeIDResource(Resource):
         folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
         totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
         return {'folders': folderCount, 'items': totalCount - folderCount, 'total': totalCount}
-
-    @access.user
-    @autoDescribeRoute(
-        Description('Run OCR on an item and return the results.')
-        .modelParam('id', model=Item, level=AccessType.READ)
-        .errorResponse()
-        .errorResponse('Write access was denied on the item.', 403)
-    )
-    def getOCRResults(self, item):
-        return {
-            'status': 'not implemented yet',
-            'item': str(item),
-        }
