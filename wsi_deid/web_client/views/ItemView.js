@@ -430,7 +430,11 @@ wrap(ItemView, 'render', function (render) {
                     }
                 });
             } else if (action === 'ocr') {
-                alert(JSON.stringify(resp));
+                var results = '-----------------\n';
+                for (const res of resp.ocr_results.label) {
+                    results += res + '\n-----------------\n';
+                }
+                alert(results);
             } else {
                 this.model.fetch({ success: () => this.render() });
             }

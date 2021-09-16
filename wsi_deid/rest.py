@@ -191,7 +191,7 @@ def process_item(item, user=None):
 
 def ocr_item(item, user=None):
     return {
-        'ocr_reesults': 'Not implemented yet',
+        'ocr_results': process.get_image_text(item),
         'item': str(item['_id']),
         'user': str(user['_id']),
     }

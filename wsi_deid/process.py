@@ -1,16 +1,19 @@
 import base64
 import copy
 import io
+import itertools
 import math
 import os
 import re
 import subprocess
 import threading
 import xml.etree.ElementTree
+import pytesseract
 
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
+import PIL.ImageOps
 import pyvips
 import tifftools
 from girder import logger
@@ -1251,6 +1254,23 @@ def redact_topleft_square(image):
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
+def get_text_from_image(image):
+    ocr_results = []
+    for crop, rotate, contrast in itertools.product(
+        (0, 1, 2),
+        (None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270),
+        (None, "autocontrast", "equalize"),
+    ):
+        subimage = PIL.ImageOps.crop(image, crop)
+        if rotate:
+            subimage = subimage.transpose(rotate)
+        if contrast:
+            subimage = getattr(PIL.ImageOps, contrast)(subimage)
+        text = pytesseract.image_to_string(subimage).strip()
+        if len(text) > 0:
+            ocr_results.append(text)
+    return ocr_results
+
 
 def get_image_text(item):
     """
@@ -1260,4 +1280,19 @@ def get_image_text(item):
     :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
     image key, and `[]` will be a list of possible strings of text found on the associated image.
     """
-    pass
+    results = {}
+    tile_source = ImageItem().tileSource(item)
+    keys = []
+    try:
+        for key in tile_source.getAssociatedImagesList():
+            if key == 'label':
+                keys.append(key)
+                image, _ = tile_source.getAssociatedImage(key)
+                image = PIL.Image.open(io.BytesIO(image))
+                text_list = get_text_from_image(image)
+                results[key] = text_list
+            else:
+                continue
+    except Exception as e:
+        return str(e)
+    return results
