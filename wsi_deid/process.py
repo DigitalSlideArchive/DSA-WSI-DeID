@@ -1255,7 +1255,7 @@ def redact_topleft_square(image):
     return newImage
 
 def get_text_from_image(image):
-    ocr_results = []
+    words = {}
     for crop, rotate, contrast in itertools.product(
         (0, 1, 2),
         (None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270),
@@ -1268,8 +1268,11 @@ def get_text_from_image(image):
             subimage = getattr(PIL.ImageOps, contrast)(subimage)
         text = pytesseract.image_to_string(subimage).strip()
         if len(text) > 0:
-            ocr_results.append(text)
-    return ocr_results
+            # split text into words
+            text_parts = [word for word in text.split() if re.search(r'\w', word)]
+            for word in text_parts:
+                words[word] = 1
+    return list(words)
 
 
 def get_image_text(item):

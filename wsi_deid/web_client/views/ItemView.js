@@ -430,9 +430,9 @@ wrap(ItemView, 'render', function (render) {
                     }
                 });
             } else if (action === 'ocr') {
-                var results = '-----------------\n';
+                var results = '';
                 for (const res of resp.ocr_results.label) {
-                    results += res + '\n-----------------\n';
+                    results += res + '\n';
                 }
                 alert(results);
             } else {
