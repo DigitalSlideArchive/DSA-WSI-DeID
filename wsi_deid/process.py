@@ -1257,7 +1257,7 @@ def get_image_text(item):
     Use OCR (pytesseract) to identify and return text on any associated image.
 
     :param item: a girder item.
-    :returns: a dictionary of found text in the format {key: []}. `key` will be the associated image key, and `[]`
-    will be a list of possible strings of text found on the associated image.
+    :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
+    image key, and `[]` will be a list of possible strings of text found on the associated image.
     """
     pass

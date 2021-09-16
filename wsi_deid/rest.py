@@ -243,6 +243,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'exportall'), self.exportAll)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('GET', ('item', ':id', 'ocr'), self.getOCRResults)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -369,3 +370,16 @@ class WSIDeIDResource(Resource):
         folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
         totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
         return {'folders': folderCount, 'items': totalCount - folderCount, 'total': totalCount}
+
+    @access.user
+    @autoDescribeRoute(
+        Description('Run OCR on an item and return the results.')
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .errorResponse()
+        .errorResponse('Write access was denied on the item.', 403)
+    )
+    def getOCRResults(self, item):
+        return {
+            'status': 'not implemented yet',
+            'item': str(item),
+        }
