@@ -110,9 +110,9 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const getFormat = () => {
-        if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;aperio."]').length > 0) {
+        if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'aperio') {
             return formats.aperio;
-        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;hamamatsu."]').length > 0) {
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'hamamatsu') {
             return formats.hamamatsu;
         } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;xml;PIM_DP_"]').length > 0) {
             return formats.philips;
