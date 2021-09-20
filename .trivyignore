@@ -36,3 +36,7 @@ CVE-2018-7159
 
 # python3.6: We are using Python 3.9
 CVE-2021-23336
+
+# vim : we don't run vim, it is only available for debug
+CVE-2021-3778
+CVE-2021-3796
