@@ -13,21 +13,31 @@ defaultConfig = {
     'no_redact_control_keys': [
         r'^internal;aperio_version$',
         r'^internal;openslide;openslide\.(?!comment$)',
-        r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$',
+        r'^internal;openslide;tiff\.(ResolutionUnit|XResolution|YResolution)$',
     ],
     'no_redact_control_keys_format_aperio': [
-        r'^internal;openslide;aperio.AppMag',
+        r'^internal;openslide;aperio\.(AppMag|MPP|Exposure (Time|Scale))$',
     ],
-    'no_redact_control_keys_format_hamamatsu': [],
+    'no_redact_control_keys_format_hamamatsu': [
+        r'^internal;openslide;hamamatsu\.SourceLens$',
+    ],
     'no_redact_control_keys_format_philips': [],
     'hide_metadata_keys': [
-        r'^internal;openslide;openslide.level\[',
+        r'^internal;openslide;openslide\.level\[',
     ],
     'hide_metadata_keys_format_aperio': [
-        r'^internal;openslide;(openslide.comment|tiff.ImageDescription)$',
+        r'^internal;openslide;(openslide\.comment|tiff\.ImageDescription)$',
+        (
+            r'^internal;openslide;aperio\.(Original(Height|Width)|Left|Top|Right|Bottom'
+            r'|LineArea(X|Y)Offset|LineCameraSkew|Focus Offset|StripeWidth)'
+        ),
     ],
     'hide_metadata_keys_format_hamamatsu': [
-        r'^internal;openslide;hamamatsu.(AHEX|MHLN)\[',
+        (
+            r'^internal;openslide;hamamatsu\.((AHEX|MHLN|YRNP|zCoarse|zFine)\['
+            r'|(X|Y)OffsetFromSlideCentre|ccd.(width|height)|(focalplane|slant)\.(left|right)'
+            r'(top|bottom)|stage.center)'
+        ),
     ],
     'hide_metadata_keys_format_philips': [],
 }
