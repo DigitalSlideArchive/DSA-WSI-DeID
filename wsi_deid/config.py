@@ -29,7 +29,7 @@ defaultConfig = {
         r'^internal;openslide;(openslide\.comment|tiff\.ImageDescription)$',
         (
             r'^internal;openslide;aperio\.(Original(Height|Width)|Left|Top|Right|Bottom'
-            r'|LineArea(X|Y)Offset|LineCameraSkew|Focus Offset|StripeWidth)'
+            r'|LineArea(X|Y)Offset|LineCameraSkew|Focus Offset|StripeWidth|DisplayColor)'
         ),
     ],
     'hide_metadata_keys_format_hamamatsu': [
