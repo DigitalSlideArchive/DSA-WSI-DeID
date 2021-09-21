@@ -30,21 +30,25 @@ The label image can be redacted by default if the ``always_redact_label`` value 
 Disabling the Redaction Control
 +++++++++++++++++++++++++++++++
 
-Redaction can be disabled for certain metadata fields. This can be used for fields that are helpful to users reviewing images, but will never contain actual PHI/PII. This can be configured on a per-format basis. In order to specify which fields should have redaction disabled, add those fields, as regular expressions, to the following lists:
+Redaction can be disabled for certain metadata fields. This can be used for fields that are helpful to users reviewing images, but will never contain actual PHI/PII. This can be configured on a per-format basis. The following settings control this functionality.
 
 * ``no_redact_control_keys``
 * ``no_redact_control_keys_format_aperio``
 * ``no_redact_control_keys_format_hamamatsu``
 * ``no_redact_control_keys_format_philips``
 
-Note that fields specified in ``no_redact_control_keys`` will have redaction disabled on all image formats. If you wish to disable redaction of a metadata field on, for example, Aperio images only, you can add that value to the ``no_redact_control_keys_format_aperio`` list.
+In order to disable redaction controls for certain metadata fields, you can add `key: value` pairs to the dictionaries in `girder.local.conf`. Both the key and value need to be regular expressions. The `key` is a regular expression that will match your target metadata. The associated `value` should be a regular expression that matches the expected metadata value. For example, if your metadata should always contain an integer value, you could use the regular expression `"\\d+"`. If you view an image and the metadata value does not match the expected expression, then redaction will be available for that metadata item.
+
+Note that fields specified in ``no_redact_control_keys`` will have redaction disabled on all image formats. If you wish to disable redaction of a metadata field on, for example, Aperio images only, you can add that metadata key and expected value to the ``no_redact_control_keys_format_aperio`` dictionary.
 
 Hiding Metadata Fields
 ++++++++++++++++++++++
 
-If you wish to hide certain metadata fields because they will never contain PHI/PII and are not useful to reviewers, you can specify those metadata fields, as regular expressions, in the following lists in ``girder.local.conf``:
+Similar to configuration for disabling redaction, if you wish to hide certain metadata fields because they will never contain PHI/PII and are not useful to reviewers, you can specify those metadata fields and their expected values, as regular expressions, in the following dictionaries in ``girder.local.conf``:
 
 * ``hide_metadata_keys``
 * ``hide_metadata_keys_format_aperio``
 * ``hide_metadata_keys_format_hamamatsu``
 * ``hide_metadata_keys_format_philips``
+
+If these metadata items contain unexpected values (e.g., text where a number was expected), they will be visible and available for redaction.
