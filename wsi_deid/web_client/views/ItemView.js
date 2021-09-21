@@ -121,6 +121,16 @@ wrap(ItemView, 'render', function (render) {
         }
     };
 
+    const isValidRegex = (string) => {
+        try {
+            const regExp = new RegExp(string);
+        } catch(e) {
+            console.error(`There was an error parsing "${string}" as a regular expression: ${e}.`);
+            return false;
+        }
+        return true;
+    };
+
     const getRedactionDisabledPatterns = (settings) => {
         const format = getFormat();
         let patterns = settings.no_redact_control_keys;
@@ -137,7 +147,7 @@ wrap(ItemView, 'render', function (render) {
             default:
                 break;
         }
-        return patterns;
+        return patterns.filter(pattern => isValidRegex(pattern));
     };
 
     const getHiddenMetadataPatterns = (settings) => {
@@ -156,7 +166,7 @@ wrap(ItemView, 'render', function (render) {
             default:
                 break;
         }
-        return patterns;
+        return patterns.filter(pattern => isValidRegex(pattern));
     };
 
     const showRedactButton = (keyname, disableRedactionPatterns) => {
