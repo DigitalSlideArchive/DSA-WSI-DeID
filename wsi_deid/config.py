@@ -1,6 +1,7 @@
 import girder.utility.config
 
 CONFIG_SECTION = 'wsi_deid'
+NUMERIC_VALUES = r'^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?))*\s*$'
 
 defaultConfig = {
     'redact_macro_square': False,
@@ -10,36 +11,37 @@ defaultConfig = {
     'show_import_button': True,
     'show_export_button': True,
     'show_next_item': True,
-    'no_redact_control_keys': [
-        r'^internal;aperio_version$',
-        r'^internal;openslide;openslide\.(?!comment$)',
-        r'^internal;openslide;tiff\.(ResolutionUnit|XResolution|YResolution)$',
-    ],
-    'no_redact_control_keys_format_aperio': [
-        r'^internal;openslide;aperio\.(AppMag|MPP|Exposure (Time|Scale))$',
-    ],
-    'no_redact_control_keys_format_hamamatsu': [
-        r'^internal;openslide;hamamatsu\.SourceLens$',
-    ],
-    'no_redact_control_keys_format_philips': [],
-    'hide_metadata_keys': [
-        r'^internal;openslide;openslide\.level\[',
-    ],
-    'hide_metadata_keys_format_aperio': [
-        r'^internal;openslide;(openslide\.comment|tiff\.ImageDescription)$',
+    'no_redact_control_keys': {
+        r'^internal;aperio_version$': '',
+        r'^internal;openslide;openslide\.(?!comment$)': '',
+        r'^internal;openslide;tiff\.(XResolution|YResolution)$': NUMERIC_VALUES,
+        r'^internal;openslide;tiff\.ResolutionUnit$': '',
+    },
+    'no_redact_control_keys_format_aperio': {
+        r'^internal;openslide;aperio\.(AppMag|MPP|Exposure (Time|Scale))$': NUMERIC_VALUES,
+    },
+    'no_redact_control_keys_format_hamamatsu': {
+        r'^internal;openslide;hamamatsu\.SourceLens$': NUMERIC_VALUES,
+    },
+    'no_redact_control_keys_format_philips': {},
+    'hide_metadata_keys': {
+        r'^internal;openslide;openslide\.level\[': NUMERIC_VALUES,
+    },
+    'hide_metadata_keys_format_aperio': {
+        r'^internal;openslide;(openslide\.comment|tiff\.ImageDescription)$': '',
         (
             r'^internal;openslide;aperio\.(Original(Height|Width)|Left|Top|Right|Bottom'
             r'|LineArea(X|Y)Offset|LineCameraSkew|Focus Offset|StripeWidth|DisplayColor)'
-        ),
-    ],
-    'hide_metadata_keys_format_hamamatsu': [
+        ): NUMERIC_VALUES,
+    },
+    'hide_metadata_keys_format_hamamatsu': {
         (
             r'^internal;openslide;hamamatsu\.((AHEX|MHLN|YRNP|zCoarse|zFine)\['
             r'|(X|Y)OffsetFromSlideCentre|ccd.(width|height)|(focalplane|slant)\.(left|right)'
             r'(top|bottom)|stage.center)'
-        ),
-    ],
-    'hide_metadata_keys_format_philips': [],
+        ): NUMERIC_VALUES,
+    },
+    'hide_metadata_keys_format_philips': {},
 }
 
 

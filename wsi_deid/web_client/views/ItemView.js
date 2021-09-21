@@ -131,23 +131,46 @@ wrap(ItemView, 'render', function (render) {
         return true;
     };
 
+    const validateRedactionPatternObject = (redactionPatterns) => {
+        for (const key in redactionPatterns) {
+            let removeKey = false;
+            try {
+                new RegExp(key);
+            } catch (e) {
+                removeKey = true;
+                console.error(`There was an error parsing "${key}" as a regular expression: ${e}.`);
+            }
+            let value = redactionPatterns[key];
+            try {
+                new RegExp(value);
+            } catch (e) {
+                removeKey = true;
+                console.error(`There was an error parsing "${value}" as a regular expression: ${e}.`);
+            }
+            if (removeKey) {
+                delete redactionPatterns[key]
+            }
+        }
+        return redactionPatterns;
+    };
+
     const getRedactionDisabledPatterns = (settings) => {
         const format = getFormat();
-        let patterns = settings.no_redact_control_keys;
+        let patterns = settings.no_redact_control_keys; // patterns is an object that looks like {key:value}, where `key` and `value` are both regular expressions
         switch (format) {
             case formats.aperio:
-                patterns = patterns.concat(settings.no_redact_control_keys_format_aperio);
+                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_aperio);
                 break;
             case formats.hamamatsu:
-                patterns = patterns.concat(settings.no_redact_control_keys_format_hamamatsu);
+                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_hamamatsu);
                 break;
             case formats.philips:
-                patterns = patterns.concat(settings.no_redact_control_keys_format_philips);
+                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_philips);
                 break;
             default:
                 break;
         }
-        return patterns.filter(pattern => isValidRegex(pattern));
+        return validateRedactionPatternObject(patterns);
     };
 
     const getHiddenMetadataPatterns = (settings) => {
@@ -155,24 +178,29 @@ wrap(ItemView, 'render', function (render) {
         let patterns = settings.hide_metadata_keys;
         switch (format) {
             case formats.aperio:
-                patterns = patterns.concat(settings.hide_metadata_keys_format_aperio);
+                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_aperio);
                 break;
             case formats.hamamatsu:
-                patterns = patterns.concat(settings.hide_metadata_keys_format_hamamatsu);
+                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_hamamatsu);
                 break;
             case formats.philips:
-                patterns = patterns.concat(settings.hide_metadata_keys_format_philips);
+                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_philips);
                 break;
             default:
                 break;
         }
-        return patterns.filter(pattern => isValidRegex(pattern));
+        return validateRedactionPatternObject(patterns);
     };
 
     const showRedactButton = (keyname, disableRedactionPatterns) => {
-        for (const pattern of disableRedactionPatterns) {
-            if (keyname.match(new RegExp(pattern))) {
-                return false;
+        for (const metadataPattern in disableRedactionPatterns) {
+            if (keyname.match(new RegExp(metadataPattern))) {
+                const value = this.$el.find(`.large_image_metadata_value[keyname^="${keyname}"]`).text();
+                const expectedValuePattern = new RegExp(disableRedactionPatterns[metadataPattern]);
+
+                // If the value of the metadata field matches the expected pattern (e.g., a number
+                // or comma-separated list of numbers), do not show the redact button
+                return !(expectedValuePattern.test(value));
             }
         }
         return true;
@@ -227,9 +255,14 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const hideField = (keyname, hideFieldPatterns) => {
-        for (const pattern of hideFieldPatterns) {
-            if (keyname.match(new RegExp(pattern))) {
-                return true;
+        for (const metadataPattern in hideFieldPatterns) {
+            if (keyname.match(new RegExp(metadataPattern))) {
+                const value = this.$el.find(`.large_image_metadata_value[keyname^="${keyname}"]`).text();
+                const expectedValuePattern = new RegExp(hideFieldPatterns[metadataPattern]);
+
+                // If the value of the metadata field matches the expected pattern,
+                // hide the metadata field.
+                return expectedValuePattern.test(value);
             }
         }
         return false;
@@ -286,6 +319,9 @@ wrap(ItemView, 'render', function (render) {
                 return;
             }
             elem.find('.g-hui-redact').remove();
+            if (hideField(keyname, hideFieldPatterns)) {
+                elem.closest('tr').css('display', 'none');
+            }
             if (showControls) {
                 let isRedacted = redactList.metadata[keyname] !== undefined;
                 let redactButtonAllowed = true;
@@ -297,9 +333,6 @@ wrap(ItemView, 'render', function (render) {
                     addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
-            }
-            if (hideField(keyname, hideFieldPatterns)) {
-                elem.closest('tr').css('display', 'none');
             }
         });
         // Add redaction controls to images
