@@ -1,7 +1,10 @@
 import girder.utility.config
 
 CONFIG_SECTION = 'wsi_deid'
-NUMERIC_VALUES = r'^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?))*\s*$'
+NUMERIC_VALUES = (
+    r'^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?'
+    r'(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?))*\s*$'
+)
 
 defaultConfig = {
     'redact_macro_square': False,
