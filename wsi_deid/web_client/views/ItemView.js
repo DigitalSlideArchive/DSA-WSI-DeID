@@ -123,8 +123,8 @@ wrap(ItemView, 'render', function (render) {
 
     const isValidRegex = (string) => {
         try {
-            const regExp = new RegExp(string);
-        } catch(e) {
+            void new RegExp(string);
+        } catch (e) {
             console.error(`There was an error parsing "${string}" as a regular expression: ${e}.`);
             return false;
         }
@@ -133,22 +133,8 @@ wrap(ItemView, 'render', function (render) {
 
     const validateRedactionPatternObject = (redactionPatterns) => {
         for (const key in redactionPatterns) {
-            let removeKey = false;
-            try {
-                new RegExp(key);
-            } catch (e) {
-                removeKey = true;
-                console.error(`There was an error parsing "${key}" as a regular expression: ${e}.`);
-            }
-            let value = redactionPatterns[key];
-            try {
-                new RegExp(value);
-            } catch (e) {
-                removeKey = true;
-                console.error(`There was an error parsing "${value}" as a regular expression: ${e}.`);
-            }
-            if (removeKey) {
-                delete redactionPatterns[key]
+            if (!isValidRegex(key) || !isValidRegex(redactionPatterns[key])) {
+                delete redactionPatterns[key];
             }
         }
         return redactionPatterns;
