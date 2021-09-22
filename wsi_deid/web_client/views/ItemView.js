@@ -143,38 +143,14 @@ wrap(ItemView, 'render', function (render) {
     const getRedactionDisabledPatterns = (settings) => {
         const format = getFormat();
         let patterns = settings.no_redact_control_keys; // patterns is an object that looks like {key:value}, where `key` and `value` are both regular expressions
-        switch (format) {
-            case formats.aperio:
-                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_aperio);
-                break;
-            case formats.hamamatsu:
-                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_hamamatsu);
-                break;
-            case formats.philips:
-                patterns = Object.assign(patterns, patterns, settings.no_redact_control_keys_format_philips);
-                break;
-            default:
-                break;
-        }
+        patterns = Object.assign({}, patterns, settings['no_redact_control_keys_format_' + format] || {});
         return validateRedactionPatternObject(patterns);
     };
 
     const getHiddenMetadataPatterns = (settings) => {
         const format = getFormat();
         let patterns = settings.hide_metadata_keys;
-        switch (format) {
-            case formats.aperio:
-                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_aperio);
-                break;
-            case formats.hamamatsu:
-                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_hamamatsu);
-                break;
-            case formats.philips:
-                patterns = Object.assign(patterns, patterns, settings.hide_metadata_keys_format_philips);
-                break;
-            default:
-                break;
-        }
+        patterns = Object.assign({}, patterns, settings['hide_metadata_keys_format_' + format] || {});
         return validateRedactionPatternObject(patterns);
     };
 
