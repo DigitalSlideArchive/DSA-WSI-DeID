@@ -38,6 +38,13 @@ let PHIPIITypes = [{
     text: 'Other PHI/PII'
 }];
 
+const formats = {
+    aperio: 'aperio',
+    hamamatsu: 'hamamatsu',
+    philips: 'philips',
+    none: ''
+};
+
 wrap(ItemView, 'render', function (render) {
     this.getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
@@ -102,15 +109,61 @@ wrap(ItemView, 'render', function (render) {
         return isSquare && $(event.target).is('input[type="checkbox"]');
     };
 
-    const showRedactButton = (keyname) => {
-        if (keyname.match(/^internal;aperio_version$/)) {
+    const getFormat = () => {
+        if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'aperio') {
+            return formats.aperio;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'hamamatsu') {
+            return formats.hamamatsu;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;xml;PIM_DP_"]').length > 0) {
+            return formats.philips;
+        } else {
+            return formats.none;
+        }
+    };
+
+    const isValidRegex = (string) => {
+        try {
+            void new RegExp(string);
+        } catch (e) {
+            console.error(`There was an error parsing "${string}" as a regular expression: ${e}.`);
             return false;
         }
-        if (keyname.match(/^internal;openslide;openslide\.(?!comment$)/)) {
-            return false;
+        return true;
+    };
+
+    const validateRedactionPatternObject = (redactionPatterns) => {
+        for (const key in redactionPatterns) {
+            if (!isValidRegex(key) || !isValidRegex(redactionPatterns[key])) {
+                delete redactionPatterns[key];
+            }
         }
-        if (keyname.match(/^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$/)) {
-            return false;
+        return redactionPatterns;
+    };
+
+    const getRedactionDisabledPatterns = (settings) => {
+        const format = getFormat();
+        let patterns = settings.no_redact_control_keys; // patterns is an object that looks like {key:value}, where `key` and `value` are both regular expressions
+        patterns = Object.assign({}, patterns, settings['no_redact_control_keys_format_' + format] || {});
+        return validateRedactionPatternObject(patterns);
+    };
+
+    const getHiddenMetadataPatterns = (settings) => {
+        const format = getFormat();
+        let patterns = settings.hide_metadata_keys;
+        patterns = Object.assign({}, patterns, settings['hide_metadata_keys_format_' + format] || {});
+        return validateRedactionPatternObject(patterns);
+    };
+
+    const showRedactButton = (keyname, disableRedactionPatterns) => {
+        for (const metadataPattern in disableRedactionPatterns) {
+            if (keyname.match(new RegExp(metadataPattern))) {
+                const value = this.$el.find(`.large_image_metadata_value[keyname^="${keyname}"]`).text();
+                const expectedValuePattern = new RegExp(disableRedactionPatterns[metadataPattern]);
+
+                // If the value of the metadata field matches the expected pattern (e.g., a number
+                // or comma-separated list of numbers), do not show the redact button
+                return !(expectedValuePattern.test(value));
+            }
         }
         return true;
     };
@@ -163,16 +216,16 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(elem);
     };
 
-    const hideField = (keyname) => {
-        const isAperio = this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;aperio."]').length > 0;
-        if (isAperio && keyname.match(/^internal;openslide;(openslide.comment|tiff.ImageDescription)$/)) {
-            return true;
-        }
-        if (keyname.match(/^internal;openslide;openslide.level\[/)) {
-            return true;
-        }
-        if (keyname.match(/^internal;openslide;hamamatsu.(AHEX|MHLN)\[/)) {
-            return true;
+    const hideField = (keyname, hideFieldPatterns) => {
+        for (const metadataPattern in hideFieldPatterns) {
+            if (keyname.match(new RegExp(metadataPattern))) {
+                const value = this.$el.find(`.large_image_metadata_value[keyname^="${keyname}"]`).text();
+                const expectedValuePattern = new RegExp(hideFieldPatterns[metadataPattern]);
+
+                // If the value of the metadata field matches the expected pattern,
+                // hide the metadata field.
+                return expectedValuePattern.test(value);
+            }
         }
         return false;
     };
@@ -218,6 +271,8 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.li-metadata-tabs .tab-pane').last().addClass('active');
 
         const redactList = this.getRedactList();
+        const disableRedactionPatterns = getRedactionDisabledPatterns(settings);
+        const hideFieldPatterns = getHiddenMetadataPatterns(settings);
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
@@ -226,6 +281,9 @@ wrap(ItemView, 'render', function (render) {
                 return;
             }
             elem.find('.g-hui-redact').remove();
+            if (hideField(keyname, hideFieldPatterns)) {
+                elem.closest('tr').css('display', 'none');
+            }
             if (showControls) {
                 let isRedacted = redactList.metadata[keyname] !== undefined;
                 let redactButtonAllowed = true;
@@ -233,13 +291,10 @@ wrap(ItemView, 'render', function (render) {
                     elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname].value));
                     redactButtonAllowed = false;
                 }
-                if (showRedactButton(keyname) && redactButtonAllowed) {
+                if (showRedactButton(keyname, disableRedactionPatterns) && redactButtonAllowed) {
                     addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
-            }
-            if (hideField(keyname)) {
-                elem.closest('tr').css('display', 'none');
             }
         });
         // Add redaction controls to images
