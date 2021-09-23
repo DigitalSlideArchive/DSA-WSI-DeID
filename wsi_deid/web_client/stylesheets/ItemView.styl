@@ -1,13 +1,16 @@
-.g-hui-redact-label, a.g-hui-redact>span
+.g-hui-redact-label, .wsi-deid-replace-value, a.g-hui-redact>span, label
   text-transform uppercase
   font-weight bold
   font-size 12px
   margin-left 10px
   display inline-block
-  .g-hui-redact
+  .g-hui-redact, .wsi-deid-replace-value-input
     margin-left 5px
     font-weight normal
     text-transform none
+
+.wsi-deid-replace-value
+  display: none
 
 .large_image_metadata_value.redacted
   text-decoration-line line-through
@@ -19,6 +22,8 @@
     display inline-block
   .g-hui-redact-label
     text-decoration-line none
+  .wsi-deid-replace-value
+    display: inline-block
   a.g-hui-redact>span
     text-decoration-line line-through
 

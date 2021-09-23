@@ -216,6 +216,13 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(elem);
     };
 
+    const addNewValueEntryField = (parentElem, keyname, redactRecord, settings) => {
+        let inputId = `redact-value-${keyname}`;
+        let input = $(`<label for="${inputId}">New value:</label><input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
+        input = $('<span class="wsi-deid-replace-value"></span>').append(input);
+        parentElem.append(input);
+    };
+
     const hideField = (keyname, hideFieldPatterns) => {
         for (const metadataPattern in hideFieldPatterns) {
             if (keyname.match(new RegExp(metadataPattern))) {
@@ -292,6 +299,7 @@ wrap(ItemView, 'render', function (render) {
                     redactButtonAllowed = false;
                 }
                 if (showRedactButton(keyname, disableRedactionPatterns) && redactButtonAllowed) {
+                    addNewValueEntryField(elem, keyname, redactList.metadata[keyname], settings);
                     addRedactButton(elem, keyname, redactList.metadata[keyname], 'metadata', settings);
                 }
                 elem.toggleClass('redacted', isRedacted);
