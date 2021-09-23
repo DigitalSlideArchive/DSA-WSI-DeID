@@ -38,6 +38,8 @@ let PHIPIITypes = [{
     text: 'Other PHI/PII'
 }];
 
+const systemRedactedReason = 'System Redacted';
+
 const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
@@ -64,6 +66,7 @@ wrap(ItemView, 'render', function (render) {
         event.stopPropagation();
         let target = $(event.currentTarget);
         const isSquare = target.is('.g-hui-redact-square,.g-hui-redact-square-span');
+        const isInput = target.is('.wsi-deid-replace-value');
         if (isSquare) {
             target = target.closest('.g-hui-redact-label').find('.g-hui-redact');
         }
@@ -74,6 +77,16 @@ wrap(ItemView, 'render', function (render) {
         let isRedacted = redactList[category][keyname] !== undefined;
         if (isSquare) {
             redactList[category][keyname].square = !redactList[category][keyname].square;
+        } else if (isInput) {
+            const newValue = target.find('.wsi-deid-replace-value-input').val();
+            const oldValue = redactList[category][keyname].value;
+            if (newValue === oldValue) {
+                // no change
+                return;
+            } else {
+                let redactRecord = redactList[category][keyname];
+                redactList[category][keyname] = { value: newValue, reason: redactRecord.reason, category: redactRecord.category };
+            }
         } else {
             if (target.is('a')) { // button, not select
                 reason = isRedacted ? 'none' : 'No_Reason_Collected';
@@ -82,7 +95,12 @@ wrap(ItemView, 'render', function (render) {
                 delete redactList[category][keyname];
                 isRedacted = false;
             } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
-                redactList[category][keyname] = { value: null, reason: reason, category: $(':selected', target).attr('category') || reason };
+                let redactRecordValue = '';
+                let redactRecord = redactList[category][keyname];
+                if (redactRecord) {
+                    redactRecordValue = redactRecord.value;
+                }
+                redactList[category][keyname] = { value: redactRecordValue, reason: reason, category: $(':selected', target).attr('category') || reason };
                 isRedacted = true;
             } else {
                 // no change
@@ -218,9 +236,19 @@ wrap(ItemView, 'render', function (render) {
 
     const addNewValueEntryField = (parentElem, keyname, redactRecord, settings) => {
         let inputId = `redact-value-${keyname}`;
-        let input = $(`<label for="${inputId}">New value:</label><input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
-        input = $('<span class="wsi-deid-replace-value"></span>').append(input);
-        parentElem.append(input);
+        let inputField = $(`<input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
+
+        if (redactRecord && redactRecord.value) {
+            inputField.attr({ value: redactRecord.value });
+        }
+
+        let inputControl = $(`<label for="${inputId}">New value:</label>`).append(inputField);
+        inputControl = $('<span class="wsi-deid-replace-value"></span>').append(inputControl);
+        inputControl.attr({
+            keyname: keyname,
+            category: 'metadata'
+        });
+        parentElem.append(inputControl);
     };
 
     const hideField = (keyname, hideFieldPatterns) => {
@@ -294,7 +322,8 @@ wrap(ItemView, 'render', function (render) {
             if (showControls) {
                 let isRedacted = redactList.metadata[keyname] !== undefined;
                 let redactButtonAllowed = true;
-                if (isRedacted && redactList.metadata[keyname].value) {
+                const redactReason = isRedacted ? redactList.metadata[keyname].reason : '';
+                if (isRedacted && redactList.metadata[keyname].value && (redactReason === systemRedactedReason || redactReason === undefined)) {
                     elem.append($('<span class="redact-replacement"/>').text(redactList.metadata[keyname].value));
                     redactButtonAllowed = false;
                 }
@@ -344,6 +373,7 @@ wrap(ItemView, 'render', function (render) {
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
             this.events['click .g-hui-redact-square-span'] = flagRedaction;
+            this.events['focusout .wsi-deid-replace-value'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {
                 event.stopPropagation();
                 return false;
