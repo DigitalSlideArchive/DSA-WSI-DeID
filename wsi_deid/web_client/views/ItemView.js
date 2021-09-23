@@ -235,6 +235,10 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const addNewValueEntryField = (parentElem, keyname, redactRecord, settings) => {
+        if (!settings.edit_metadata) {
+            return;
+        }
+
         let inputId = `redact-value-${keyname}`;
         let inputField = $(`<input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
 

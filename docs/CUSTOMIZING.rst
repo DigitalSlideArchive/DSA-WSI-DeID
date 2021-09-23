@@ -17,8 +17,8 @@ Redacting the top/left of the macro image
 
 When the ``redact_macro_square`` setting is set to ``True``, the upper left square of all macro images will automatically be blacked out.  This region often contains the label on the slide, and sometimes that can contain PHI that is visible with contrast or other image adjustment.
 
-Redaction Catgories
-+++++++++++++++++++
+Redaction Categories
+++++++++++++++++++++
 
 By default, when metadata or images are redacted, the user must pick the type of PHI/PII that is present and the reason for the redaction.  If the ``require_redact_category`` is set to ``False``, then, instead of requiring a reason, the user interface will show a ``REDACT`` button that toggles redaction on and off for the metadata or image.  The export file will contain ``No Reason Collected`` in these cases.
 
@@ -52,3 +52,8 @@ Similar to configuration for disabling redaction, if you wish to hide certain me
 * ``hide_metadata_keys_format_philips``
 
 If these metadata items contain unexpected values (e.g., text where a number was expected), they will be visible and available for redaction.
+
+Editing Metadata Values
++++++++++++++++++++++++
+
+Normally, when a metadata field is redacted, its value becomes blank. In `girder.local.conf`, you can set `edit_metadata` to `True` to enable editing metadata as part of the redaction process. If editing metadata is enabled, users will have the opportunity to set the value of a redacted metadata field to any value.
