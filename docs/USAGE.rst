@@ -276,6 +276,8 @@ Review Process for PHI/PII in Image(s) and Metadata
 
    The user can view metadata fields, and if any of these contain PHI/PII, the user should select the classification of PHI in the redact control for that field (see the PHI/PII Definitions and Types, below). The metadata field will then have a line through the text, indicating that the field will be redacted (it has been marked for redaction).
 
+   If editing metadata is enabled (see `CUSTOMIZING.rst <CUSTOMIZING.rst>`_ for details turning this on), a text box will appear next to any metadata field that has been marked for redaction. Users can type a new value into this field, to replace the redacted value. This text box only appears if a metadata field is marked for redaction.
+
    2.3. Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
 
    2.4. When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.

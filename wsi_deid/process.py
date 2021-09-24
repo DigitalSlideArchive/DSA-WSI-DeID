@@ -17,6 +17,14 @@ from large_image.tilesource import dictToEtree
 from . import config
 
 
+def generate_system_redaction_list_entry(newValue):
+    """Create an entry for the redaction list for a redaction performed by the system."""
+    return {
+        'value': newValue,
+        'reason': 'System Redacted',
+    }
+
+
 def get_redact_list(item):
     """
     Get the redaction list, ensuring that the images and metadata
@@ -102,7 +110,9 @@ def get_standard_redactions(item, title):
                 value = value[:5] + '01:01' + value[10:]
             else:
                 value = None
-            redactList['metadata']['internal;openslide;tiff.%s' % key] = {'value': value}
+            redactList['metadata']['internal;openslide;tiff.%s' % key] = (
+                generate_system_redaction_list_entry(value)
+            )
     # Make, Model, Software?
     for key in {'Copyright', 'HostComputer'}:
         tag = tifftools.Tag[key].value
@@ -114,18 +124,23 @@ def get_standard_redactions(item, title):
 
 def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
     metadata = tileSource.getInternalMetadata() or {}
+    title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList = {
         'images': {},
         'metadata': {
-            'internal;openslide;aperio.Filename': {'value': title},
-            'internal;openslide;aperio.Title': {'value': title},
-            'internal;openslide;tiff.Software': {
-                'value': get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))},
+            'internal;openslide;aperio.Filename': title_redaction_list_entry,
+            'internal;openslide;aperio.Title': title_redaction_list_entry,
+            'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
+                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))
+            ),
         },
     }
     if metadata['openslide'].get('aperio.Date'):
-        redactList['metadata']['internal;openslide;aperio.Date'] = {
-            'value': '01/01/' + metadata['openslide']['aperio.Date'][6:]}
+        redactList['metadata']['internal;openslide;aperio.Date'] = (
+            generate_system_redaction_list_entry(
+                '01/01/' + metadata['openslide']['aperio.Date'][6:]
+            )
+        )
     return redactList
 
 
@@ -134,9 +149,10 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
     redactList = {
         'images': {},
         'metadata': {
-            'internal;openslide;hamamatsu.Reference': {'value': title},
-            'internal;openslide;tiff.Software': {
-                'value': get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))},
+            'internal;openslide;hamamatsu.Reference': generate_system_redaction_list_entry(title),
+            'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
+                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))
+            )
         },
     }
     for key in {'Created', 'Updated'}:
@@ -151,10 +167,11 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
     redactList = {
         'images': {},
         'metadata': {
-            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': {'value': title},
-            'internal;xml;PIM_DP_UFS_BARCODE': {'value': title},
-            'internal;tiff;software': {
-                'value': get_deid_field(item, metadata.get('tiff', {}).get('software'))},
+            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': generate_system_redaction_list_entry(title),
+            'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(title),
+            'internal;tiff;software': generate_system_redaction_list_entry(
+                get_deid_field(item, metadata.get('tiff', {}).get('software'))
+            ),
         },
     }
     for key in {'DICOM_DATE_OF_LAST_CALIBRATION'}:
@@ -164,7 +181,9 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
                 value = None
             else:
                 value = value[:4] + '0101'
-            redactList['metadata']['internal;xml;%s' % key] = {'value': value}
+            redactList['metadata']['internal;xml;%s' % key] = (
+                generate_system_redaction_list_entry(value)
+            )
     for key in {'DICOM_ACQUISITION_DATETIME'}:
         if metadata['xml'].get(key):
             value = metadata['xml'][key].strip('"')
@@ -172,7 +191,9 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
                 value = None
             else:
                 value = value[:4] + '0101' + value[8:]
-            redactList['metadata']['internal;xml;%s' % key] = {'value': value}
+            redactList['metadata']['internal;xml;%s' % key] = (
+                generate_system_redaction_list_entry(value)
+            )
     return redactList
 
 
@@ -727,8 +748,9 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
                 'data', '').split()[0].lower() not in redactList['images']]
 
     redactList = copy.copy(redactList)
-    redactList['metadata']['internal;xml;PIIM_DP_SCANNER_OPERATOR_ID'] = {'value': title}
-    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = {'value': title}
+    title_redaction_list_entry = generate_system_redaction_list_entry(title)
+    redactList['metadata']['internal;xml;PIIM_DP_SCANNER_OPERATOR_ID'] = title_redaction_list_entry
+    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = title_redaction_list_entry
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
