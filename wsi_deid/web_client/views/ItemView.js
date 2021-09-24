@@ -377,7 +377,7 @@ wrap(ItemView, 'render', function (render) {
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
             this.events['click .g-hui-redact-square-span'] = flagRedaction;
-            this.events['focusout .wsi-deid-replace-value'] = flagRedaction;
+            this.events['change .wsi-deid-replace-value'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {
                 event.stopPropagation();
                 return false;
