@@ -54,6 +54,7 @@ setup(
         'tifftools',
         'xlrd',
         'pytesseract',
+        'easyocr',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
