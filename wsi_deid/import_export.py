@@ -1,14 +1,14 @@
 import datetime
 import json
-import jsonschema
-import magic
-import openpyxl
 import os
-import pandas as pd
 import shutil
 import subprocess
 import tempfile
 
+import jsonschema
+import magic
+import openpyxl
+import pandas as pd
 from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
@@ -16,12 +16,10 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
-
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
 from .constants import PluginSettings
-
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -425,6 +423,7 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
+    logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     if not exportPath or not exportFolderId:
@@ -438,9 +437,14 @@ def exportItems(ctx, user=None, all=False):
             byteCount += exportItemsNext(
                 mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
         totalByteCount = byteCount
+    logger.info('Exported files')
     exportNoteRejected(report, user, all)
+    logger.info('Exported note others')
     file = exportReport(ctx, exportPath, report, user)
-    return reportSummary(report, file=file)
+    logger.info('Exported generated report')
+    summary = reportSummary(report, file=file)
+    logger.info('Exported done')
+    return summary
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
