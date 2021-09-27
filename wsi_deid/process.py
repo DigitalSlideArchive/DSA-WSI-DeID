@@ -1254,6 +1254,60 @@ def redact_topleft_square(image):
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
+def get_text_from_image_aperio(tile_source, tesseract_config=None):
+    label_key = 'label'
+    label_image, _ = tile_source.getAssociatedImage(label_key)
+    label_image = PIL.Image.open(io.BytesIO(label_image))
+    words = {}
+    for crop, rotate, contrast in itertools.product(
+        (0, 1, 2),
+        (None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270),
+        (None, "autocontrast", "equalize"),
+    ):
+        try:
+            subimage = PIL.ImageOps.crop(label_image, crop)
+            # subimage = label_image
+            if rotate:
+                subimage = subimage.transpose(rotate)
+            if contrast:
+                subimage = getattr(PIL.ImageOps, contrast)(subimage)
+            text = pytesseract.image_to_string(subimage, config=tesseract_config).strip()
+            if len(text) > 0:
+                # split text into words
+                print(text)
+                text_parts = [word for word in text.split() if re.search(r'\w', word)]
+                for word in text_parts:
+                    words[word] = 1
+        except Exception as e:
+            print(e)
+            continue
+    return list(words)
+
+
+def get_text_from_image_hamamatsu(tile_source, tesseract_config=None):
+    macro_image, _ = tile_source.getAssociatedImage('macro')
+    macro_image = PIL.Image.open(io.BytesIO(macro_image))
+    words = {}
+    width, height = macro_image.size
+    if width > height:
+        macro_image.transpose(PIL.Image.ROTATE_90)
+        width, height = macro_image.size
+    top_box = (0, 0, width, 400)
+    bottom_box = (0, height - 400, width, height)
+    for box in [top_box, bottom_box]:
+        region = macro_image.crop(box)
+        region_flipped = region.transpose(PIL.Image.ROTATE_180)
+        for region in [region, region_flipped]:
+            text = pytesseract.image_to_string(region, config=tesseract_config).strip()
+            if len(text) > 0:
+                text_parts = [word for word in text.split() if re.search(r'\w', word)]
+                for word in text_parts:
+                    words[word] = 1
+    return list(words)
+
+def get_text_from_image_philips(image):
+    pass
+
 def get_text_from_image(image):
     words = {}
     for crop, rotate, contrast in itertools.product(
@@ -1283,8 +1337,26 @@ def get_image_text(item):
     :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
     image key, and `[]` will be a list of possible strings of text found on the associated image.
     """
+    user_patterns="""\\d\\d/\\d\\d/\\d\\d
+    \\d/\\d\\d/\\d\\d
+    \\d\\d/\\d/\\d\\d
+    \\d/\\d/\\d\\d
+    \\d\\d-\\c
+    \\d\\d - \\c
+    \\d-\\c
+    \\d - \\c
+    """
+    open('/tmp/tesseract.patterns', 'w').write(user_patterns)
+    tesseract_config = '--user-patterns /tmp/tesseract.patterns'
     results = {}
     tile_source = ImageItem().tileSource(item)
+    image_format = determine_format(tile_source)
+    if image_format == 'aperio':
+        aperio_label_text = get_text_from_image_aperio(tile_source, tesseract_config)
+        return aperio_label_text
+    elif image_format == 'hamamatsu':
+        hamamatsu_label_text = get_text_from_image_hamamatsu(tile_source, tesseract_config)
+        return hamamatsu_label_text
     keys = []
     try:
         for key in tile_source.getAssociatedImagesList():
