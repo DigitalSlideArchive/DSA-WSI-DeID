@@ -190,10 +190,10 @@ def process_item(item, user=None):
 
 
 def ocr_item(item, user=None):
+    ocr_results, time = process.get_image_text(item)
     return {
-        'ocr_results': process.get_image_text(item),
-        'item': str(item['_id']),
-        'user': str(user['_id']),
+        'ocr_results': ocr_results,
+        'time_elapsed': time,
     }
 
 

@@ -8,7 +8,9 @@ import re
 import subprocess
 import threading
 import xml.etree.ElementTree
+import easyocr
 import pytesseract
+import time
 
 import PIL.Image
 import PIL.ImageDraw
@@ -1254,7 +1256,7 @@ def redact_topleft_square(image):
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
-def get_text_from_image_aperio(tile_source, tesseract_config=None):
+def get_text_from_image_label(tile_source, tesseract_config=None):
     label_key = 'label'
     label_image, _ = tile_source.getAssociatedImage(label_key)
     label_image = PIL.Image.open(io.BytesIO(label_image))
@@ -1283,6 +1285,26 @@ def get_text_from_image_aperio(tile_source, tesseract_config=None):
             continue
     return list(words)
 
+def image_to_byte_array(image):
+    image_byte_array = io.BytesIO()
+    image.save(image_byte_array, "tiff")
+    image_byte_array = image_byte_array.getvalue()
+    return image_byte_array
+
+def get_text_from_image_label_easyocr(tile_source):
+    reader = easyocr.Reader(['en'], gpu=False)
+
+    label_key = 'label'
+    label_image, _ = tile_source.getAssociatedImage(label_key)
+    label_image = PIL.Image.open(io.BytesIO(label_image))
+    words = {}
+    for rotate in [PIL.Image.ROTATE_90, PIL.Image.ROTATE_90, PIL.Image.ROTATE_270]:
+        rotated_image = label_image.transpose(rotate)
+        text = reader.readtext(image_to_byte_array(rotated_image), detail=0)
+        for word in text:
+            if re.search(r'\w', word):
+                words[word] = 1
+    return list(words)
 
 def get_text_from_image_hamamatsu(tile_source, tesseract_config=None):
     macro_image, _ = tile_source.getAssociatedImage('macro')
@@ -1331,7 +1353,7 @@ def get_text_from_image(image):
 
 def get_image_text(item):
     """
-    Use OCR (pytesseract) to identify and return text on any associated image.
+    Use OCR to identify and return text on any associated image.
 
     :param item: a girder item.
     :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
@@ -1348,26 +1370,16 @@ def get_image_text(item):
     """
     open('/tmp/tesseract.patterns', 'w').write(user_patterns)
     tesseract_config = '--user-patterns /tmp/tesseract.patterns'
-    results = {}
+    results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
-    if image_format == 'aperio':
-        aperio_label_text = get_text_from_image_aperio(tile_source, tesseract_config)
-        return aperio_label_text
+    start = time.time()
+    if image_format in ['aperio', 'philips']:
+        # aperio_label_text = get_text_from_image_label(tile_source, tesseract_config)
+        aperio_label_text = get_text_from_image_label_easyocr(tile_source)
+        results = aperio_label_text
     elif image_format == 'hamamatsu':
         hamamatsu_label_text = get_text_from_image_hamamatsu(tile_source, tesseract_config)
-        return hamamatsu_label_text
-    keys = []
-    try:
-        for key in tile_source.getAssociatedImagesList():
-            if key == 'label':
-                keys.append(key)
-                image, _ = tile_source.getAssociatedImage(key)
-                image = PIL.Image.open(io.BytesIO(image))
-                text_list = get_text_from_image(image)
-                results[key] = text_list
-            else:
-                continue
-    except Exception as e:
-        return str(e)
-    return results
+        results = hamamatsu_label_text
+    end = time.time()
+    return results, (end - start)
