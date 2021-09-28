@@ -357,6 +357,7 @@ wrap(ItemView, 'render', function (render) {
                 let isRedacted = redactList.images[keyname] !== undefined;
                 if (keyname !== 'label' || !settings.always_redact_label) {
                     addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
+                    addOcrButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], settings);
                 } else {
                     isRedacted = true;
                 }
