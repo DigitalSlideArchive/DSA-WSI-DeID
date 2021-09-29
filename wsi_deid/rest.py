@@ -4,7 +4,7 @@ import tempfile
 import easyocr
 
 import histomicsui.handlers
-from girder import logger
+from girder import logger, events
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
@@ -32,7 +32,6 @@ ProjectFolders = {
     'finished': PluginSettings.HUI_FINISHED_FOLDER,
 }
 
-easyocr_reader = None
 
 def create_folder_hierarchy(item, user, folder):
     """
@@ -191,15 +190,18 @@ def process_item(item, user=None):
     return item
 
 
+def after_ocr(event):
+    print('\n\n\nEVENT CALLBACK\n\n')
+    print(process.get_ifd_zero(event.info['item'])['tags']['label_ocr'])
+
 def ocr_item(item, user=None):
-    global easyocr_reader
-    if easyocr_reader is None:
-        easyocr_reader = easyocr.Reader(['en'], gpu=False)
-    ocr_results, time = process.get_image_text(item, easyocr_reader)
-    return {
-        'ocr_results': ocr_results,
-        'time_elapsed': time,
-    }
+    client_message = 'Success'
+    try:
+        event_info = {'item': item}
+        events.daemon.trigger('wsi_deid.ocr_item', info=event_info, callback=after_ocr)
+    except Exception as e:
+        client_message = str(e)
+    return client_message
 
 
 def get_first_item(folder, user):

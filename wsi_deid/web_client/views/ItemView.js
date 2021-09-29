@@ -133,6 +133,47 @@ wrap(ItemView, 'render', function (render) {
         return isSquare && $(event.target).is('input[type="checkbox"]');
     };
 
+    const doOcr = (event) => {
+        event.stopPropagation();
+        const target = $(event.currentTarget);
+        $('body').append(
+            '<div class="g-hui-loading-overlay"><div>' +
+            '<i class="icon-spin4 animate-spin"></i>' +
+            '</div></div>');
+        restRequest({
+            method: 'PUT',
+            url: 'wsi_deid/item/' + this.model.id + '/action/ocr',
+            error: null
+        }).done((resp) => {
+            $('.g-hui-loading-overlay').remove();
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: 'Ran OCR.',
+                type: 'success',
+                timeout: 4000
+            });
+            delete this.model.parent;
+            // var results = '';
+            // for (const res of resp.ocr_results.label) {
+            //     results += res + '\n';
+            // }
+            alert(JSON.stringify(resp));
+        }).fail((resp) => {
+            $('.g-hui-loading-overlay').remove();
+            let text = 'Failed to run OCR.';
+            if (resp.responseJSON && resp.responseJSON.message) {
+                text += ' ' + resp.responseJSON.message;
+            }
+            events.trigger('g:alert', {
+                icon: 'cancel',
+                text: text,
+                type: 'danger',
+                timeout: 5000
+            });
+        });
+        return false; // stop event propagation
+    };
+
     const getFormat = () => {
         if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'aperio') {
             return formats.aperio;
@@ -264,6 +305,14 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(inputControl);
     };
 
+    const addOcrButton = (parentElem, keyname, redactRecord, settings) => {
+        let elem = $(`<button class="btn-do-ocr">OCR</button>`).attr({
+            keyname: keyname,
+            title: 'Run OCR on this image.'
+        });
+        parentElem.append(elem);
+    }
+
     const hideField = (keyname, hideFieldPatterns) => {
         for (const metadataPattern in hideFieldPatterns) {
             if (keyname.match(new RegExp(metadataPattern))) {
@@ -386,6 +435,7 @@ wrap(ItemView, 'render', function (render) {
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
+            this.events['click button.btn-do-ocr'] = doOcr;
             this.events['click .g-hui-redact-square-span'] = flagRedaction;
             this.events['change .wsi-deid-replace-value'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {

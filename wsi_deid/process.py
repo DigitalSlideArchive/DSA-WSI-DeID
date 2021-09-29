@@ -1,7 +1,6 @@
 import base64
 import copy
 import io
-import itertools
 import math
 import os
 import re
@@ -9,7 +8,6 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 import easyocr
-import pytesseract
 import time
 
 import PIL.Image
@@ -1256,6 +1254,7 @@ def redact_topleft_square(image):
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
+
 def image_to_byte_array(image):
     image_byte_array = io.BytesIO()
     image.save(image_byte_array, "tiff")
@@ -1279,6 +1278,26 @@ def get_text_from_associated_image(tile_source, label, reader):
     return set(words)
 
 
+def get_ifd_zero(item):
+    tile_source = ImageItem().tileSource(item)
+    source_path = tile_source._getLargeImagePath()
+    tiff_info = tifftools.read_tiff(source_path)
+    ifds = tiff_info['ifds']
+    return ifds[0]
+
+
+def add_label_text_to_metadata(item, ocr_results):
+    tile_source = ImageItem().tileSource(item)
+    source_path = tile_source._getLargeImagePath()
+    tiff_info = tifftools.read_tiff(source_path)
+    ifds = tiff_info['ifds']
+
+    ifds[0]['tags']['label_ocr'] = {
+        'datatype': tifftools.Datatype.ASCII,
+        'data': ocr_results,
+    }
+    tifftools.write_tiff(ifds, source_path)
+
 def get_image_text(item, reader=None):
     """
     Use OCR to identify and return text on any associated image.
@@ -1293,14 +1312,13 @@ def get_image_text(item, reader=None):
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
-    start = time.time()
     if image_format in ['aperio', 'philips']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
+    results = get_text_from_associated_image(tile_source, key, reader)
     try:
-        results = get_text_from_associated_image(tile_source, key, reader)
+        add_label_text_to_metadata(item, results)
     except Exception as e:
         results = str(e)
-    end = time.time()
-    return results, (end - start)
+    return results

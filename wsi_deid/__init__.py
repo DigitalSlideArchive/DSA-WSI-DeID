@@ -1,6 +1,8 @@
-import girder
+import easyocr
 import psutil
-from girder import plugin
+
+import girder
+from girder import plugin, events
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -12,6 +14,21 @@ from pkg_resources import DistributionNotFound, get_distribution
 from .constants import PluginSettings
 from .import_export import SftpMode
 from .rest import WSIDeIDResource
+from .process import get_image_text
+
+# set up asynchronously running ocr
+reader = None
+
+def handle_ocr_item(event):
+    global reader
+    if reader is None:
+        reader = easyocr.Reader(['en'], gpu=False)
+    item = event.info['item']
+    ocr_results = get_image_text(item, reader)
+    # TODO fix File already exists
+    print(f'\n\n\nRESULTS: {ocr_results}')
+
+events.bind('wsi_deid.ocr_item', 'ocr_handler', handle_ocr_item)
 
 try:
     __version__ = get_distribution(__name__).version
