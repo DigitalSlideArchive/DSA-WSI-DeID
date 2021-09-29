@@ -1256,97 +1256,27 @@ def redact_topleft_square(image):
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
-def get_text_from_image_label(tile_source, tesseract_config=None):
-    label_key = 'label'
-    label_image, _ = tile_source.getAssociatedImage(label_key)
-    label_image = PIL.Image.open(io.BytesIO(label_image))
-    words = {}
-    for crop, rotate, contrast in itertools.product(
-        (0, 1, 2),
-        (None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270),
-        (None, "autocontrast", "equalize"),
-    ):
-        try:
-            subimage = PIL.ImageOps.crop(label_image, crop)
-            # subimage = label_image
-            if rotate:
-                subimage = subimage.transpose(rotate)
-            if contrast:
-                subimage = getattr(PIL.ImageOps, contrast)(subimage)
-            text = pytesseract.image_to_string(subimage, config=tesseract_config).strip()
-            if len(text) > 0:
-                # split text into words
-                print(text)
-                text_parts = [word for word in text.split() if re.search(r'\w', word)]
-                for word in text_parts:
-                    words[word] = 1
-        except Exception as e:
-            print(e)
-            continue
-    return list(words)
-
 def image_to_byte_array(image):
     image_byte_array = io.BytesIO()
     image.save(image_byte_array, "tiff")
     image_byte_array = image_byte_array.getvalue()
     return image_byte_array
 
-def get_text_from_image_label_easyocr(tile_source, reader):
-    label_key = 'label'
-    label_image, _ = tile_source.getAssociatedImage(label_key)
-    label_image = PIL.Image.open(io.BytesIO(label_image))
+
+def get_text_from_associated_image(tile_source, label, reader):
+    associated_image, _ = tile_source.getAssociatedImage(label)
+    associated_image = PIL.Image.open(io.BytesIO(associated_image))
     words = []
-    for rotate in [PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
-        rotated_image = label_image.transpose(rotate)
-        text = reader.readtext(image_to_byte_array(rotated_image), detail=0)
+    for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
+        if rotate is not None:
+            rotated_image = associated_image.transpose(rotate)
+            text = reader.readtext(image_to_byte_array(rotated_image), detail=0)
+        else:
+            text = reader.readtext(image_to_byte_array(associated_image), detail=0)
         for word in text:
             if re.search(r'\w', word):
                 words.append(word)
     return set(words)
-
-def get_text_from_image_hamamatsu(tile_source, tesseract_config=None):
-    macro_image, _ = tile_source.getAssociatedImage('macro')
-    macro_image = PIL.Image.open(io.BytesIO(macro_image))
-    words = {}
-    width, height = macro_image.size
-    if width > height:
-        macro_image.transpose(PIL.Image.ROTATE_90)
-        width, height = macro_image.size
-    top_box = (0, 0, width, 400)
-    bottom_box = (0, height - 400, width, height)
-    for box in [top_box, bottom_box]:
-        region = macro_image.crop(box)
-        region_flipped = region.transpose(PIL.Image.ROTATE_180)
-        for region in [region, region_flipped]:
-            text = pytesseract.image_to_string(region, config=tesseract_config).strip()
-            if len(text) > 0:
-                text_parts = [word for word in text.split() if re.search(r'\w', word)]
-                for word in text_parts:
-                    words[word] = 1
-    return list(words)
-
-def get_text_from_image_philips(image):
-    pass
-
-def get_text_from_image(image):
-    words = {}
-    for crop, rotate, contrast in itertools.product(
-        (0, 1, 2),
-        (None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270),
-        (None, "autocontrast", "equalize"),
-    ):
-        subimage = PIL.ImageOps.crop(image, crop)
-        if rotate:
-            subimage = subimage.transpose(rotate)
-        if contrast:
-            subimage = getattr(PIL.ImageOps, contrast)(subimage)
-        text = pytesseract.image_to_string(subimage).strip()
-        if len(text) > 0:
-            # split text into words
-            text_parts = [word for word in text.split() if re.search(r'\w', word)]
-            for word in text_parts:
-                words[word] = 1
-    return list(words)
 
 
 def get_image_text(item, reader=None):
@@ -1354,20 +1284,10 @@ def get_image_text(item, reader=None):
     Use OCR to identify and return text on any associated image.
 
     :param item: a girder item.
+    :param reader: an EasyOCR reader object. If a reader is not provided, one will be created.
     :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
     image key, and `[]` will be a list of possible strings of text found on the associated image.
     """
-    user_patterns="""\\d\\d/\\d\\d/\\d\\d
-    \\d/\\d\\d/\\d\\d
-    \\d\\d/\\d/\\d\\d
-    \\d/\\d/\\d\\d
-    \\d\\d-\\c
-    \\d\\d - \\c
-    \\d-\\c
-    \\d - \\c
-    """
-    open('/tmp/tesseract.patterns', 'w').write(user_patterns)
-    tesseract_config = '--user-patterns /tmp/tesseract.patterns'
     if reader is None:
         reader = easyocr.Reader(['en'], gpu=False)
     results = []
@@ -1375,11 +1295,12 @@ def get_image_text(item, reader=None):
     image_format = determine_format(tile_source)
     start = time.time()
     if image_format in ['aperio', 'philips']:
-        # aperio_label_text = get_text_from_image_label(tile_source, tesseract_config)
-        aperio_label_text = get_text_from_image_label_easyocr(tile_source, reader)
-        results = aperio_label_text
+        key = 'label'
     elif image_format == 'hamamatsu':
-        hamamatsu_label_text = get_text_from_image_hamamatsu(tile_source, tesseract_config)
-        results = hamamatsu_label_text
+        key = 'macro'
+    try:
+        results = get_text_from_associated_image(tile_source, key, reader)
+    except Exception as e:
+        results = str(e)
     end = time.time()
     return results, (end - start)
