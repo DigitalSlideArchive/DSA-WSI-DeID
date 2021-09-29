@@ -1291,20 +1291,18 @@ def image_to_byte_array(image):
     image_byte_array = image_byte_array.getvalue()
     return image_byte_array
 
-def get_text_from_image_label_easyocr(tile_source):
-    reader = easyocr.Reader(['en'], gpu=False)
-
+def get_text_from_image_label_easyocr(tile_source, reader):
     label_key = 'label'
     label_image, _ = tile_source.getAssociatedImage(label_key)
     label_image = PIL.Image.open(io.BytesIO(label_image))
-    words = {}
-    for rotate in [PIL.Image.ROTATE_90, PIL.Image.ROTATE_90, PIL.Image.ROTATE_270]:
+    words = []
+    for rotate in [PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
         rotated_image = label_image.transpose(rotate)
         text = reader.readtext(image_to_byte_array(rotated_image), detail=0)
         for word in text:
             if re.search(r'\w', word):
-                words[word] = 1
-    return list(words)
+                words.append(word)
+    return set(words)
 
 def get_text_from_image_hamamatsu(tile_source, tesseract_config=None):
     macro_image, _ = tile_source.getAssociatedImage('macro')
@@ -1351,7 +1349,7 @@ def get_text_from_image(image):
     return list(words)
 
 
-def get_image_text(item):
+def get_image_text(item, reader=None):
     """
     Use OCR to identify and return text on any associated image.
 
@@ -1370,13 +1368,15 @@ def get_image_text(item):
     """
     open('/tmp/tesseract.patterns', 'w').write(user_patterns)
     tesseract_config = '--user-patterns /tmp/tesseract.patterns'
+    if reader is None:
+        reader = easyocr.Reader(['en'], gpu=False)
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     start = time.time()
     if image_format in ['aperio', 'philips']:
         # aperio_label_text = get_text_from_image_label(tile_source, tesseract_config)
-        aperio_label_text = get_text_from_image_label_easyocr(tile_source)
+        aperio_label_text = get_text_from_image_label_easyocr(tile_source, reader)
         results = aperio_label_text
     elif image_format == 'hamamatsu':
         hamamatsu_label_text = get_text_from_image_hamamatsu(tile_source, tesseract_config)

@@ -1,6 +1,7 @@
 import datetime
 import os
 import tempfile
+import easyocr
 
 import histomicsui.handlers
 from girder import logger
@@ -31,6 +32,7 @@ ProjectFolders = {
     'finished': PluginSettings.HUI_FINISHED_FOLDER,
 }
 
+easyocr_reader = None
 
 def create_folder_hierarchy(item, user, folder):
     """
@@ -190,7 +192,10 @@ def process_item(item, user=None):
 
 
 def ocr_item(item, user=None):
-    ocr_results, time = process.get_image_text(item)
+    global easyocr_reader
+    if easyocr_reader is None:
+        easyocr_reader = easyocr.Reader(['en'], gpu=False)
+    ocr_results, time = process.get_image_text(item, easyocr_reader)
     return {
         'ocr_results': ocr_results,
         'time_elapsed': time,
