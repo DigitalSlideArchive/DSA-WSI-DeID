@@ -8,8 +8,7 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 import easyocr
-import time
-
+import traceback
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
@@ -1275,28 +1274,8 @@ def get_text_from_associated_image(tile_source, label, reader):
         for word in text:
             if re.search(r'\w', word):
                 words.append(word)
-    return set(words)
+    return ", ".join(set(words))
 
-
-def get_ifd_zero(item):
-    tile_source = ImageItem().tileSource(item)
-    source_path = tile_source._getLargeImagePath()
-    tiff_info = tifftools.read_tiff(source_path)
-    ifds = tiff_info['ifds']
-    return ifds[0]
-
-
-def add_label_text_to_metadata(item, ocr_results):
-    tile_source = ImageItem().tileSource(item)
-    source_path = tile_source._getLargeImagePath()
-    tiff_info = tifftools.read_tiff(source_path)
-    ifds = tiff_info['ifds']
-
-    ifds[0]['tags']['label_ocr'] = {
-        'datatype': tifftools.Datatype.ASCII,
-        'data': ocr_results,
-    }
-    tifftools.write_tiff(ifds, source_path)
 
 def get_image_text(item, reader=None):
     """
@@ -1317,8 +1296,6 @@ def get_image_text(item, reader=None):
     elif image_format == 'hamamatsu':
         key = 'macro'
     results = get_text_from_associated_image(tile_source, key, reader)
-    try:
-        add_label_text_to_metadata(item, results)
-    except Exception as e:
-        results = str(e)
+    # TODO: Evaluate adding this to the .tiff file metadata
+    item = ImageItem().setMetadata(item, {'label_ocr': results})
     return results

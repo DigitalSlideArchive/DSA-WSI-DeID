@@ -19,16 +19,18 @@ from .process import get_image_text
 # set up asynchronously running ocr
 reader = None
 
+
 def handle_ocr_item(event):
+    print("\n\n\nHANDLING EVENT")
     global reader
     if reader is None:
         reader = easyocr.Reader(['en'], gpu=False)
     item = event.info['item']
     ocr_results = get_image_text(item, reader)
-    # TODO fix File already exists
-    print(f'\n\n\nRESULTS: {ocr_results}')
+
 
 events.bind('wsi_deid.ocr_item', 'ocr_handler', handle_ocr_item)
+
 
 try:
     __version__ = get_distribution(__name__).version

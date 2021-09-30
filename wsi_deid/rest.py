@@ -190,15 +190,11 @@ def process_item(item, user=None):
     return item
 
 
-def after_ocr(event):
-    print('\n\n\nEVENT CALLBACK\n\n')
-    print(process.get_ifd_zero(event.info['item'])['tags']['label_ocr'])
-
 def ocr_item(item, user=None):
     client_message = 'Success'
     try:
         event_info = {'item': item}
-        events.daemon.trigger('wsi_deid.ocr_item', info=event_info, callback=after_ocr)
+        events.daemon.trigger('wsi_deid.ocr_item', info=event_info)
     except Exception as e:
         client_message = str(e)
     return client_message
