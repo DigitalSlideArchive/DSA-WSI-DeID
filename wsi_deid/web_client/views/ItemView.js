@@ -14,7 +14,7 @@ import ItemViewTemplate from '../templates/ItemView.pug';
 import ItemViewNextTemplate from '../templates/ItemViewNext.pug';
 import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
-import { goToNextUnprocessedItem } from '../utils';
+import { goToNextUnprocessedItem, pollForOcrResults } from '../utils';
 
 let PHIPIITypes = [{
     category: 'Personal_Info',
@@ -131,47 +131,6 @@ wrap(ItemView, 'render', function (render) {
         target.closest('.g-widget-auximage').toggleClass('redact-square', !!redactSquare);
         target.closest('.g-widget-auximage').find('input[type="checkbox"]').prop('checked', !!redactSquare);
         return isSquare && $(event.target).is('input[type="checkbox"]');
-    };
-
-    const doOcr = (event) => {
-        event.stopPropagation();
-        const target = $(event.currentTarget);
-        $('body').append(
-            '<div class="g-hui-loading-overlay"><div>' +
-            '<i class="icon-spin4 animate-spin"></i>' +
-            '</div></div>');
-        restRequest({
-            method: 'PUT',
-            url: 'wsi_deid/item/' + this.model.id + '/action/ocr',
-            error: null
-        }).done((resp) => {
-            $('.g-hui-loading-overlay').remove();
-            events.trigger('g:alert', {
-                icon: 'ok',
-                text: 'Ran OCR.',
-                type: 'success',
-                timeout: 4000
-            });
-            delete this.model.parent;
-            // var results = '';
-            // for (const res of resp.ocr_results.label) {
-            //     results += res + '\n';
-            // }
-            alert(JSON.stringify(resp));
-        }).fail((resp) => {
-            $('.g-hui-loading-overlay').remove();
-            let text = 'Failed to run OCR.';
-            if (resp.responseJSON && resp.responseJSON.message) {
-                text += ' ' + resp.responseJSON.message;
-            }
-            events.trigger('g:alert', {
-                icon: 'cancel',
-                text: text,
-                type: 'danger',
-                timeout: 5000
-            });
-        });
-        return false; // stop event propagation
     };
 
     const getFormat = () => {
@@ -305,14 +264,6 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(inputControl);
     };
 
-    const addOcrButton = (parentElem, keyname, redactRecord, settings) => {
-        let elem = $(`<button class="btn-do-ocr">OCR</button>`).attr({
-            keyname: keyname,
-            title: 'Run OCR on this image.'
-        });
-        parentElem.append(elem);
-    }
-
     const hideField = (keyname, hideFieldPatterns) => {
         for (const metadataPattern in hideFieldPatterns) {
             if (keyname.match(new RegExp(metadataPattern))) {
@@ -406,7 +357,6 @@ wrap(ItemView, 'render', function (render) {
                 let isRedacted = redactList.images[keyname] !== undefined;
                 if (keyname !== 'label' || !settings.always_redact_label) {
                     addRedactButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], 'images', settings);
-                    addOcrButton(elem.find('.g-widget-auximage-title'), keyname, redactList.images[keyname], settings);
                 } else {
                     isRedacted = true;
                 }
@@ -435,7 +385,6 @@ wrap(ItemView, 'render', function (render) {
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
-            this.events['click button.btn-do-ocr'] = doOcr;
             this.events['click .g-hui-redact-square-span'] = flagRedaction;
             this.events['change .wsi-deid-replace-value'] = flagRedaction;
             this.events['click .g-hui-redact-label'] = (event) => {
@@ -444,6 +393,20 @@ wrap(ItemView, 'render', function (render) {
             };
             this.delegateEvents();
         }
+    };
+
+    const alertResults = (results) => {
+        if (!results) {
+            results = 'Something went wrong';
+        }
+        alert(results);
+    };
+
+    const addOcrMetadata = (results) => {
+        console.log(results);
+        let metadataContainer = $('.g-widget-metadata-container');
+        console.log(metadataContainer);
+        console.log(metadataContainer.addMetadata);
     };
 
     const workflowButton = (event) => {
@@ -481,12 +444,8 @@ wrap(ItemView, 'render', function (render) {
                     }
                 });
             } else if (action === 'ocr') {
-                // var results = '';
-                // for (const res of resp.ocr_results.label) {
-                //     results += res + '\n';
-                // }
-                alert(JSON.stringify(resp));
-            } else {
+                pollForOcrResults(this.model.id, addOcrMetadata, 30);
+            }else {
                 this.model.fetch({ success: () => this.render() });
             }
         }).fail((resp) => {

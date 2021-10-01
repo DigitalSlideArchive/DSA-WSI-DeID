@@ -30,6 +30,41 @@ function goToNextUnprocessedItem(callback) {
     return false;
 }
 
+function pollForOcrResults(itemId, callback, maxAttempts) {
+    let gotOcrData = false;
+    let attempts = 0;
+
+    const executePoll = () => {
+        attempts++;
+        restRequest({
+            url: 'item/' + itemId,
+            error: null
+        }).done((resp) => {
+            if (gotOcrData) {
+                callback(resp['meta']['label_ocr']);
+            } else if (attempts >= maxAttempts) {
+                callback('Too many attempts');
+            } else {
+                setTimeout(executePoll, 1000);
+            }
+        });
+    };
+    restRequest({
+        url: 'item/' + itemId,
+        error: null
+    }).done((resp) => {
+        gotOcrData = resp['meta']['label_ocr'];
+        if (gotOcrData) {
+            callback(resp['meta']['label_ocr']);
+        } else if (attempts >= maxAttempts) {
+            callback('Too many attempts');
+        } else {
+            setTimeout(executePoll, 1000);
+        }
+    });
+    return false;
+}
+
 export {
-    goToNextUnprocessedItem
+    goToNextUnprocessedItem, pollForOcrResults
 };
