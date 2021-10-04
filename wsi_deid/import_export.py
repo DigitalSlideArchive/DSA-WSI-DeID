@@ -10,7 +10,7 @@ import magic
 import openpyxl
 import pandas as pd
 import paramiko
-from girder import logger
+from girder import logger, events
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -225,6 +225,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
         ctx.update(message='Failed to import %s' % name)
         return 'failed'
     item = Item().setMetadata(item, {'redactList': redactList})
+    # TESTING
+    events.daemon.trigger('wsi_deid.ocr_item', {'item': item})
     ctx.update(message='Imported %s' % name)
     return status
 

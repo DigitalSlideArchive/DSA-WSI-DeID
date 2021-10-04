@@ -1,7 +1,6 @@
 import datetime
 import os
 import tempfile
-import easyocr
 
 import histomicsui.handlers
 from girder import logger, events

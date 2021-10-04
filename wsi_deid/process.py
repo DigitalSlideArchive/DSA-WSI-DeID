@@ -1283,8 +1283,7 @@ def get_image_text(item, reader=None):
 
     :param item: a girder item.
     :param reader: an EasyOCR reader object. If a reader is not provided, one will be created.
-    :returns: a dictionary of found text in the format {key: []}. `key` will be the associated
-    image key, and `[]` will be a list of possible strings of text found on the associated image.
+    :returns: a list of found text .
     """
     if reader is None:
         reader = easyocr.Reader(['en'], gpu=False)

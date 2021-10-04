@@ -21,7 +21,6 @@ reader = None
 
 
 def handle_ocr_item(event):
-    print("\n\n\nHANDLING EVENT")
     global reader
     if reader is None:
         reader = easyocr.Reader(['en'], gpu=False)
@@ -29,7 +28,7 @@ def handle_ocr_item(event):
     ocr_results = get_image_text(item, reader)
 
 
-events.bind('wsi_deid.ocr_item', 'ocr_handler', handle_ocr_item)
+events.bind('wsi_deid.ocr_item', 'handle_ocr_item', handle_ocr_item)
 
 
 try:
