@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import paramiko
 
 import jsonschema
 import magic
@@ -19,6 +20,7 @@ from girder.models.upload import Upload
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
+from . import config
 from .constants import PluginSettings
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -426,6 +428,8 @@ def exportItems(ctx, user=None, all=False):
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
+    sftp_client = get_sftp_client()
+    sftp_destination = config.getConfig('sftp_destination_folder')
     if not exportPath or not exportFolderId:
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
@@ -436,6 +440,7 @@ def exportItems(ctx, user=None, all=False):
         for filepath, file in Folder().fileList(exportFolder, user, data=False):
             byteCount += exportItemsNext(
                 mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
+            sftp_client.put(filepath, os.path.join(sftp_destination, filepath))
         totalByteCount = byteCount
     logger.info('Exported files')
     exportNoteRejected(report, user, all)
@@ -445,6 +450,17 @@ def exportItems(ctx, user=None, all=False):
     summary = reportSummary(report, file=file)
     logger.info('Exported done')
     return summary
+
+
+def get_sftp_client():
+    host = config.getConfig('sftp_host')
+    user = config.getConfig('sftp_user')
+    password = config.getConfig('sftp_password')
+
+    transport = paramiko.Transport((host, 22))
+    transport.connect(username=user, password=password)
+    sftp_client = paramiko.SFTPClient.from_transport(transport)
+    return sftp_client
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,

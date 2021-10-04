@@ -46,6 +46,11 @@ defaultConfig = {
         ): NUMERIC_VALUES,
     },
     'hide_metadata_keys_format_philips': {},
+    'sftp_host': '',
+    'sftp_user': '',
+    'sftp_password': '',
+    'sftp_destination_folder': '',
+
 }
 
 
