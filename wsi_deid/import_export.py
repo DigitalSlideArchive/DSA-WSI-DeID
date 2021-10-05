@@ -10,6 +10,7 @@ import jsonschema
 import magic
 import openpyxl
 import pandas as pd
+from enum import Enum
 from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
@@ -24,6 +25,11 @@ from . import config
 from .constants import PluginSettings
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+class SftpMode(Enum):
+    LOCAL_EXPORT_ONLY = 0
+    SFTP_ONLY = 1
+    SFTP_AND_EXPORT = 2
 
 
 def readExcelData(filepath):
@@ -425,11 +431,19 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
+    sftp_mode = SftpMode(config.getConfig('sftp_mode', 0))
+    export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
+    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
-    sftp_client = get_sftp_client()
-    sftp_destination = config.getConfig('sftp_destination_folder')
+    if sftp_enabled:
+        try:
+            sftp_client = get_sftp_client()
+        except Exception as e:
+            sftp_client = None
+            logger.info('Could not establish a connection to remote server for SFTP.')
+        sftp_destination = config.getConfig('sftp_destination_folder')
     if not exportPath or not exportFolderId:
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
@@ -438,10 +452,14 @@ def exportItems(ctx, user=None, all=False):
     for mode in ('measure', 'copy'):
         byteCount = 0
         for filepath, file in Folder().fileList(exportFolder, user, data=False):
-            byteCount += exportItemsNext(
-                mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
-            sftp_client.put(filepath, os.path.join(sftp_destination, filepath))
+            if export_enabled:
+                byteCount += exportItemsNext(
+                    mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
+            if sftp_enabled and sftp_client is not None:
+                sftp_one_item(filepath, file, sftp_destination, sftp_client)
         totalByteCount = byteCount
+    if sftp_enabled and sftp_client is not None:
+        sftp_client.close()
     logger.info('Exported files')
     exportNoteRejected(report, user, all)
     logger.info('Exported note others')
@@ -453,14 +471,41 @@ def exportItems(ctx, user=None, all=False):
 
 
 def get_sftp_client():
+    """Create an instance of paramiko.SFTPClient based on girder config."""
     host = config.getConfig('sftp_host')
+    port = config.getConfig('sftp_port', 22)
     user = config.getConfig('sftp_user')
     password = config.getConfig('sftp_password')
 
-    transport = paramiko.Transport((host, 22))
+    transport = paramiko.Transport((host, port))
     transport.connect(username=user, password=password)
     sftp_client = paramiko.SFTPClient.from_transport(transport)
     return sftp_client
+
+
+def sftp_one_item(filepath, file, destination, sftp_client):
+    """
+    Send a file to a remote server via SFTP.
+
+    :param filepath: the file path of this item
+    :param file: the file document of this item
+    :param destination: the remote folder for the file to be sent to
+    :param sftp_client: an instance of paramiko.SFTPClient
+    """
+    file_path_segments = filepath.split(os.path.sep)
+    image_dir = file_path_segments[-2]
+    file_name = file_path_segments[-1]
+
+    item = Item().load(file['itemId'], force=True, exc=False)
+    tile_source = ImageItem().tileSource(item)
+    tile_source_path = tile_source._getLargeImagePath()
+
+    sftp_client.chdir(destination)
+    remote_dirs = sftp_client.listdir()
+    if image_dir not in remote_dirs:
+        sftp_client.mkdir(image_dir)
+    full_remote_path = os.path.join(destination, image_dir, file_name)
+    sftp_client.put(tile_source_path, full_remote_path)
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,

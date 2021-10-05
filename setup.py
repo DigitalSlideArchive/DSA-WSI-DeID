@@ -48,6 +48,7 @@ setup(
         'large_image[tiff,openslide,memcached]',
         'openpyxl',
         'pandas',
+        'paramiko',
         'python-magic',
         'pyvips',
         'tifftools',
