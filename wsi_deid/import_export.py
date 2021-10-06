@@ -433,41 +433,59 @@ def exportItems(ctx, user=None, all=False):
     """
     sftp_mode = SftpMode(config.getConfig('sftp_mode', 0))
     export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
-    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
-    if sftp_enabled:
-        try:
-            sftp_client = get_sftp_client()
-        except Exception as e:
-            sftp_client = None
-            logger.info('Could not establish a connection to remote server for SFTP.')
-        sftp_destination = config.getConfig('sftp_destination_folder')
     if not exportPath or not exportFolderId:
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
     totalByteCount = 0
-    for mode in ('measure', 'copy'):
-        byteCount = 0
-        for filepath, file in Folder().fileList(exportFolder, user, data=False):
-            if export_enabled:
+    if export_enabled:
+        for mode in ('measure', 'copy'):
+            byteCount = 0
+            for filepath, file in Folder().fileList(exportFolder, user, data=False):
                 byteCount += exportItemsNext(
                     mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
-            if sftp_enabled and sftp_client is not None:
-                sftp_one_item(filepath, file, sftp_destination, sftp_client)
-        totalByteCount = byteCount
-    if sftp_enabled and sftp_client is not None:
-        sftp_client.close()
-    logger.info('Exported files')
-    exportNoteRejected(report, user, all)
-    logger.info('Exported note others')
-    file = exportReport(ctx, exportPath, report, user)
-    logger.info('Exported generated report')
-    summary = reportSummary(report, file=file)
-    logger.info('Exported done')
+            totalByteCount = byteCount
+        logger.info('Exported files')
+        exportNoteRejected(report, user, all)
+        logger.info('Exported note others')
+        file = exportReport(ctx, exportPath, report, user)
+        logger.info('Exported generated report')
+        summary = reportSummary(report, file=file)
+        logger.info('Exported done')
+    sftp_items(sftp_mode, exportFolder, user)
     return summary
+
+
+def sftp_items(sftp_mode, export_folder, user):
+    """
+    Export items to a remote server via SFTP.
+
+    :param sftp_mode: should come from the girder config file. Used to determine if SFTP is enabled
+    :param export_folder: the girder folder from which files should be exported
+    :param user: the user triggering the export
+    """
+    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
+    sftp_destination = config.getConfig('sftp_destination_folder')
+    if not sftp_enabled:
+        return
+
+    if not sftp_destination:
+        raise Exception('SFTP destination not specified')
+
+    logger.info('SFTP begin. Remote destination: %s', sftp_destination)
+    sftp_client = get_sftp_client()
+    if sftp_client is None:
+        raise Exception('There was an error establishing a connection to the remote SFTP server')
+    for filepath, file in Folder().fileList(export_folder, user, data=False):
+        try:
+            sftp_one_item(filepath, file, sftp_destination, sftp_client)
+        except:
+            logger.error(f'There was an error transferring {filepath} to the remote destination')
+    sftp_client.close()
+    logger.info('SFTP done')
 
 
 def get_sftp_client():
@@ -495,7 +513,7 @@ def sftp_one_item(filepath, file, destination, sftp_client):
     file_path_segments = filepath.split(os.path.sep)
     image_dir = file_path_segments[-2]
     file_name = file_path_segments[-1]
-
+    full_remote_path = os.path.join(destination, image_dir, file_name)
     item = Item().load(file['itemId'], force=True, exc=False)
     tile_source = ImageItem().tileSource(item)
     tile_source_path = tile_source._getLargeImagePath()
@@ -504,8 +522,18 @@ def sftp_one_item(filepath, file, destination, sftp_client):
     remote_dirs = sftp_client.listdir()
     if image_dir not in remote_dirs:
         sftp_client.mkdir(image_dir)
-    full_remote_path = os.path.join(destination, image_dir, file_name)
-    sftp_client.put(tile_source_path, full_remote_path)
+
+    existing_files = sftp_client.listdir(os.path.join(destination, image_dir))
+    if file_name in existing_files:
+        existing_file_stat = sftp_client.stat(full_remote_path)
+        if existing_file_stat.st_size == file['size']:
+            logger.info(f'File {file_name} already exists at the remote destination')
+            return
+    transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
+    if transferred_file_stat.st_size == file['size']:
+        logger.info(f'File {file_name} successfully transferred to remote destination')
+    else:
+        logger.error(f'There was an error transferring {file_name} to remote destination')
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
