@@ -26,6 +26,7 @@ from .constants import PluginSettings
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
+
 class SftpMode(Enum):
     LOCAL_EXPORT_ONLY = 0
     SFTP_ONLY = 1
@@ -487,7 +488,7 @@ def sftp_items(export_folder, user):
     for filepath, file in Folder().fileList(export_folder, user, data=False):
         try:
             sftp_one_item(filepath, file, sftp_destination, sftp_client)
-        except:
+        except Exception:
             logger.error(f'There was an error transferring {filepath} to the remote destination')
     sftp_client.close()
     logger.info('SFTP done')
