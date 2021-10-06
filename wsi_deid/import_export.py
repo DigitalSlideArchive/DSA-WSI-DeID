@@ -442,6 +442,7 @@ def exportItems(ctx, user=None, all=False):
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
+    summary = {}
     totalByteCount = 0
     if export_enabled:
         for mode in ('measure', 'copy'):
@@ -475,7 +476,7 @@ def sftp_items(export_folder, user):
     sftp_mode = config.getConfig('sftp_mode', 0)
     sftp_enabled = SftpMode(sftp_mode) in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     sftp_destination = config.getConfig('sftp_destination_folder')
-    if not sftp_enabled: # Sanity check
+    if not sftp_enabled:  # Sanity check
         return
 
     if not sftp_destination:
