@@ -11,7 +11,7 @@ import magic
 import openpyxl
 import pandas as pd
 from enum import Enum
-from girder import logger
+from girder import logger, events
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -433,6 +433,7 @@ def exportItems(ctx, user=None, all=False):
     """
     sftp_mode = SftpMode(config.getConfig('sftp_mode', 0))
     export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
+    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
@@ -455,11 +456,14 @@ def exportItems(ctx, user=None, all=False):
         logger.info('Exported generated report')
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
-    sftp_items(sftp_mode, exportFolder, user)
+    if sftp_enabled:
+        sftp_event_info = {'export_folder': exportFolder, 'user': user}
+        events.daemon.trigger('wsi_deid.sftp_export', sftp_event_info)
+    summary['sftp_enabled'] = sftp_enabled
     return summary
 
 
-def sftp_items(sftp_mode, export_folder, user):
+def sftp_items(export_folder, user):
     """
     Export items to a remote server via SFTP.
 
@@ -467,9 +471,10 @@ def sftp_items(sftp_mode, export_folder, user):
     :param export_folder: the girder folder from which files should be exported
     :param user: the user triggering the export
     """
-    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
+    sftp_mode = config.getConfig('sftp_mode', 0)
+    sftp_enabled = SftpMode(sftp_mode) in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     sftp_destination = config.getConfig('sftp_destination_folder')
-    if not sftp_enabled:
+    if not sftp_enabled: # Sanity check
         return
 
     if not sftp_destination:

@@ -1,7 +1,7 @@
 import psutil
 
 import girder
-from girder import plugin
+from girder import plugin, events
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException
 from girder.models.assetstore import Assetstore
@@ -12,6 +12,7 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
 from .rest import WSIDeIDResource
+from .import_export import sftp_items
 
 
 try:
@@ -44,6 +45,15 @@ def validateSettingsFolder(doc):
 def validateSettingsImportExport(doc):
     if not doc.get('value', None):
         doc['value'] = None
+
+
+def handle_sftp_export(event):
+    export_folder = event.info['export_folder']
+    user = event.info['user']
+    sftp_items(export_folder, user)
+
+
+events.bind('wsi_deid.sftp_export', handle_sftp_export.__name__, handle_sftp_export)
 
 
 class GirderPlugin(plugin.GirderPlugin):
