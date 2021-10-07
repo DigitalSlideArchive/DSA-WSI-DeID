@@ -52,7 +52,13 @@ var ConfigView = View.extend({
             'histomicsui.finished_folder': { name: 'Approved', id: 'g-hui-finished-folder' },
             'histomicsui.reports_folder': { name: 'Reports', id: 'g-hui-reports-folder' },
             'wsi_deid.import_path': { name: 'Internal Import Path', id: 'g-wsi-deid-import-path' },
-            'wsi_deid.export_path': { name: 'Internal Export Path', id: 'g-wsi-deid-export-path' }
+            'wsi_deid.export_path': { name: 'Internal Export Path', id: 'g-wsi-deid-export-path' },
+            'wsi_deid.remote_path': { name: 'Remote Export Path', id: 'g-wsi-deid-remote-path'},
+            'wsi_deid.remote_host': { name: 'Remote SFTP Host', id: 'g-wsi-deid-remote_host' },
+            'wsi_deid.remote_port': { name: 'Remote SFTP Port', id: 'g-wsi-deid-remote-port' },
+            'wsi_deid.remote_user': { name: 'Remote SFTP User', id: 'g-wsi-deid-remote-user' },
+            'wsi_deid.remote_password': { name: 'Remote SFTP Password', id: 'g-wsi-deid-remote-password' },
+            'wsi_deid.sftp_mode': { name: 'SFTP Mode', id: 'g-wsi-deid-sftp-mode' },
         };
         this._browserWidgetView = {};
         $.when(
