@@ -11,7 +11,8 @@ import magic
 import openpyxl
 import pandas as pd
 from enum import Enum
-from girder import logger, events
+from girder import logger
+from girder_jobs.models.job import Job, JobStatus
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -459,40 +460,63 @@ def exportItems(ctx, user=None, all=False):
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
     if sftp_enabled:
-        sftp_event_info = {'export_folder': exportFolder, 'user': user}
-        events.daemon.trigger('wsi_deid.sftp_export', sftp_event_info)
+        job_title = f'Remote export: {user["email"]}, {datetime.datetime.now()}'
+        sftp_job = Job().createLocalJob(
+            module='wsi_deid',
+            function='sftp_items',
+            title=job_title,
+            type='wsi_deid.sftp_job',
+            args=(exportFolder, user,)
+        )
+        Job().scheduleJob(job=sftp_job)
     summary['sftp_enabled'] = sftp_enabled
     return summary
 
 
-def sftp_items(export_folder, user):
+def sftp_items(job):
     """
     Export items to a remote server via SFTP.
 
-    :param sftp_mode: should come from the girder config file. Used to determine if SFTP is enabled
-    :param export_folder: the girder folder from which files should be exported
-    :param user: the user triggering the export
+    :param job: A girder job object containing information about how to run the SFTP export
     """
+    args = job.get('args', None)
+    export_folder = args[0]
+    user = args[1]
+
     sftp_mode = Setting().get(PluginSettings.WSI_DEID_SFTP_MODE)
     sftp_enabled = SftpMode(sftp_mode) in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     sftp_destination = Setting().get(PluginSettings.WSI_DEID_REMOTE_PATH)
     if not sftp_enabled:  # Sanity check
         return
 
+    Job().updateJob(
+        job,
+        log=f'Beginning to transfer files to remote directory {sftp_destination}.\n',
+        status=JobStatus.RUNNING,
+        notify=True
+    )
     if not sftp_destination:
-        raise Exception('SFTP destination not specified')
+        message = 'SFTP destination not specified. No items transferred.\n'
+        Job().updateJob(
+            job, log=message, status=JobStatus.ERROR, notify=True)
+        raise Exception(message)
 
-    logger.info('SFTP begin. Remote destination: %s', sftp_destination)
+    # logger.info('SFTP begin. Remote destination: %s', sftp_destination)
     sftp_client = get_sftp_client()
     if sftp_client is None:
-        raise Exception('There was an error establishing a connection to the remote SFTP server')
+        message = 'There was an error establishing a connection to the remote SFTP server.\n'
+        Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
+        raise Exception(message)
     for filepath, file in Folder().fileList(export_folder, user, data=False):
         try:
-            sftp_one_item(filepath, file, sftp_destination, sftp_client)
+            sftp_one_item(filepath, file, sftp_destination, sftp_client, job)
         except Exception:
-            logger.error(f'There was an error transferring {filepath} to the remote destination')
+            Job().updateJob(
+                job,
+                log=f'There was an error transferring {filepath} to the remote destination.\n'
+            )
     sftp_client.close()
-    logger.info('SFTP done')
+    Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
 
 
 def get_sftp_client():
@@ -508,7 +532,7 @@ def get_sftp_client():
     return sftp_client
 
 
-def sftp_one_item(filepath, file, destination, sftp_client):
+def sftp_one_item(filepath, file, destination, sftp_client, job):
     """
     Send a file to a remote server via SFTP.
 
@@ -516,6 +540,7 @@ def sftp_one_item(filepath, file, destination, sftp_client):
     :param file: the file document of this item
     :param destination: the remote folder for the file to be sent to
     :param sftp_client: an instance of paramiko.SFTPClient
+    :param job: a Girder job. Used to log messages.
     """
     file_path_segments = filepath.split(os.path.sep)
     image_dir = file_path_segments[-2]
@@ -534,13 +559,15 @@ def sftp_one_item(filepath, file, destination, sftp_client):
     if file_name in existing_files:
         existing_file_stat = sftp_client.stat(full_remote_path)
         if existing_file_stat.st_size == file['size']:
-            logger.info(f'File {file_name} already exists at the remote destination')
+            Job().updateJob(job, log=f'File {file_name} already exists at the remote destination.\n')
             return
     transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
     if transferred_file_stat.st_size == file['size']:
-        logger.info(f'File {file_name} successfully transferred to remote destination')
+        message = f'File {file_name} successfully transferred to the remote destination.\n'
     else:
-        logger.error(f'There was an error transferring {file_name} to remote destination')
+        message = f'There was an error transferring {file_name} to the remote destination.\n'
+
+    Job().updateJob(job, log=message)
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,

@@ -1,6 +1,6 @@
 import girder
 import psutil
-from girder import events, plugin
+from girder import plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -63,15 +63,6 @@ def validateRemoteSftpPort(doc):
 def validateSettingSftpMode(doc):
     if not doc['value'] in [mode.value for mode in SftpMode]:
         raise ValidationException('SFTP Mode must be one of "local", "remote", or "both"', 'value')
-
-
-def handle_sftp_export(event):
-    export_folder = event.info['export_folder']
-    user = event.info['user']
-    sftp_items(export_folder, user)
-
-
-events.bind('wsi_deid.sftp_export', handle_sftp_export.__name__, handle_sftp_export)
 
 
 class GirderPlugin(plugin.GirderPlugin):
