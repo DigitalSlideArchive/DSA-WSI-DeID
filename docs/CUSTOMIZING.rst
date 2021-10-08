@@ -57,17 +57,3 @@ Editing Metadata Values
 +++++++++++++++++++++++
 
 Normally, when a metadata field is redacted, its value becomes blank. In `girder.local.conf`, you can set `edit_metadata` to `True` to enable editing metadata as part of the redaction process. If editing metadata is enabled, users will have the opportunity to set the value of a redacted metadata field to any value.
-
-Transferring Files to a Remote Server via SFTP
-++++++++++++++++++++++++++++++++++++++++++++++
-
-In addition to exporting approved files to a local directory, you can configure transfer of approved files to another machine via SFTP. The following settings control this functionality:
-
-* ``sftp_host``: this is the address of the host machine to send approved files to.
-* ``sftp_port``: this is the port on which the remote host is listening for SFTP connections. Default is 22.
-* ``sftp_user``, ``sftp_password``: username and password of a user on the remote machine.
-* ``sftp_desination_folder``: a directory on the remote machine where the approved WSIs will be sent.
-* ``sftp_mode``: this setting explicitly enables this functionality. There are three choices.
-   * ``0``: SFTP off, local export only. This is the default.
-   * ``1``: SFTP only, no local export.
-   * ``2``: SFTP and local export

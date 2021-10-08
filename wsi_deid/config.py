@@ -46,7 +46,6 @@ defaultConfig = {
         ): NUMERIC_VALUES,
     },
     'hide_metadata_keys_format_philips': {},
-    'sftp_mode': 0
 }
 
 
