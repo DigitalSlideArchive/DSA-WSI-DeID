@@ -12,6 +12,7 @@ import ItemViewWidget from '@girder/large_image/views/itemViewWidget';
 
 import ItemViewTemplate from '../templates/ItemView.pug';
 import ItemViewNextTemplate from '../templates/ItemViewNext.pug';
+import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
 import { goToNextUnprocessedItem } from '../utils';
 
@@ -52,6 +53,7 @@ wrap(ItemView, 'render', function (render) {
         let redactList = (this.model.get('meta') || {}).redactList || {};
         redactList.metadata = redactList.metadata || {};
         redactList.images = redactList.images || {};
+        redactList.area = redactList.area || {};
         ['images', 'metadata'].forEach((main) => {
             for (let key in redactList[main]) {
                 if (!_.isObject(redactList[main][key]) || redactList[main][key] === null) {
@@ -60,6 +62,20 @@ wrap(ItemView, 'render', function (render) {
             }
         });
         return redactList;
+    };
+
+    this.putRedactList = function (redactList, source) {
+        restRequest({
+            method: 'PUT',
+            url: 'wsi_deid/item/' + this.model.id + '/redactList',
+            contentType: 'application/json',
+            data: JSON.stringify(redactList),
+            error: null
+        });
+        if (this.model.get('meta') === undefined) {
+            this.model.set('meta', {});
+        }
+        this.model.get('meta').redactList = redactList;
     };
 
     const flagRedaction = (event) => {
@@ -108,17 +124,7 @@ wrap(ItemView, 'render', function (render) {
             }
         }
         const redactSquare = (redactList[category][keyname] || {}).square || (!isRedacted && target.closest('.g-widget-auximage').hasClass('always-redact-square'));
-        restRequest({
-            method: 'PUT',
-            url: 'wsi_deid/item/' + this.model.id + '/redactList',
-            contentType: 'application/json',
-            data: JSON.stringify(redactList),
-            error: null
-        });
-        if (this.model.get('meta') === undefined) {
-            this.model.set('meta', {});
-        }
-        this.model.get('meta').redactList = redactList;
+        this.putRedactList(redactList, 'flagRedaction');
         target.closest('td.large_image_metadata_value').toggleClass('redacted', isRedacted);
         target.closest('td.large_image_metadata_value').find('.redact-replacement').remove();
         target.closest('.g-widget-auximage').toggleClass('redacted', isRedacted && !redactSquare);
@@ -160,14 +166,14 @@ wrap(ItemView, 'render', function (render) {
 
     const getRedactionDisabledPatterns = (settings) => {
         const format = getFormat();
-        let patterns = settings.no_redact_control_keys; // patterns is an object that looks like {key:value}, where `key` and `value` are both regular expressions
+        let patterns = settings.no_redact_control_keys || {}; // patterns is an object that looks like {key:value}, where `key` and `value` are both regular expressions
         patterns = Object.assign({}, patterns, settings['no_redact_control_keys_format_' + format] || {});
         return validateRedactionPatternObject(patterns);
     };
 
     const getHiddenMetadataPatterns = (settings) => {
         const format = getFormat();
-        let patterns = settings.hide_metadata_keys;
+        let patterns = settings.hide_metadata_keys || {};
         patterns = Object.assign({}, patterns, settings['hide_metadata_keys_format_' + format] || {});
         return validateRedactionPatternObject(patterns);
     };
@@ -186,7 +192,10 @@ wrap(ItemView, 'render', function (render) {
         return true;
     };
 
-    const addRedactButton = (parentElem, keyname, redactRecord, category, settings) => {
+    const addRedactButton = (parentElem, keyname, redactRecord, category, settings, title) => {
+        if (title === undefined || title === null) {
+            title = 'Redact';
+        }
         let elem;
         if (settings.require_redact_category !== false) {
             elem = $('<select class="g-hui-redact"/>');
@@ -222,9 +231,9 @@ wrap(ItemView, 'render', function (render) {
             if (!matched && redactRecord) {
                 $('[value="Other_PHIPII"]', elem).attr('selected', 'selected');
             }
-            elem = $('<span class="g-hui-redact-label">Redact</span>').append(elem);
+            elem = $('<span class="g-hui-redact-label">' + title + '</span>').append(elem);
         } else {
-            elem = $('<a class="g-hui-redact' + (redactRecord && redactRecord.reason ? ' undo' : '') + '"><span>Redact</span></a>').attr({
+            elem = $('<a class="g-hui-redact' + (redactRecord && redactRecord.reason ? ' undo' : '') + '"><span>' + title + '</span></a>').attr({
                 keyname: keyname,
                 category: category,
                 title: 'Toggle redacting this ' + category
@@ -437,8 +446,76 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
+    const getWSIAnnotationLayer = () => {
+        const map = this.imageViewerSelect.currentViewer.viewer;
+        return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+    };
+
+    const handleWSIAnnotationMode = () => {
+        const annLayer = getWSIAnnotationLayer();
+        if (annLayer.mode()) {
+            this.$el.find('.g-widget-redact-area-container button').addClass('active');
+            this.$el.find('.g-widget-redact-area-container').addClass('area-adding').removeClass('area-set');
+            return;
+        }
+        annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
+        annLayer.draw();
+        let redactList = this.getRedactList();
+        redactList.area = redactList.area || {};
+        redactList.area._wsi = redactList.area._wsi || {};
+        redactList.area._wsi.geojson = annLayer.geojson();
+        if (!redactList.area._wsi.geojson) {
+            delete redactList.area._wsi;
+        } else {
+            if (!redactList.area._wsi.reason) {
+                redactList.area._wsi.reason = 'No_Reason_Collected';
+                delete redactList.area._wsi.category;
+                let reasonSelect = this.$el.find('.g-widget-redact-area-container select.g-hui-redact');
+                if (reasonSelect.length) {
+                    let reasonElem = $(':selected', reasonSelect);
+                    if (!reasonElem.length || reasonElem.val() === 'none' || !reasonElem.val()) {
+                        reasonElem = reasonSelect.find('option:last');
+                    }
+                    redactList.area._wsi.reason = reasonElem.val();
+                    redactList.area._wsi.category = reasonElem.attr('category');
+                    reasonElem.prop('selected', true);
+                }
+            }
+        }
+        this.putRedactList(redactList, 'handleWSIAnnotationMode');
+        this.$el.find('.g-widget-redact-area-container button').removeClass('active');
+        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
+    };
+
+    const redactAreaWSI = (event) => {
+        event.stopPropagation();
+        const annLayer = getWSIAnnotationLayer();
+        if (this.$el.find('.g-widget-redact-area-container.area-adding,.g-widget-redact-area-container.area-set').length) {
+            let redactList = this.getRedactList();
+            redactList.area = redactList.area || {};
+            delete redactList.area._wsi;
+            this.putRedactList(redactList, 'redactAreaWSI');
+            this.$el.find('.g-widget-redact-area-container button').removeClass('active');
+            this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').removeClass('area-set');
+            annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
+            annLayer.draw();
+            if (annLayer.mode()) {
+                annLayer.mode(null);
+            }
+            return;
+        }
+        annLayer.options('clickToEdit', true);
+        annLayer.mode('polygon');
+        this.$el.find('.g-widget-redact-area-container button').addClass('active');
+        this.$el.find('.g-widget-redact-area-container').addClass('area-adding');
+        // when entering any non-null mode, disable drawing on associated images
+        annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
+        annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);
+    };
+
     const adjustControls = (folderType, settings) => {
-        addRedactionControls(folderType === 'ingest' || folderType === 'quarantine', settings || {});
+        let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
+        addRedactionControls(hasRedactionControls, settings || {});
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
@@ -451,7 +528,37 @@ wrap(ItemView, 'render', function (render) {
         /* Place a copy of any reject buttons in the item header */
         this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
         this.events['click .g-workflow-button'] = workflowButton;
+        /* Place an area redaction control in the item header */
+        if (hasRedactionControls) {
+            const redactArea = ItemViewRedactAreaTemplate({});
+            this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(redactArea);
+            this.events['click .g-item-info-header .g-widget-redact-area-container button'] = redactAreaWSI;
+            if (settings.require_redact_category !== false) {
+                let redactList = (this.model.get('meta') || {}).redactList || {};
+                addRedactButton(this.$el.find('.g-item-image-viewer-select .g-widget-redact-area-container'), '_wsi', (redactList.area || {})._wsi, 'area', settings, '');
+            }
+            // add an existing area
+            addWSIRedactionArea();
+        }
         this.delegateEvents();
+    };
+
+    const addWSIRedactionArea = () => {
+        let redactList = this.getRedactList();
+        if (!redactList.area || !redactList.area._wsi || !redactList.area._wsi.geojson) {
+            return;
+        }
+        if (!this.imageViewerSelect.currentViewer.viewer) {
+            window.setTimeout(addWSIRedactionArea, 1000);
+            return;
+        }
+        const annLayer = getWSIAnnotationLayer();
+        annLayer.geojson(redactList.area._wsi.geojson);
+        annLayer.draw();
+        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').addClass('area-set');
+        annLayer.options('clickToEdit', true);
+        annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
+        annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);
     };
 
     this.once('g:largeImageItemViewRendered', function () {
@@ -497,7 +604,7 @@ function _setNextPreviousImage(parent) {
 wrap(ItemViewWidget, 'render', function (render) {
     /* Add any internal metadata items that will be added but don't already
      * exist. */
-    let internal = this.metadata.internal;
+    let internal = this.metadata.internal || {};
     Object.entries(this.parentView.getRedactList().metadata).forEach(([k, v]) => {
         let parts = k.split(';');
         if (parts[0] !== 'internal' || !v || v.value === undefined || parts.length !== 3) {

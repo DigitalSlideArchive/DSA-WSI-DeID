@@ -1,6 +1,5 @@
-import psutil
-
 import girder
+import psutil
 from girder import plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException
@@ -12,7 +11,6 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
 from .rest import WSIDeIDResource
-
 
 try:
     __version__ = get_distribution(__name__).version

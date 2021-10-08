@@ -45,7 +45,7 @@ setup(
         'girder-homepage',
         'histomicsui',
         'jsonschema',
-        'large_image[tiff,openslide,memcached]',
+        'large_image[tiff,openslide,memcached,openjpeg]',
         'openpyxl',
         'pandas',
         'python-magic',

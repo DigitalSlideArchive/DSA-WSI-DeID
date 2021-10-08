@@ -1,7 +1,7 @@
 import os
+
 import pytest
 from pytest_girder.web_client import runWebClientTest
-
 
 from .utilities import provisionBoundServer  # noqa
 
