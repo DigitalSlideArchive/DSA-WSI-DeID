@@ -28,9 +28,9 @@ XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.she
 
 
 class SftpMode(Enum):
-    LOCAL_EXPORT_ONLY = 0
-    SFTP_ONLY = 1
-    SFTP_AND_EXPORT = 2
+    LOCAL_EXPORT_ONLY = 'local'
+    SFTP_ONLY = 'remote'
+    SFTP_AND_EXPORT = 'both'
 
 
 def readExcelData(filepath):
@@ -432,7 +432,7 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
-    sftp_mode = SftpMode(config.getConfig('sftp_mode', 0))
+    sftp_mode = SftpMode(Setting().get(PluginSettings.WSI_DEID_SFTP_MODE))
     export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
     sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     logger.info('Export begin (all=%s)' % all)
@@ -473,9 +473,9 @@ def sftp_items(export_folder, user):
     :param export_folder: the girder folder from which files should be exported
     :param user: the user triggering the export
     """
-    sftp_mode = config.getConfig('sftp_mode', 0)
+    sftp_mode = Setting().get(PluginSettings.WSI_DEID_SFTP_MODE)
     sftp_enabled = SftpMode(sftp_mode) in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
-    sftp_destination = config.getConfig('sftp_destination_folder')
+    sftp_destination = Setting().get(PluginSettings.WSI_DEID_REMOTE_PATH)
     if not sftp_enabled:  # Sanity check
         return
 
@@ -497,10 +497,10 @@ def sftp_items(export_folder, user):
 
 def get_sftp_client():
     """Create an instance of paramiko.SFTPClient based on girder config."""
-    host = config.getConfig('sftp_host')
-    port = config.getConfig('sftp_port', 22)
-    user = config.getConfig('sftp_user')
-    password = config.getConfig('sftp_password')
+    host = Setting().get(PluginSettings.WSI_DEID_REMOTE_HOST)
+    port = Setting().get(PluginSettings.WSI_DEID_REMOTE_PORT)
+    user = Setting().get(PluginSettings.WSI_DEID_REMOTE_USER)
+    password = Setting().get(PluginSettings.WSI_DEID_REMOTE_PASSWORD)
 
     transport = paramiko.Transport((host, port))
     transport.connect(username=user, password=password)

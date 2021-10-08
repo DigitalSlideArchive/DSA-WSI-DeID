@@ -79,6 +79,7 @@ WSI DeID Version: %s
     if not Setting().get(PluginSettings.WSI_DEID_SFTP_MODE):
         Setting().set(PluginSettings.WSI_DEID_SFTP_MODE, 'local')
 
+
 if __name__ == '__main__':
     # This loads plugins, allowing setting validation
     configureServer()

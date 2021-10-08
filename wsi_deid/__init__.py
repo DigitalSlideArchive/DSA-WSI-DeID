@@ -1,7 +1,6 @@
-import psutil
-
 import girder
-from girder import plugin, events
+import psutil
+from girder import events, plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -11,9 +10,8 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
+from .import_export import SftpMode, sftp_items
 from .rest import WSIDeIDResource
-from .import_export import sftp_items
-
 
 try:
     __version__ = get_distribution(__name__).version
@@ -63,7 +61,7 @@ def validateRemoteSftpPort(doc):
 
 @setting_utilities.validator(PluginSettings.WSI_DEID_SFTP_MODE)
 def validateSettingSftpMode(doc):
-    if not doc['value'] in ['local', 'remote', 'both']:
+    if not doc['value'] in [mode.value for mode in SftpMode]:
         raise ValidationException('SFTP Mode must be one of "local", "remote", or "both"', 'value')
 
 
