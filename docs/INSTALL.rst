@@ -212,6 +212,23 @@ Alternatively, administrators can click on ``Users`` from the left menu, select 
 .. image:: screenshots/pending_approval_highlighted.png
     :alt: user pending approval
 
+Remote Export of Redacted Files
+-------------------------------
+
+In addition to exporting files to a local directory, you can transfer redacted WSIs from the ``Approved`` folder to a remote destination via SFTP. You can configure these by changing the WSI DeID plugin settings from the Admin console. From the Admin console, navigate to ``Plugins``, and then click the cog icon in the WSI DeID section. Use the fields in the screenshot below to configure SFTP transfer to a remote host.
+
+.. image:: screenshots/sftp_settings.png
+    :alt: SFTP settings
+
+The ``SFTP MODE`` setting has three choices:
+
+**Local export only:** Files are exported to a local directory only
+
+**Local export and remote transfer:** Files are exported both to a local directory and a remote location via SFTP
+
+**Remote transfer only:** Files are not exported locally. They are only transferred to a remote location via SFTP
+
+
 Windows Server 2019
 ===================
 
