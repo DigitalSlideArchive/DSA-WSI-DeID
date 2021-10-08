@@ -1,5 +1,15 @@
 # Change Log
 
+## Unreleased
+
+### Features
+- Allow redacting an area from a WSI (#224)
+- Add an option to allow editing redacted metadata (#221)
+- Add options to determine which metadata is visible and redactable (#219)
+
+### Improvements
+- Added more logging during export (#222)
+
 ## Version 2.2.1
 
 ### Improvements
