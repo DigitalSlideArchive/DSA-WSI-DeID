@@ -4,6 +4,20 @@ girderTest.importPlugin('homepage', 'jobs', 'worker', 'large_image', 'large_imag
 
 girderTest.startApp();
 
+describe('Mock WebGL', function () {
+    it('mock Webgl', function () {
+        var girder = window.girder;
+        var GeojsViewer = girder.plugins.large_image.views.imageViewerWidget.geojs;
+        girder.utilities.PluginUtils.wrap(GeojsViewer, 'initialize', function (initialize) {
+            this.once('g:beforeFirstRender', function () {
+                window.geo.util.restoreWebglRenderer();
+                window.geo.util.mockWebglRenderer();
+            });
+            initialize.apply(this, arguments);
+        });
+    });
+});
+
 describe('Test the WSI DeID plugin', function () {
     it('change the WSI DeID settings', function () {
         girderTest.login('admin', 'Admin', 'Admin', 'password')();
@@ -103,7 +117,7 @@ describe('Test the WSI DeID plugin', function () {
             });
             girderTest.waitForLoad();
             waitsFor(function () {
-                return $('.g-hui-redact').length;
+                return $('.g-hui-redact').length && $('.g-widget-redact-area-container').length;
             });
             waitsFor(function () {
                 return $('.g-workflow-button[action="process"]').length;
