@@ -22,7 +22,6 @@ from girder.models.upload import Upload
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
-from . import config
 from .constants import PluginSettings
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -559,7 +558,10 @@ def sftp_one_item(filepath, file, destination, sftp_client, job):
     if file_name in existing_files:
         existing_file_stat = sftp_client.stat(full_remote_path)
         if existing_file_stat.st_size == file['size']:
-            Job().updateJob(job, log=f'File {file_name} already exists at the remote destination.\n')
+            Job().updateJob(
+                job,
+                log=f'File {file_name} already exists at the remote destination.\n'
+            )
             return
     transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
     if transferred_file_stat.st_size == file['size']:

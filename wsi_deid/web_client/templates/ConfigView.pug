@@ -104,48 +104,44 @@ form#g-wsi_deid-form(role="form")
         title="The remote path used for exporting files.",
         spellcheck="false")
   .form-group
-    label(for="g-wsi-deid-remote-host") Remote SFTP Host
+    label(for="g-wsi-deid-remote-host") Remote Export Host
     p.g-hui-description
       | Remote address to transfer approved WSIs to.
     input#g-wsi-deid-remote-host.form-control.input-sm(
-      type="text", value=settings['wsi_deid.remote_host'] || '',
-      title="The remote host to transfer files to.",
-      spellcheck="false")
+        type="text", value=settings['wsi_deid.remote_host'] || '',
+        title="The remote host to transfer files to.",
+        spellcheck="false")
   .form-group
-    label(for="g-wsi-deid-remote-port") Remote SFTP Port
+    label(for="g-wsi-deid-remote-path") Remote SFTP Port
     p.g-hui-description
-      | Port for SFTP connections on the remote machine.
+      | Port for SFTP connections on the remote host.
     input#g-wsi-deid-remote-port.form-control.input-sm(
-      type="number", value=settings['wsi_deid.remote_port'] || '',
-      title="Remote port for SFTP connections.")
+        type="number", value=settings['wsi_deid.remote_port'] || '',
+        title="Remote port for SFTP connections.")
   .form-group
-    label(for="g-wsi-deid-remote-user") Remote SFTP username
+    label(for="g-wsi-deid-remote-path") Remote Export User
     p.g-hui-description
-      | Username for a user on the remote machine for SFTP transfer.
+      | Username of a user on the remote host for SFTP transfer.
     input#g-wsi-deid-remote-user.form-control.input-sm(
-      type="text", value=settings['wsi_deid.remote_user'] || '',
-      title="Username of a user on the remote host.",
-      spellcheck="false")
+        type="text", value=settings['wsi_deid.remote_user'] || '',
+        title="Username of a user on the remote host",
+        spellcheck="false")
   .form-group
-    label(for="g-wsi-deid-remote-password") Remote SFTP password
+    label(for="g-wsi-deid-remote-password") Remote Export Password
     p.g-hui-description
-      | Password for the user on the remote machine.
+      | Password for the specified user on the remote host for SFTP transfer.
     input#g-wsi-deid-remote-password.form-control.input-sm(
-      type="password", value=settings['wsi_deid.remote_password'] || '',
-      title="Password for the user on the remote machine.",
-      spellcheck="false")
+        type="password", value=settings['wsi_deid.remote_password'] || '',
+        title="Password for the user on the remote machine.",
+        spellcheck="false")
   .form-group
     label(for="g-wsi-deid-sftp-mode") SFTP Mode
     p.g-hui-description
       | Controls behavior of the export function
     select#g-wsi-deid-sftp-mode.input-sm
-      option(value='local'
-        selected=(settings['wsi_deid.sftp_mode'] === 'local')) Local export only
-      option(value='remote'
-        selected=(settings['wsi_deid.sftp_mode'] === 'remote')) Remote (SFTP) transfer only
-      option(value='both'
-        selected=(settings['wsi_deid.sftp_mode'] === 'both')) Local export and remote transfer
-
+      option(value='local', selected=(settings['wsi_deid.sftp_mode'] === 'local')) Local export only
+      option(value='remote', selected=(settings['wsi_deid.sftp_mode'] === 'remote')) Remote (SFTP) transfer only
+      option(value='both', selected=(settings['wsi_deid.sftp_mode'] === 'both')) Local export and remote transfer
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save
