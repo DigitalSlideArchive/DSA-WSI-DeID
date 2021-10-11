@@ -1,3 +1,4 @@
+from os import stat
 import easyocr
 import psutil
 
@@ -9,6 +10,7 @@ from girder.models.assetstore import Assetstore
 from girder.models.folder import Folder
 from girder.models.setting import Setting
 from girder.utility import setting_utilities
+from girder_jobs.models.job import Job, JobStatus
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
@@ -20,12 +22,31 @@ from .process import get_image_text
 reader = None
 
 
+def start_ocr_item_job(job):
+    Job().updateJob(job, log=f'Job {job.get("title")} started\n', status=JobStatus.RUNNING)
+    job_args = job.get('args', None)
+    if job_args is None:
+        Job().updateJob(
+            job,
+            log=f'Jobs of type {job.type} require a Girder item as an argument\n',
+            status=JobStatus.ERROR
+        )
+        return
+    item = job_args[0]
+    global reader
+    if reader is None:
+        reader = easyocr.Reader(['en'], gpu=False)
+    label_text = get_image_text(item, reader)
+    Job().updateJob(job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
+
+
 def handle_ocr_item(event):
     global reader
     if reader is None:
         reader = easyocr.Reader(['en'], gpu=False)
-    item = event.info['item']
-    ocr_results = get_image_text(item, reader)
+    if not event.item:
+        return
+    get_image_text(event.item, reader)
 
 
 events.bind('wsi_deid.ocr_item', 'handle_ocr_item', handle_ocr_item)

@@ -407,6 +407,7 @@ wrap(ItemView, 'render', function (render) {
         let metadataContainer = $('.g-widget-metadata-container');
         console.log(metadataContainer);
         console.log(metadataContainer.addMetadata);
+        console.log(this.model);
     };
 
     const workflowButton = (event) => {
@@ -429,6 +430,10 @@ wrap(ItemView, 'render', function (render) {
             url: 'wsi_deid/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
+            let alertMessage = actions[action].done;
+            if (action === 'ocr') {
+               alertMessage = `Started Job ${resp.job_id}: ${resp.job_title}.`;
+            }
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
@@ -444,7 +449,8 @@ wrap(ItemView, 'render', function (render) {
                     }
                 });
             } else if (action === 'ocr') {
-                pollForOcrResults(this.model.id, addOcrMetadata, 30);
+                console.log(resp);
+                // pollForOcrResults(this.model.id, addOcrMetadata, 30);
             }else {
                 this.model.fetch({ success: () => this.render() });
             }

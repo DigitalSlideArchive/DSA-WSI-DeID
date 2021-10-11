@@ -16,7 +16,9 @@ from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
 from girder.utility.model_importer import ModelImporter
-from girder.utility.progress import ProgressContext, setResponseTimeLimit
+from girder.utility.progress import setResponseTimeLimit, ProgressContext
+from girder_jobs.models.job import Job
+
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
@@ -189,14 +191,22 @@ def process_item(item, user=None):
     return item
 
 
-def ocr_item(item, user=None):
-    client_message = 'Success'
-    try:
-        event_info = {'item': item}
-        events.daemon.trigger('wsi_deid.ocr_item', info=event_info)
-    except Exception as e:
-        client_message = str(e)
-    return client_message
+def ocr_item(item, user):
+    job_title = f'Finding label text for image: {item["name"]}'
+    ocr_job = Job().createLocalJob(
+        module='wsi_deid',
+        function='start_ocr_item_job',
+        title=job_title,
+        type='wsi_deid_ocr_job',
+        userId = user.get('_id', None),
+        asynchronous=True,
+        args=(item,)
+    )
+    Job().scheduleJob(job=ocr_job)
+    return {
+        'job_id': ocr_job._id,
+        'job_title': ocr_job.title,
+    }
 
 
 def get_first_item(folder, user):
