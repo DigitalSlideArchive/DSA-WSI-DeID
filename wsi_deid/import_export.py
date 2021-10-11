@@ -4,33 +4,27 @@ import os
 import shutil
 import subprocess
 import tempfile
-import paramiko
+from enum import Enum
 
 import jsonschema
 import magic
 import openpyxl
 import pandas as pd
-from enum import Enum
+import paramiko
 from girder import logger
-from girder_jobs.models.job import Job, JobStatus
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
+from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
-from . import process
-from .constants import PluginSettings
+from . import process, __version__
+from .constants import PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-
-
-class SftpMode(Enum):
-    LOCAL_EXPORT_ONLY = 'local'
-    SFTP_ONLY = 'remote'
-    SFTP_AND_EXPORT = 'both'
 
 
 def readExcelData(filepath):
@@ -459,12 +453,14 @@ def exportItems(ctx, user=None, all=False):
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
     if sftp_enabled:
-        job_title = f'Remote export: {user["email"]}, {datetime.datetime.now()}'
+        job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
         sftp_job = Job().createLocalJob(
             module='wsi_deid',
             function='sftp_items',
             title=job_title,
             type='wsi_deid.sftp_job',
+            user=user,
+            asynchronous=True,
             args=(exportFolder, user,)
         )
         Job().scheduleJob(job=sftp_job)
@@ -500,7 +496,6 @@ def sftp_items(job):
             job, log=message, status=JobStatus.ERROR, notify=True)
         raise Exception(message)
 
-    # logger.info('SFTP begin. Remote destination: %s', sftp_destination)
     sftp_client = get_sftp_client()
     if sftp_client is None:
         message = 'There was an error establishing a connection to the remote SFTP server.\n'
@@ -512,8 +507,11 @@ def sftp_items(job):
         except Exception:
             Job().updateJob(
                 job,
-                log=f'There was an error transferring {filepath} to the remote destination.\n'
+                log=f'There was an error transferring {filepath} to the remote destination.\n',
+                status=JobStatus.ERROR,
             )
+            sftp_client.close()
+            return
     sftp_client.close()
     Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
 
@@ -529,6 +527,26 @@ def get_sftp_client():
     transport.connect(username=user, password=password)
     sftp_client = paramiko.SFTPClient.from_transport(transport)
     return sftp_client
+
+
+def skip_export(item, all, metadata_property):
+    """
+    Determine whether a particular item should be exported as part of this export run.
+
+    :param item: the item we're checking
+    :param all: whether or not we're exporting all or recent items
+    :param metadata_property: the metadata property that acts as a flag to check previous exports:
+    """
+    return not all and item.get('meta', {}).get(metadata_property)
+
+
+def append_export_record(item, user, metadata_property):
+    exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
+    exportedRecord.append({
+        'time': datetime.datetime.utcnow().isoformat(),
+        'user': str(user['_id']) if user else None,
+        'version': __version__,
+    })
 
 
 def sftp_one_item(filepath, file, destination, sftp_client, job):
@@ -554,7 +572,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job):
     if image_dir not in remote_dirs:
         sftp_client.mkdir(image_dir)
 
-    existing_files = sftp_client.listdir(os.path.join(destination, image_dir))
+    existing_files = sftp_client.listdir(image_dir)
     if file_name in existing_files:
         existing_file_stat = sftp_client.stat(full_remote_path)
         if existing_file_stat.st_size == file['size']:
