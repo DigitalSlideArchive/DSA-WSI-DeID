@@ -1,3 +1,8 @@
+from enum import Enum
+
+from girder.settings import SettingDefault
+
+
 class PluginSettings(object):
     HUI_INGEST_FOLDER = 'histomicsui.ingest_folder'
     HUI_QUARANTINE_FOLDER = 'histomicsui.quarantine_folder'
@@ -14,3 +19,12 @@ class PluginSettings(object):
     WSI_DEID_REMOTE_PASSWORD = 'wsi_deid.remote_password'
     WSI_DEID_REMOTE_PORT = 'wsi_deid.remote_port'
     WSI_DEID_SFTP_MODE = 'wsi_deid.sftp_mode'
+
+
+class SftpMode(Enum):
+    LOCAL_EXPORT_ONLY = 'local'
+    SFTP_ONLY = 'remote'
+    SFTP_AND_EXPORT = 'both'
+
+
+SettingDefault.defaults[PluginSettings.WSI_DEID_SFTP_MODE] = SftpMode.LOCAL_EXPORT_ONLY
