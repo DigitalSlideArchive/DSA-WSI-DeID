@@ -178,9 +178,12 @@ def process_item(item, user=None):
         'version': __version__,
     })
     item['meta'].pop('quarantine', None)
-    if 'wsi_deidExported' in item['meta']:
-        item['meta']['redacted'][-1]['previousExports'] = item['meta']['wsi_deidExported']
-    item['meta'].pop('wsi_deidExported', None)
+    allPreviousExports = {}
+    for history_key in [import_export.EXPORT_HISTORY_KEY, import_export.SFTP_HISTORY_KEY]:
+        if history_key in item['meta']:
+            allPreviousExports[history_key] = item['meta'][history_key]
+        item['meta'].pop(history_key, None)
+    item['meta']['redacted'][-1]['previousExports'] = allPreviousExports
     item['updated'] = datetime.datetime.utcnow()
     item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item

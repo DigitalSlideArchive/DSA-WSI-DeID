@@ -9,6 +9,7 @@ import jsonschema
 import magic
 import openpyxl
 import pandas as pd
+import paramiko
 from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
@@ -16,12 +17,15 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.models.upload import Upload
+from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
-from .constants import PluginSettings
+from .constants import PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+EXPORT_HISTORY_KEY = 'wsi_deidExported'
+SFTP_HISTORY_KEY = 'wsi_deidExportedSftp'
 
 
 def readExcelData(filepath):
@@ -423,6 +427,9 @@ def exportItems(ctx, user=None, all=False):
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
     """
+    sftp_mode = SftpMode(Setting().get(PluginSettings.WSI_DEID_SFTP_MODE))
+    export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
+    sftp_enabled = sftp_mode in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
@@ -430,21 +437,237 @@ def exportItems(ctx, user=None, all=False):
         raise Exception('Export path and/or finished folder not specified.')
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
+    summary = {}
     totalByteCount = 0
-    for mode in ('measure', 'copy'):
-        byteCount = 0
-        for filepath, file in Folder().fileList(exportFolder, user, data=False):
-            byteCount += exportItemsNext(
-                mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
-        totalByteCount = byteCount
-    logger.info('Exported files')
-    exportNoteRejected(report, user, all)
-    logger.info('Exported note others')
-    file = exportReport(ctx, exportPath, report, user)
-    logger.info('Exported generated report')
-    summary = reportSummary(report, file=file)
-    logger.info('Exported done')
+    if sftp_enabled:
+        job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
+        sftp_job = Job().createLocalJob(
+            module='wsi_deid',
+            function='sftp_items',
+            title=job_title,
+            type='wsi_deid.sftp_job',
+            user=user,
+            asynchronous=True,
+            args=(exportFolder, user, all)
+        )
+        Job().scheduleJob(job=sftp_job)
+    if export_enabled:
+        for mode in ('measure', 'copy'):
+            byteCount = 0
+            for filepath, file in Folder().fileList(exportFolder, user, data=False):
+                byteCount += exportItemsNext(
+                    mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
+            totalByteCount = byteCount
+        logger.info('Exported files')
+        exportNoteRejected(report, user, all, EXPORT_HISTORY_KEY)
+        logger.info('Exported note others')
+        file = exportReport(ctx, exportPath, report, user)
+        logger.info('Exported generated report')
+        summary = reportSummary(report, file=file)
+        logger.info('Exported done')
+    summary['sftp_enabled'] = sftp_enabled
     return summary
+
+
+def sftp_items(job):
+    """
+    Export items to a remote server via SFTP.
+
+    :param job: A girder job object containing information about how to run the SFTP export
+    """
+    args = job.get('args', None)
+    export_folder = args[0]
+    user = args[1]
+    export_all = args[2]
+    sftp_report = []
+
+    sftp_mode = Setting().get(PluginSettings.WSI_DEID_SFTP_MODE)
+    sftp_enabled = SftpMode(sftp_mode) in [SftpMode.SFTP_AND_EXPORT, SftpMode.SFTP_ONLY]
+    sftp_destination = Setting().get(PluginSettings.WSI_DEID_REMOTE_PATH)
+    if not sftp_enabled:  # Sanity check
+        return
+
+    Job().updateJob(
+        job,
+        log=f'Beginning to transfer files to remote directory {sftp_destination}.\n',
+        status=JobStatus.RUNNING,
+        notify=True
+    )
+    if not sftp_destination:
+        message = 'SFTP destination not specified. No items transferred.\n'
+        Job().updateJob(
+            job, log=message, status=JobStatus.ERROR, notify=True)
+        raise Exception(message)
+
+    sftp_client = get_sftp_client()
+    if sftp_client is None:
+        message = 'There was an error establishing a connection to the remote SFTP server.\n'
+        Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
+        raise Exception(message)
+    try:
+        for filepath, file in Folder().fileList(export_folder, user, data=False):
+            try:
+                sftp_one_item(
+                    filepath,
+                    file,
+                    sftp_destination,
+                    sftp_client,
+                    job,
+                    export_all,
+                    user,
+                    sftp_report
+                )
+            except Exception:
+                Job().updateJob(
+                    job,
+                    log=f'There was an error transferring {filepath} to the remote destination.\n',
+                    status=JobStatus.ERROR,
+                )
+                # reraise exception to stop looping through files
+                raise
+        # create and export the report
+        exportNoteRejected(sftp_report, user, export_all, SFTP_HISTORY_KEY)
+        sftpReport(
+            job,
+            Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH),
+            sftp_report,
+            sftp_client,
+            sftp_destination,
+            user,
+        )
+        Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
+    except Exception as exc:
+        # log the exception
+        logger.exception(f'Job {job["_id"]} failed.')
+        # mark the job failed with details about the exception
+        Job.updateJob(
+            job,
+            log=f'Job failed with the following exception: {str(exc)}.',
+            status=JobStatus.ERROR
+        )
+    finally:
+        sftp_client.close()
+
+
+def get_sftp_client():
+    """Create an instance of paramiko.SFTPClient based on girder config."""
+    host = Setting().get(PluginSettings.WSI_DEID_REMOTE_HOST)
+    port = Setting().get(PluginSettings.WSI_DEID_REMOTE_PORT)
+    user = Setting().get(PluginSettings.WSI_DEID_REMOTE_USER)
+    password = Setting().get(PluginSettings.WSI_DEID_REMOTE_PASSWORD)
+
+    transport = paramiko.Transport((host, port))
+    transport.connect(username=user, password=password)
+    sftp_client = paramiko.SFTPClient.from_transport(transport)
+    return sftp_client
+
+
+def getSourcePath(item):
+    """
+    Get the large image path for a Girder File.
+    Return None if no tile source could be found.
+
+    :param item: The girder item to find the tile source path of
+    """
+    try:
+        tileSource = ImageItem().tileSource(item)
+    except Exception:
+        return None
+    return tileSource._getLargeImagePath()
+
+
+def skipExport(item, all, metadataProperty):
+    """
+    Determine whether a particular item should be exported as part of this export run.
+
+    :param item: the item we're checking
+    :param all: whether or not we're exporting all or recent items
+    :param metadataProperty: the metadata property that acts as a flag to check previous exports
+    """
+    return not all and item.get('meta', {}).get(metadataProperty)
+
+
+def appendExportRecord(item, user, metadataProperty, status=None):
+    """
+    Append information about the current export to an item's exported record. Return the most
+    recent export record.
+
+    :param item: the Girder item to add export history to
+    :param user: the user performing this export
+    :metadataProperty: the Girder item property that holds export history
+    """
+    from . import __version__
+    exportedRecord = item.get('meta', {}).get(metadataProperty, [])
+    newExportRecord = {
+        'time': datetime.datetime.utcnow().isoformat(),
+        'user': str(user['_id']) if user else None,
+        'version': __version__,
+    }
+    if status:
+        newExportRecord['status'] = status
+    exportedRecord.append(newExportRecord)
+    item = Item().setMetadata(item, {metadataProperty: exportedRecord})
+    return newExportRecord
+
+
+def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, user, reports):
+    """
+    Send a file to a remote server via SFTP.
+
+    :param filepath: the file path of this item
+    :param file: the file document of this item
+    :param destination: the remote folder for the file to be sent to
+    :param sftp_client: an instance of paramiko.SFTPClient
+    :param job: a Girder job. Used to log messages.
+    :param export_all: whether or not to export all items or newly approved items
+    :param user: the user who triggered the transfer
+    :param reports: array of export info to compile into a report spreadsheet
+    """
+    file_path_segments = filepath.split(os.path.sep)
+    image_dir = file_path_segments[-2]
+    file_name = file_path_segments[-1]
+    full_remote_path = os.path.join(destination, image_dir, file_name)
+    item = Item().load(file['itemId'], force=True, exc=False)
+    tile_source_path = getSourcePath(item)
+    if not tile_source_path:
+        Job().updateJob(job, log=f'Unable to locate tile source for {file_name}')
+        return
+    if skipExport(item, export_all, SFTP_HISTORY_KEY):
+        Job().updateJob(job, log=f'File {file_name} previously exported.\n')
+        return
+
+    remote_dirs = sftp_client.listdir(destination)
+    if image_dir not in remote_dirs:
+        sftp_client.mkdir(os.path.join(destination, image_dir))
+
+    existing_files = sftp_client.listdir(os.path.join(destination, image_dir))
+    if file_name in existing_files:
+        existing_file_stat = sftp_client.stat(full_remote_path)
+        if existing_file_stat.st_size == file['size']:
+            reports.append({'item': item, 'status': 'present'})
+        else:
+            reports.append({'item': item, 'status': 'different'})
+        Job().updateJob(
+            job,
+            log=f'A file with the name {file_name} already exists at the remote destination.\n',
+        )
+    else:
+        transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
+        if transferred_file_stat.st_size == file['size']:
+            Job().updateJob(
+                job,
+                log=f'File {file_name} successfully transferred to the remote destination.\n',
+            )
+            new_export_record = appendExportRecord(item, user, SFTP_HISTORY_KEY)
+            reports.append({
+                'item': item,
+                'status': 'finished',
+                'time': new_export_record['time']
+            })
+        else:
+            raise Exception(
+                f'There was an error transferring file {file_name} to remote destination.'
+            )
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
@@ -464,15 +687,9 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
     :returns: the number of bytes that are copied.  If mode is measure, no
         copying is actually done.
     """
-    from . import __version__
-
     item = Item().load(file['itemId'], force=True, exc=False)
-    try:
-        tileSource = ImageItem().tileSource(item)
-    except Exception:
-        return 0
-    sourcePath = tileSource._getLargeImagePath()
-    if not all and item.get('meta', {}).get('wsi_deidExported'):
+    sourcePath = getSourcePath(item)
+    if not sourcePath or skipExport(item, all, EXPORT_HISTORY_KEY):
         return 0
     filepath = filepath.split(os.path.sep, 1)[1]
     if mode == 'copy':
@@ -498,22 +715,16 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
                 subprocess.check_call(['cp', '--preserve=timestamps', sourcePath, destPath])
             except Exception:
                 shutil.copy2(sourcePath, destPath)
-            exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
-            exportedRecord.append({
-                'time': datetime.datetime.utcnow().isoformat(),
-                'user': str(user['_id']) if user else None,
-                'version': __version__,
-            })
-            item = Item().setMetadata(item, {'wsi_deidExported': exportedRecord})
+            newExportRecord = appendExportRecord(item, user, EXPORT_HISTORY_KEY)
             report.append({
                 'item': item,
                 'status': 'finished',
-                'time': exportedRecord[-1]['time'],
+                'time': newExportRecord['time'],
             })
         return file['size']
 
 
-def exportNoteRejected(report, user, all, allFiles=True):
+def exportNoteRejected(report, user, all, metadataProperty, allFiles=True):
     """
     Note items that are rejected or quarantined, collecting them for a report.
 
@@ -524,8 +735,6 @@ def exportNoteRejected(report, user, all, allFiles=True):
     :param allFiles: True to report on all files in all folders.  False to only
         report rejected and quarantined items.
     """
-    from . import __version__
-
     shortList = [
         ('rejected', PluginSettings.HUI_REJECTED_FOLDER),
         ('quarantined', PluginSettings.HUI_QUARANTINE_FOLDER),
@@ -543,34 +752,23 @@ def exportNoteRejected(report, user, all, allFiles=True):
                 ImageItem().tileSource(item)
             except Exception:
                 continue
-            if not all and item.get('meta', {}).get('wsi_deidExported'):
+            if skipExport(item, all, metadataProperty):
                 continue
-            exportedRecord = item.get('meta', {}).get('wsi_deidExported', [])
-            exportedRecord.append({
-                'time': datetime.datetime.utcnow().isoformat(),
-                'user': str(user['_id']) if user else None,
-                'version': __version__,
-                'status': status,
-            })
-            item = Item().setMetadata(item, {'wsi_deidExported': exportedRecord})
+            newExportRecord = appendExportRecord(item, user, metadataProperty, status=status)
             report.append({
                 'item': item,
                 'status': status,
-                'time': exportedRecord[-1]['time'],
+                'time': newExportRecord['time'],
             })
 
 
-def exportReport(ctx, exportPath, report, user):
+def buildExportDataSet(report):
     """
-    Create an export report.
+    Build a dataframe with export data. The results of this method
+    can be used to generate an export report spreadsheet.
 
-    :param ctx: a progress context.
-    :param exportPath: directory for exports
-    :param report: a list of files that were exported.
-    :param user: the user triggering this.
-    :return: the Girder file with the report
+    :param report: a list of information used to build the dataframe
     """
-    ctx.update(message='Generating report')
     statusDict = {
         'finished': 'Approved',
         'present': 'Approved',
@@ -665,12 +863,54 @@ def exportReport(ctx, exportPath, report, user):
         'UserIdentifiedPHIPII_Category_ImageComponents',
         'UserIdentifiedPHIPII_DetailedType_ImageComponents',
     ])
+    return df
+
+
+def exportReport(ctx, exportPath, report, user):
+    """
+    Create an export report.
+
+    :param ctx: a progress context.
+    :param exportPath: directory for exports
+    :param report: a list of files that were exported.
+    :param user: the user triggering this.
+    :return: the Girder file with the report
+    """
+    ctx.update(message='Generating report')
     exportName = 'DeID Export Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    df = buildExportDataSet(report)
     reportFolder = 'Export Job Reports'
     path = os.path.join(exportPath, exportName)
     ctx.update(message='Saving report')
     df.to_excel(path, index=False)
     return saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
+
+
+def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
+    """
+    Create an export report for SFTP transfers.
+
+    :param job: the girder job running the transfer.
+    :param exportPath: path for exports.
+    :param report: a list of files that were exported.
+    :param sftpClient: an instance of paramiko.SFTPClient
+    :param sftpDestination: the directory path for remote transfers.
+    :param user: the user triggering generation of the report.
+    :return: result of transferring the file to the remote SFTP destination.
+    """
+    Job().updateJob(job, log='Generating report.\n')
+    dateTime = datetime.datetime.now()
+    exportName = 'DeID Remote Export Job %s.xlsx' % dateTime.strftime('%Y%m%d %H%M%S')
+    path = os.path.join(exportPath, exportName)
+    df = buildExportDataSet(report)
+    Job().updateJob(job, log='Transferring report to remote destination.\n')
+    df.to_excel(path, index=False)
+    remotePath = os.path.join(sftpDestination, exportName)
+    stat = sftpClient.put(path, remotePath)
+    Job().updateJob(job, log='Report transferred to the remote destination.\n')
+    reportFolder = 'Remote Export Job Reports'
+    saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
+    return stat
 
 
 def saveToReports(path, mimetype=None, user=None, folderName=None):

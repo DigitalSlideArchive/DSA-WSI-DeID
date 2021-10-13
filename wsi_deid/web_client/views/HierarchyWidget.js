@@ -76,6 +76,9 @@ function performAction(action) {
             if (!any) {
                 text = 'Nothing to export.';
             }
+            if (resp['sftp_enabled']) {
+                text += ' Transfer of files to remote server via SFTP started in background.';
+            }
         }
         if (resp.fileId) {
             events.once('g:alert', () => {

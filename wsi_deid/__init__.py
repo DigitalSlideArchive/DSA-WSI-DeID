@@ -2,7 +2,7 @@ import girder
 import psutil
 from girder import plugin
 from girder.constants import AssetstoreType
-from girder.exceptions import GirderException
+from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
 from girder.models.folder import Folder
 from girder.models.setting import Setting
@@ -10,6 +10,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
+from .import_export import SftpMode, sftp_items # noqa F401
 from .rest import WSIDeIDResource
 
 try:
@@ -38,10 +39,30 @@ def validateSettingsFolder(doc):
 @setting_utilities.validator({
     PluginSettings.WSI_DEID_IMPORT_PATH,
     PluginSettings.WSI_DEID_EXPORT_PATH,
+    PluginSettings.WSI_DEID_REMOTE_PATH,
+    PluginSettings.WSI_DEID_REMOTE_HOST,
+    PluginSettings.WSI_DEID_REMOTE_USER,
+    PluginSettings.WSI_DEID_REMOTE_PASSWORD,
 })
 def validateSettingsImportExport(doc):
     if not doc.get('value', None):
         doc['value'] = None
+
+
+@setting_utilities.validator(PluginSettings.WSI_DEID_REMOTE_PORT)
+def validateRemoteSftpPort(doc):
+    value = doc.get('value', None)
+    if value is None:
+        doc['value'] = None
+    else:
+        if not isinstance(value, int):
+            raise ValidationException('Remote SFTP Port must be an integer value')
+
+
+@setting_utilities.validator(PluginSettings.WSI_DEID_SFTP_MODE)
+def validateSettingSftpMode(doc):
+    if not doc['value'] in [mode.value for mode in SftpMode]:
+        raise ValidationException('SFTP Mode must be one of "local", "remote", or "both"', 'value')
 
 
 class GirderPlugin(plugin.GirderPlugin):
