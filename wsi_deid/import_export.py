@@ -439,6 +439,18 @@ def exportItems(ctx, user=None, all=False):
     report = []
     summary = {}
     totalByteCount = 0
+    if sftp_enabled:
+        job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
+        sftp_job = Job().createLocalJob(
+            module='wsi_deid',
+            function='sftp_items',
+            title=job_title,
+            type='wsi_deid.sftp_job',
+            user=user,
+            asynchronous=True,
+            args=(exportFolder, user, all)
+        )
+        Job().scheduleJob(job=sftp_job)
     if export_enabled:
         for mode in ('measure', 'copy'):
             byteCount = 0
@@ -453,18 +465,6 @@ def exportItems(ctx, user=None, all=False):
         logger.info('Exported generated report')
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
-    if sftp_enabled:
-        job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
-        sftp_job = Job().createLocalJob(
-            module='wsi_deid',
-            function='sftp_items',
-            title=job_title,
-            type='wsi_deid.sftp_job',
-            user=user,
-            asynchronous=True,
-            args=(exportFolder, user, all)
-        )
-        Job().scheduleJob(job=sftp_job)
     summary['sftp_enabled'] = sftp_enabled
     return summary
 
@@ -504,36 +504,49 @@ def sftp_items(job):
         message = 'There was an error establishing a connection to the remote SFTP server.\n'
         Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
         raise Exception(message)
-    for filepath, file in Folder().fileList(export_folder, user, data=False):
-        try:
-            sftp_one_item(
-                filepath,
-                file,
-                sftp_destination,
-                sftp_client,
-                job,
-                export_all,
-                user,
-                sftp_report
-            )
-        except Exception:
-            Job().updateJob(
-                job,
-                log=f'There was an error transferring {filepath} to the remote destination.\n',
-                status=JobStatus.ERROR,
-            )
-            sftp_client.close()
-    # create and export the report
-    exportNoteRejected(sftp_report, user, export_all, SFTP_HISTORY_KEY)
-    sftpReport(
-        job,
-        Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH),
-        sftp_report,
-        sftp_client,
-        sftp_destination,
-    )
-    sftp_client.close()
-    Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
+    try:
+        for filepath, file in Folder().fileList(export_folder, user, data=False):
+            try:
+                sftp_one_item(
+                    filepath,
+                    file,
+                    sftp_destination,
+                    sftp_client,
+                    job,
+                    export_all,
+                    user,
+                    sftp_report
+                )
+            except Exception:
+                Job().updateJob(
+                    job,
+                    log=f'There was an error transferring {filepath} to the remote destination.\n',
+                    status=JobStatus.ERROR,
+                )
+                # reraise exception to stop looping through files
+                raise
+        # create and export the report
+        exportNoteRejected(sftp_report, user, export_all, SFTP_HISTORY_KEY)
+        sftpReport(
+            job,
+            Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH),
+            sftp_report,
+            sftp_client,
+            sftp_destination,
+            user,
+        )
+        Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
+    except Exception as exc:
+        # log the exception
+        logger.exception(f'Job {job["_id"]} failed.')
+        # mark the job failed with details about the exception
+        Job.updateJob(
+            job,
+            log=f'Job failed with the following exception: {str(exc)}.',
+            status=JobStatus.ERROR
+        )
+    finally:
+        sftp_client.close()
 
 
 def get_sftp_client():
@@ -623,12 +636,11 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
         Job().updateJob(job, log=f'File {file_name} previously exported.\n')
         return
 
-    sftp_client.chdir(destination)
-    remote_dirs = sftp_client.listdir()
+    remote_dirs = sftp_client.listdir(destination)
     if image_dir not in remote_dirs:
-        sftp_client.mkdir(image_dir)
+        sftp_client.mkdir(os.path.join(destination, image_dir))
 
-    existing_files = sftp_client.listdir(image_dir)
+    existing_files = sftp_client.listdir(os.path.join(destination, image_dir))
     if file_name in existing_files:
         existing_file_stat = sftp_client.stat(full_remote_path)
         if existing_file_stat.st_size == file['size']:
@@ -874,7 +886,7 @@ def exportReport(ctx, exportPath, report, user):
     return saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
 
 
-def sftpReport(job, exportPath, report, sftpClient, sftpDestination):
+def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
     """
     Create an export report for SFTP transfers.
 
@@ -883,6 +895,8 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination):
     :param report: a list of files that were exported.
     :param sftpClient: an instance of paramiko.SFTPClient
     :param sftpDestination: the directory path for remote transfers.
+    :param user: the user triggering generation of the report.
+    :return: result of transferring the file to the remote SFTP destination.
     """
     Job().updateJob(job, log='Generating report.\n')
     dateTime = datetime.datetime.now()
@@ -894,6 +908,8 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination):
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
     Job().updateJob(job, log='Report transferred to the remote destination.\n')
+    reportFolder = 'Remote Export Job Reports'
+    saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
     return stat
 
 
