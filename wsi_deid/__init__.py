@@ -1,3 +1,4 @@
+from _typeshed import SupportsItemAccess
 from os import stat
 import easyocr
 import psutil
@@ -22,6 +23,16 @@ from .process import get_image_text
 reader = None
 
 
+def get_reader():
+    global reader
+    if reader is None:
+        reader = easyocr.Reader(['en'], gpu=False, verbose=False)
+    return reader
+
+
+OCR_BATCH_JOB_TYPE = 'wsi_deid_batch_ocr'
+
+
 def start_ocr_item_job(job):
     Job().updateJob(job, log=f'Job {job.get("title")} started\n', status=JobStatus.RUNNING)
     job_args = job.get('args', None)
@@ -40,6 +51,20 @@ def start_ocr_item_job(job):
     Job().updateJob(
         job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
 
+
+def start_ocr_batch_job(job):
+    Job().updateJob(job, log='Starting batch job to OCR newly imported items\n', status=JobStatus.RUNNING)
+    job_args = job.get('args', None)
+    if job_args is None:
+        Job().updateJob(job, log=f'Jobs of type {OCR_BATCH_JOB_TYPE} require a list of girder items as an argument.\n', status=JobStatus.ERROR)
+        return
+    items = job_args[0]
+    ocr_reader = get_reader()
+    for item in items:
+        Job().updateJob(job, log=f'Finding label text for file: {item["name"]}')
+        label_text = get_image_text(item, ocr_reader)
+        Job().updateJob(job, log=f'Found text {label_text} in file {item["name"]}.\n')
+    Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
 
 def handle_ocr_item(event):
     global reader
