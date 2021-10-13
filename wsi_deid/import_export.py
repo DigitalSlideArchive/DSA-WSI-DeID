@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-from enum import Enum
 
 import jsonschema
 import magic
@@ -26,7 +25,7 @@ from .constants import PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
-SFTP_HISTORY_KEY = 'wsi_deidExportSftp'
+SFTP_HISTORY_KEY = 'wsi_deidExportedSftp'
 
 
 def readExcelData(filepath):
@@ -507,7 +506,16 @@ def sftp_items(job):
         raise Exception(message)
     for filepath, file in Folder().fileList(export_folder, user, data=False):
         try:
-            sftp_one_item(filepath, file, sftp_destination, sftp_client, job, export_all, user, sftp_report)
+            sftp_one_item(
+                filepath,
+                file,
+                sftp_destination,
+                sftp_client,
+                job,
+                export_all,
+                user,
+                sftp_report
+            )
         except Exception:
             Job().updateJob(
                 job,
@@ -645,7 +653,9 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
                 'time': new_export_record['time']
             })
         else:
-            raise Exception(f'There was an error transferring file {file_name} to remote destination.')
+            raise Exception(
+                f'There was an error transferring file {file_name} to remote destination.'
+            )
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
@@ -665,8 +675,6 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
     :returns: the number of bytes that are copied.  If mode is measure, no
         copying is actually done.
     """
-    from . import __version__
-
     item = Item().load(file['itemId'], force=True, exc=False)
     sourcePath = getSourcePath(item)
     if not sourcePath or skipExport(item, all, EXPORT_HISTORY_KEY):
@@ -740,6 +748,7 @@ def exportNoteRejected(report, user, all, metadataProperty, allFiles=True):
                 'status': status,
                 'time': newExportRecord['time'],
             })
+
 
 def buildExportDataSet(report):
     """
@@ -876,11 +885,11 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination):
     :param sftpDestination: the directory path for remote transfers.
     """
     Job().updateJob(job, log='Generating report.\n')
-    exportName = 'DeID Remote Export Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
-    reportFolder = 'Remote Export Job Reports'
+    dateTime = datetime.datetime.now()
+    exportName = 'DeID Remote Export Job %s.xlsx' % dateTime.strftime('%Y%m%d %H%M%S')
     path = os.path.join(exportPath, exportName)
     df = buildExportDataSet(report)
-    Job().updateJob(job, log=f'Transferring report to remote destination.\n')
+    Job().updateJob(job, log='Transferring report to remote destination.\n')
     df.to_excel(path, index=False)
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
