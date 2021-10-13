@@ -35,9 +35,10 @@ def start_ocr_item_job(job):
     item = job_args[0]
     global reader
     if reader is None:
-        reader = easyocr.Reader(['en'], gpu=False)
+        reader = easyocr.Reader(['en'], gpu=False, verbose=False)
     label_text = get_image_text(item, reader)
-    Job().updateJob(job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
+    Job().updateJob(
+        job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
 
 
 def handle_ocr_item(event):

@@ -198,14 +198,14 @@ def ocr_item(item, user):
         function='start_ocr_item_job',
         title=job_title,
         type='wsi_deid_ocr_job',
-        userId = user.get('_id', None),
+        user=user,
         asynchronous=True,
         args=(item,)
     )
     Job().scheduleJob(job=ocr_job)
     return {
-        'job_id': ocr_job._id,
-        'job_title': ocr_job.title,
+        'job_id': ocr_job.get('_id', None),
+        'job_title': ocr_job.get('title', None),
     }
 
 

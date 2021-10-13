@@ -419,7 +419,7 @@ wrap(ItemView, 'render', function (render) {
             process: { done: 'Item redacted.', fail: 'Failed to redact item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
             finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' },
-            ocr: {done: 'Ran OCR.', failed: 'Failed to run OCR.'}
+            ocr: {done: 'Started job to find label text with OCR.', failed: 'Failed to start job to find label text with OCR.'}
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
@@ -437,7 +437,7 @@ wrap(ItemView, 'render', function (render) {
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
-                text: actions[action].done,
+                text: alertMessage,
                 type: 'success',
                 timeout: 4000
             });

@@ -1274,8 +1274,7 @@ def get_text_from_associated_image(tile_source, label, reader):
         for word in text:
             if re.search(r'\w', word):
                 words.append(word)
-    return ", ".join(set(words))
-
+    return words
 
 def get_image_text(item, reader=None):
     """
