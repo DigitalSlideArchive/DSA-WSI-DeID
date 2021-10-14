@@ -924,7 +924,7 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
     df.to_excel(path, index=False)
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
-    Job().updateJob(job, log=f'Report transferred to the remote destination.\n\n')
+    Job().updateJob(job, log='Report transferred to the remote destination.\n\n')
     reportFolder = 'Remote Export Job Reports'
     saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
     return stat

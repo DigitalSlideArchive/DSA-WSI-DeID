@@ -84,7 +84,6 @@ function performAction(action) {
                     events.once('g:alert', () => {
                         $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track the remote transfer here.').attr('href', `/#job/${resp.sftp_job_id}`));
                     }, this);
-
                 }
             }
         }
