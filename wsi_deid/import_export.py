@@ -898,16 +898,16 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
     :param user: the user triggering generation of the report.
     :return: result of transferring the file to the remote SFTP destination.
     """
-    Job().updateJob(job, log='Generating report.\n')
     dateTime = datetime.datetime.now()
     exportName = 'DeID Remote Export Job %s.xlsx' % dateTime.strftime('%Y%m%d %H%M%S')
     path = os.path.join(exportPath, exportName)
+    Job().updateJob(job, log=f'Generating remote export report "{exportName}".\n')
     df = buildExportDataSet(report)
     Job().updateJob(job, log='Transferring report to remote destination.\n')
     df.to_excel(path, index=False)
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
-    Job().updateJob(job, log='Report transferred to the remote destination.\n')
+    Job().updateJob(job, log=f'Report "{exportName}" transferred to the remote destination.\n')
     reportFolder = 'Remote Export Job Reports'
     saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
     return stat
