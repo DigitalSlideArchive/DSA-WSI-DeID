@@ -10,7 +10,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
-from .import_export import SftpMode, sftp_items # noqa F401
+from .import_export import SftpMode
 from .rest import WSIDeIDResource
 
 try:

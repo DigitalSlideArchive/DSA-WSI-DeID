@@ -442,7 +442,7 @@ def exportItems(ctx, user=None, all=False):
     if sftp_enabled:
         job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
         sftp_job = Job().createLocalJob(
-            module='wsi_deid',
+            module='wsi_deid.import_export',
             function='sftp_items',
             title=job_title,
             type='wsi_deid.sftp_job',
