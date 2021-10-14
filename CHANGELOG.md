@@ -6,6 +6,7 @@
 - Allow redacting an area from a WSI (#224)
 - Add an option to allow editing redacted metadata (#221)
 - Add options to determine which metadata is visible and redactable (#219)
+- Add options for SFTP export (#223)
 
 ### Improvements
 - Added more logging during export (#222)
