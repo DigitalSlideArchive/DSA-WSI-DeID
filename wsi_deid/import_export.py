@@ -466,6 +466,9 @@ def exportItems(ctx, user=None, all=False):
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
     summary['sftp_enabled'] = sftp_enabled
+    summary['local_export_enabled'] = export_enabled
+    if sftp_enabled:
+        summary['sftp_job_id'] = sftp_job['_id']
     return summary
 
 
@@ -499,12 +502,17 @@ def sftp_items(job):
             job, log=message, status=JobStatus.ERROR, notify=True)
         raise Exception(message)
 
-    sftp_client = get_sftp_client()
+    try:
+        sftp_client = get_sftp_client()
+    except Exception as exc:
+        logger.exception(f'Job {job["_id"]} failed.')
+        connection_failed_message = (
+            f'Attempting to establish a remote connection resulted in: {str(exc)}'
+        )
+        Job().updateJob(job, log=connection_failed_message, status=JobStatus.ERROR, notify=True)
+        return
+
     previous_exported_count = 0
-    if sftp_client is None:
-        message = 'There was an error establishing a connection to the remote SFTP server.\n'
-        Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
-        raise Exception(message)
     try:
         for filepath, file in Folder().fileList(export_folder, user, data=False):
             try:
@@ -564,6 +572,8 @@ def get_sftp_client():
     transport = paramiko.Transport((host, port))
     transport.connect(username=user, password=password)
     sftp_client = paramiko.SFTPClient.from_transport(transport)
+    if sftp_client is None:
+        raise Exception('There was an error connecting to the remote server.')
     return sftp_client
 
 
