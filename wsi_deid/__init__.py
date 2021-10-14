@@ -1,5 +1,3 @@
-from _typeshed import SupportsItemAccess
-from os import stat
 import easyocr
 import psutil
 
@@ -9,6 +7,7 @@ from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
 from girder.models.folder import Folder
+from girder.models.item import Item
 from girder.models.setting import Setting
 from girder.utility import setting_utilities
 from girder_jobs.models.job import Job, JobStatus
@@ -30,16 +29,13 @@ def get_reader():
     return reader
 
 
-OCR_BATCH_JOB_TYPE = 'wsi_deid_batch_ocr'
-
-
 def start_ocr_item_job(job):
     Job().updateJob(job, log=f'Job {job.get("title")} started\n', status=JobStatus.RUNNING)
     job_args = job.get('args', None)
     if job_args is None:
         Job().updateJob(
             job,
-            log=f'Jobs of type {job.type} require a Girder item as an argument\n',
+            log=f'Expected a Girder item as an argument\n',
             status=JobStatus.ERROR
         )
         return
@@ -53,29 +49,29 @@ def start_ocr_item_job(job):
 
 
 def start_ocr_batch_job(job):
-    Job().updateJob(job, log='Starting batch job to OCR newly imported items\n', status=JobStatus.RUNNING)
+    """
+    Function to be run for girder jobs of type wsi_deid.batch_ocr. Jobs using this function
+    should include a list of girder item ids as an argument.
+
+    :param job: A girder job
+    """
+    Job().updateJob(job, log='Starting batch job to OCR newly imported items\n\n', status=JobStatus.RUNNING)
     job_args = job.get('args', None)
     if job_args is None:
-        Job().updateJob(job, log=f'Jobs of type {OCR_BATCH_JOB_TYPE} require a list of girder items as an argument.\n', status=JobStatus.ERROR)
+        Job().updateJob(job, log=f'Expected a list of girder items as an argument.\n', status=JobStatus.ERROR)
         return
-    items = job_args[0]
+    itemIds = job_args[0]
     ocr_reader = get_reader()
-    for item in items:
-        Job().updateJob(job, log=f'Finding label text for file: {item["name"]}')
+    for itemId in itemIds:
+        item = Item().load(itemId, force=True)
+        Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
         label_text = get_image_text(item, ocr_reader)
-        Job().updateJob(job, log=f'Found text {label_text} in file {item["name"]}.\n')
+        if len(label_text) > 0:
+            message = f'Found text {label_text} in file {item["name"]}.\n\n'
+        else:
+            message = f'Could not find text in file {item["name"]}.\n\n'
+        Job().updateJob(job, log=message)
     Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
-
-def handle_ocr_item(event):
-    global reader
-    if reader is None:
-        reader = easyocr.Reader(['en'], gpu=False)
-    if not event.item:
-        return
-    get_image_text(event.item, reader)
-
-
-events.bind('wsi_deid.ocr_item', 'handle_ocr_item', handle_ocr_item)
 
 
 try:

@@ -11,6 +11,7 @@ import openpyxl
 import pandas as pd
 import paramiko
 from girder import logger, events
+from girder_jobs.models.job import Job
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -174,7 +175,7 @@ def readExcelFiles(filelist, ctx):
     return manifest, report
 
 
-def ingestOneItem(importFolder, imagePath, record, ctx, user):
+def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     """
     Ingest a single image.
 
@@ -183,6 +184,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     :param record: a dictionary of information from the excel file.
     :param ctx: a progress context.
     :param user: the user triggering this.
+    :param newItems: a list which should be appended with newly added items
     """
     status = 'added'
     stat = os.stat(imagePath)
@@ -225,7 +227,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
         ctx.update(message='Failed to import %s' % name)
         return 'failed'
     item = Item().setMetadata(item, {'redactList': redactList})
-    events.daemon.trigger('wsi_deid.ocr_item', item)
+    # events.daemon.trigger('wsi_deid.ocr_item', item)
+    newItems.append(item['_id'])
     ctx.update(message='Imported %s' % name)
     return status
 
@@ -269,6 +272,7 @@ def ingestData(ctx, user=None):  # noqa
     manifest, excelReport = readExcelFiles(excelFiles, ctx)
     missingImages = []
     report = []
+    newItems = []
     for record in manifest.values():
         try:
             imagePath = os.path.join(os.path.dirname(record['excel']), record['name'])
@@ -290,12 +294,23 @@ def ingestData(ctx, user=None):  # noqa
         if record.get('errors'):
             status = 'badentry'
         else:
-            status = ingestOneItem(importFolder, imagePath, record, ctx, user)
+            status = ingestOneItem(importFolder, imagePath, record, ctx, user, newItems)
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     for image in imageFiles:
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
+    # kick off a batch job to run OCR on new items
+    batch_job = Job().createLocalJob(
+        module='wsi_deid',
+        function='start_ocr_batch_job',
+        title=f'Batch OCR triggered by import: {user["login"]}, {datetime.datetime.now().strftime("%Y%m%d %H%M%S")}',
+        type='wsi_deid.batch_ocr',
+        user=user,
+        asynchronous=True,
+        args=(newItems,),
+    )
+    Job().scheduleJob(job=batch_job)
     file = importReport(ctx, report, excelReport, user, importPath)
     return reportSummary(report, excelReport, file=file)
 

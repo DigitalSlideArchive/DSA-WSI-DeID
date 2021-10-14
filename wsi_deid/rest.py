@@ -197,7 +197,7 @@ def ocr_item(item, user):
         module='wsi_deid',
         function='start_ocr_item_job',
         title=job_title,
-        type='wsi_deid_ocr_job',
+        type='wsi_deid.ocr_job',
         user=user,
         asynchronous=True,
         args=(item,)
