@@ -490,17 +490,17 @@ def sftp_items(job):
     if not sftp_enabled:  # Sanity check
         return
 
-    Job().updateJob(
-        job,
-        log=f'Beginning to transfer files to remote directory {sftp_destination}.\n',
-        status=JobStatus.RUNNING,
-        notify=True
-    )
+    Job().updateJob(job, status=JobStatus.RUNNING)  # mark job as running
     if not sftp_destination:
         message = 'SFTP destination not specified. No items transferred.\n'
         Job().updateJob(
             job, log=message, status=JobStatus.ERROR, notify=True)
         raise Exception(message)
+
+    Job().updateJob(
+        job,
+        log=f'Starting transfer of files to remote directory: {sftp_destination}.\n\n',
+    )
 
     try:
         sftp_client = get_sftp_client()
@@ -511,7 +511,7 @@ def sftp_items(job):
         )
         Job().updateJob(job, log=connection_failed_message, status=JobStatus.ERROR, notify=True)
         return
-
+    Job().updateJob(job, log='Successfully established a connection with the remote host.\n\n')
     previous_exported_count = 0
     try:
         for filepath, file in Folder().fileList(export_folder, user, data=False):
@@ -646,7 +646,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
     item = Item().load(file['itemId'], force=True, exc=False)
     tile_source_path = getSourcePath(item)
     if not tile_source_path:
-        Job().updateJob(job, log=f'Unable to locate tile source for {file_name}')
+        Job().updateJob(job, log=f'Unable to locate tile source for {file_name}.\n')
         return ExportResult.EXPORT_FAILED
     if skipExport(item, export_all, SFTP_HISTORY_KEY):
         return ExportResult.PREVIOUSLY_EXPORTED
@@ -918,13 +918,13 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
     dateTime = datetime.datetime.now()
     exportName = 'DeID Remote Export Job %s.xlsx' % dateTime.strftime('%Y%m%d %H%M%S')
     path = os.path.join(exportPath, exportName)
-    Job().updateJob(job, log=f'Generating remote export report "{exportName}".\n')
+    Job().updateJob(job, log=f'\nGenerating remote export report "{exportName}".\n')
     df = buildExportDataSet(report)
     Job().updateJob(job, log='Transferring report to remote destination.\n')
     df.to_excel(path, index=False)
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
-    Job().updateJob(job, log=f'Report "{exportName}" transferred to the remote destination.\n')
+    Job().updateJob(job, log=f'Report transferred to the remote destination.\n\n')
     reportFolder = 'Remote Export Job Reports'
     saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
     return stat
