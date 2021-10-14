@@ -21,7 +21,7 @@ from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
-from .constants import PluginSettings, SftpMode
+from .constants import ExportResult, PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
@@ -500,6 +500,7 @@ def sftp_items(job):
         raise Exception(message)
 
     sftp_client = get_sftp_client()
+    previous_exported_count = 0
     if sftp_client is None:
         message = 'There was an error establishing a connection to the remote SFTP server.\n'
         Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
@@ -507,7 +508,7 @@ def sftp_items(job):
     try:
         for filepath, file in Folder().fileList(export_folder, user, data=False):
             try:
-                sftp_one_item(
+                export_reult = sftp_one_item(
                     filepath,
                     file,
                     sftp_destination,
@@ -517,6 +518,8 @@ def sftp_items(job):
                     user,
                     sftp_report
                 )
+                if export_reult == ExportResult.PREVIOUSLY_EXPORTED:
+                    previous_exported_count += 1
             except Exception:
                 Job().updateJob(
                     job,
@@ -535,6 +538,8 @@ def sftp_items(job):
             sftp_destination,
             user,
         )
+        if previous_exported_count > 0:
+            Job().updateJob(job, log=f'{previous_exported_count} file(s) previously exported.\n')
         Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
     except Exception as exc:
         # log the exception
@@ -622,6 +627,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
     :param export_all: whether or not to export all items or newly approved items
     :param user: the user who triggered the transfer
     :param reports: array of export info to compile into a report spreadsheet
+    :return: a member of enum ExportResult
     """
     file_path_segments = filepath.split(os.path.sep)
     image_dir = file_path_segments[-2]
@@ -631,10 +637,9 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
     tile_source_path = getSourcePath(item)
     if not tile_source_path:
         Job().updateJob(job, log=f'Unable to locate tile source for {file_name}')
-        return
+        return ExportResult.EXPORT_FAILED
     if skipExport(item, export_all, SFTP_HISTORY_KEY):
-        Job().updateJob(job, log=f'File {file_name} previously exported.\n')
-        return
+        return ExportResult.PREVIOUSLY_EXPORTED
 
     remote_dirs = sftp_client.listdir(destination)
     if image_dir not in remote_dirs:
@@ -651,6 +656,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
             job,
             log=f'A file with the name {file_name} already exists at the remote destination.\n',
         )
+        return ExportResult.ALREADY_EXISTS_AT_DESTINATION
     else:
         transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
         if transferred_file_stat.st_size == file['size']:
@@ -664,6 +670,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
                 'status': 'finished',
                 'time': new_export_record['time']
             })
+            return ExportResult.EXPORTED_SUCCESSFULLY
         else:
             raise Exception(
                 f'There was an error transferring file {file_name} to remote destination.'
