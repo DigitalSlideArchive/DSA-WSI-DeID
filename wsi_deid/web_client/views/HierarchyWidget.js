@@ -78,18 +78,20 @@ function performAction(action) {
                     text = 'Nothing to export.';
                 }
             }
-            if (resp['sftp_enabled']) {
-                text += ' Transfer of files to remote server via SFTP started in background.';
-                if (resp.sftp_job_id) {
-                    events.once('g:alert', () => {
-                        $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track the remote transfer here.').attr('href', `/#job/${resp.sftp_job_id}`));
-                    }, this);
-                }
-            }
         }
         if (resp.fileId) {
             events.once('g:alert', () => {
                 $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/api/v1/file/${resp.fileId}/download`));
+            }, this);
+        }
+        if (resp['sftp_enabled']) {
+            const message = ' Transfer of files to remote server via SFTP started in background.';
+            let sftpAlertInfo = $(`<span>${message} </span>`);
+            if (resp.sftp_job_id) {
+                sftpAlertInfo.append($('<a/>').text('Track remote transfer here.').attr('href', `/#job/${resp.sftp_job_id}`));
+            }
+            events.once('g:alert', () => {
+                $('#g-alerts-container:last div.alert:last').append(sftpAlertInfo);
             }, this);
         }
         events.trigger('g:alert', {
