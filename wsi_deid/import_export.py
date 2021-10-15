@@ -516,7 +516,7 @@ def sftp_items(job):
     try:
         for filepath, file in Folder().fileList(export_folder, user, data=False):
             try:
-                export_reult = sftp_one_item(
+                export_result = sftp_one_item(
                     filepath,
                     file,
                     sftp_destination,
@@ -526,7 +526,7 @@ def sftp_items(job):
                     user,
                     sftp_report
                 )
-                if export_reult == ExportResult.PREVIOUSLY_EXPORTED:
+                if export_result == ExportResult.PREVIOUSLY_EXPORTED:
                     previous_exported_count += 1
             except Exception:
                 Job().updateJob(
