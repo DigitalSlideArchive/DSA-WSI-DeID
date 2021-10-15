@@ -13,7 +13,8 @@ function performAction(action) {
     const actions = {
         ingest: { done: 'Import completed.', fail: 'Failed to import.' },
         export: { done: 'Recent export task completed.', fail: 'Failed to export recent items.  Check export file location for disk drive space or other system issues.' },
-        exportall: { done: 'Export all task completed.', fail: 'Failed to export all items.  Check export file location for disk drive space or other system issues.' }
+        exportall: { done: 'Export all task completed.', fail: 'Failed to export all items.  Check export file location for disk drive space or other system issues.' },
+        ocrall: { fail: 'Failed to start background task to find label text for images.'}
     };
 
     restRequest({
@@ -79,6 +80,11 @@ function performAction(action) {
                 }
             }
         }
+        if (resp.action === 'ocrall') {
+            // TODO alert user with job id
+            console.log(resp);
+            return;
+        }
         if (resp.fileId) {
             events.once('g:alert', () => {
                 $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/api/v1/file/${resp.fileId}/download`));
@@ -121,8 +127,12 @@ function performAction(action) {
 
 function addIngestControls() {
     var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
-    btns.prepend('<button class="wsi_deid-import-button btn btn-info">Import</button>');
+    btns.prepend(
+        '<button class="wsi_deid-import-button btn btn-info">Import</button>' +
+        '<button class="wsi_deid-ocr-button btn btn-info">Find label text</button>'
+    );
     this.events['click .wsi_deid-import-button'] = () => { performAction.call(this, 'ingest'); };
+    this.events['click .wsi_deid-ocr-button'] = () => { performAction.call(this, 'ocrall'); };
     this.delegateEvents();
 }
 

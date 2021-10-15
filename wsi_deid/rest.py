@@ -3,7 +3,7 @@ import os
 import tempfile
 
 import histomicsui.handlers
-from girder import logger, events
+from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
@@ -261,6 +261,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
+        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
 
@@ -352,6 +353,17 @@ class WSIDeIDResource(Resource):
             result = import_export.exportItems(ctx, user, True)
         result['action'] = 'exportall'
         return result
+
+    @autoDescribeRoute(
+        Description('Run OCR to find label text on all items in the import folder')
+        .errorResponse()
+    )
+    @access.user
+    def ocrReadyToProcess(self):
+        return {
+            'message': 'OCR all not implemented yet',
+            'action': 'ocrall'
+        }
 
     @autoDescribeRoute(
         Description('Get the ID of the next unprocessed item.')
