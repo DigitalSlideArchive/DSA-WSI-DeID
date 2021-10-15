@@ -227,7 +227,6 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
         ctx.update(message='Failed to import %s' % name)
         return 'failed'
     item = Item().setMetadata(item, {'redactList': redactList})
-    # events.daemon.trigger('wsi_deid.ocr_item', item)
     newItems.append(item['_id'])
     ctx.update(message='Imported %s' % name)
     return status
