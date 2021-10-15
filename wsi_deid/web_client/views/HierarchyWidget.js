@@ -61,28 +61,37 @@ function performAction(action) {
             }
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
-            [
-                ['finished', 'exported'],
-                ['present', 'previously exported and already exist(s) in export folder'],
-                ['different', 'with the same ImageID but different WSI file size already present in export folder. Remove the corresponding image(s) from the export directory and select Export again'],
-                ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to export folder'],
-                ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to export folder']
-            ].forEach(([key, desc]) => {
-                if (resp[key]) {
-                    text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
-                    any = true;
+            if (resp['local_export_enabled']) {
+                [
+                    ['finished', 'exported'],
+                    ['present', 'previously exported and already exist(s) in export folder'],
+                    ['different', 'with the same ImageID but different WSI file size already present in export folder. Remove the corresponding image(s) from the export directory and select Export again'],
+                    ['quarantined', 'currently quarantined.  Only files in "Approved" workflow stage are transferred to export folder'],
+                    ['rejected', 'with rejected status.  Only files in "Approved" workflow stage are transferred to export folder']
+                ].forEach(([key, desc]) => {
+                    if (resp[key]) {
+                        text += `  ${resp[key]} image${resp[key] > 1 ? 's' : ''} ${desc}.`;
+                        any = true;
+                    }
+                });
+                if (!any) {
+                    text = 'Nothing to export.';
                 }
-            });
-            if (!any) {
-                text = 'Nothing to export.';
-            }
-            if (resp['sftp_enabled']) {
-                text += ' Transfer of files to remote server via SFTP started in background.';
             }
         }
         if (resp.fileId) {
             events.once('g:alert', () => {
                 $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/api/v1/file/${resp.fileId}/download`));
+            }, this);
+        }
+        if (resp['sftp_enabled']) {
+            const message = ' Transfer of files to remote server via SFTP started in background.';
+            let sftpAlertInfo = $(`<span>${message} </span>`);
+            if (resp.sftp_job_id) {
+                sftpAlertInfo.append($('<a/>').text('Track remote transfer here.').attr('href', `/#job/${resp.sftp_job_id}`));
+            }
+            events.once('g:alert', () => {
+                $('#g-alerts-container:last div.alert:last').append(sftpAlertInfo);
             }, this);
         }
         events.trigger('g:alert', {

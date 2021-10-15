@@ -21,7 +21,7 @@ from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import process
-from .constants import PluginSettings, SftpMode
+from .constants import ExportResult, PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
@@ -466,6 +466,9 @@ def exportItems(ctx, user=None, all=False):
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
     summary['sftp_enabled'] = sftp_enabled
+    summary['local_export_enabled'] = export_enabled
+    if sftp_enabled:
+        summary['sftp_job_id'] = sftp_job['_id']
     return summary
 
 
@@ -487,27 +490,33 @@ def sftp_items(job):
     if not sftp_enabled:  # Sanity check
         return
 
-    Job().updateJob(
-        job,
-        log=f'Beginning to transfer files to remote directory {sftp_destination}.\n',
-        status=JobStatus.RUNNING,
-        notify=True
-    )
+    Job().updateJob(job, status=JobStatus.RUNNING)  # mark job as running
     if not sftp_destination:
         message = 'SFTP destination not specified. No items transferred.\n'
         Job().updateJob(
             job, log=message, status=JobStatus.ERROR, notify=True)
         raise Exception(message)
 
-    sftp_client = get_sftp_client()
-    if sftp_client is None:
-        message = 'There was an error establishing a connection to the remote SFTP server.\n'
-        Job().updateJob(job, log=message, status=JobStatus.ERROR, notify=True)
-        raise Exception(message)
+    Job().updateJob(
+        job,
+        log=f'Starting transfer of files to remote directory: {sftp_destination}.\n\n',
+    )
+
+    try:
+        sftp_client = get_sftp_client()
+    except Exception as exc:
+        logger.exception(f'Job {job["_id"]} failed.')
+        connection_failed_message = (
+            f'Attempting to establish a remote connection resulted in: {str(exc)}'
+        )
+        Job().updateJob(job, log=connection_failed_message, status=JobStatus.ERROR, notify=True)
+        return
+    Job().updateJob(job, log='Successfully established a connection with the remote host.\n\n')
+    previous_exported_count = 0
     try:
         for filepath, file in Folder().fileList(export_folder, user, data=False):
             try:
-                sftp_one_item(
+                export_result = sftp_one_item(
                     filepath,
                     file,
                     sftp_destination,
@@ -517,6 +526,8 @@ def sftp_items(job):
                     user,
                     sftp_report
                 )
+                if export_result == ExportResult.PREVIOUSLY_EXPORTED:
+                    previous_exported_count += 1
             except Exception:
                 Job().updateJob(
                     job,
@@ -535,6 +546,8 @@ def sftp_items(job):
             sftp_destination,
             user,
         )
+        if previous_exported_count > 0:
+            Job().updateJob(job, log=f'{previous_exported_count} file(s) previously exported.\n')
         Job().updateJob(job, log='Transfer of files complete.\n', status=JobStatus.SUCCESS)
     except Exception as exc:
         # log the exception
@@ -559,6 +572,8 @@ def get_sftp_client():
     transport = paramiko.Transport((host, port))
     transport.connect(username=user, password=password)
     sftp_client = paramiko.SFTPClient.from_transport(transport)
+    if sftp_client is None:
+        raise Exception('There was an error connecting to the remote server.')
     return sftp_client
 
 
@@ -622,6 +637,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
     :param export_all: whether or not to export all items or newly approved items
     :param user: the user who triggered the transfer
     :param reports: array of export info to compile into a report spreadsheet
+    :return: a member of enum ExportResult
     """
     file_path_segments = filepath.split(os.path.sep)
     image_dir = file_path_segments[-2]
@@ -630,11 +646,10 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
     item = Item().load(file['itemId'], force=True, exc=False)
     tile_source_path = getSourcePath(item)
     if not tile_source_path:
-        Job().updateJob(job, log=f'Unable to locate tile source for {file_name}')
-        return
+        Job().updateJob(job, log=f'Unable to locate tile source for {file_name}.\n')
+        return ExportResult.EXPORT_FAILED
     if skipExport(item, export_all, SFTP_HISTORY_KEY):
-        Job().updateJob(job, log=f'File {file_name} previously exported.\n')
-        return
+        return ExportResult.PREVIOUSLY_EXPORTED
 
     remote_dirs = sftp_client.listdir(destination)
     if image_dir not in remote_dirs:
@@ -651,6 +666,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
             job,
             log=f'A file with the name {file_name} already exists at the remote destination.\n',
         )
+        return ExportResult.ALREADY_EXISTS_AT_DESTINATION
     else:
         transferred_file_stat = sftp_client.put(tile_source_path, full_remote_path)
         if transferred_file_stat.st_size == file['size']:
@@ -664,6 +680,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
                 'status': 'finished',
                 'time': new_export_record['time']
             })
+            return ExportResult.EXPORTED_SUCCESSFULLY
         else:
             raise Exception(
                 f'There was an error transferring file {file_name} to remote destination.'
@@ -898,16 +915,16 @@ def sftpReport(job, exportPath, report, sftpClient, sftpDestination, user):
     :param user: the user triggering generation of the report.
     :return: result of transferring the file to the remote SFTP destination.
     """
-    Job().updateJob(job, log='Generating report.\n')
     dateTime = datetime.datetime.now()
     exportName = 'DeID Remote Export Job %s.xlsx' % dateTime.strftime('%Y%m%d %H%M%S')
     path = os.path.join(exportPath, exportName)
+    Job().updateJob(job, log=f'\nGenerating remote export report "{exportName}".\n')
     df = buildExportDataSet(report)
     Job().updateJob(job, log='Transferring report to remote destination.\n')
     df.to_excel(path, index=False)
     remotePath = os.path.join(sftpDestination, exportName)
     stat = sftpClient.put(path, remotePath)
-    Job().updateJob(job, log='Report transferred to the remote destination.\n')
+    Job().updateJob(job, log='Report transferred to the remote destination.\n\n')
     reportFolder = 'Remote Export Job Reports'
     saveToReports(path, XLSX_MIMETYPE, user, reportFolder)
     return stat

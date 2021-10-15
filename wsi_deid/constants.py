@@ -27,4 +27,11 @@ class SftpMode(Enum):
     SFTP_AND_EXPORT = 'both'
 
 
+class ExportResult(Enum):
+    EXPORTED_SUCCESSFULLY = 'success'
+    PREVIOUSLY_EXPORTED = 'previously exported'
+    ALREADY_EXISTS_AT_DESTINATION = 'already exists'
+    EXPORT_FAILED = 'failed'
+
+
 SettingDefault.defaults[PluginSettings.WSI_DEID_SFTP_MODE] = SftpMode.LOCAL_EXPORT_ONLY
