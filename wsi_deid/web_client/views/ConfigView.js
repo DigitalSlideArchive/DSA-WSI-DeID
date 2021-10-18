@@ -58,7 +58,8 @@ var ConfigView = View.extend({
             'wsi_deid.remote_port': { name: 'Remote SFTP Port', id: 'g-wsi-deid-remote-port' },
             'wsi_deid.remote_user': { name: 'Remote SFTP User', id: 'g-wsi-deid-remote-user' },
             'wsi_deid.remote_password': { name: 'Remote SFTP Password', id: 'g-wsi-deid-remote-password' },
-            'wsi_deid.sftp_mode': { name: 'SFTP Mode', id: 'g-wsi-deid-sftp-mode' }
+            'wsi_deid.sftp_mode': { name: 'SFTP Mode', id: 'g-wsi-deid-sftp-mode' },
+            'wsi_deid.ocr_on_import': { name: 'Find Label Text on Import', id: 'g-wsi-deid-ocr-on-import' }
         };
         this._browserWidgetView = {};
         $.when(

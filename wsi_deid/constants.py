@@ -19,6 +19,7 @@ class PluginSettings(object):
     WSI_DEID_REMOTE_PASSWORD = 'wsi_deid.remote_password'
     WSI_DEID_REMOTE_PORT = 'wsi_deid.remote_port'
     WSI_DEID_SFTP_MODE = 'wsi_deid.sftp_mode'
+    WSI_DEID_OCR_ON_IMPORT = 'wsi_deid.ocr_on_import'
 
 
 class SftpMode(Enum):

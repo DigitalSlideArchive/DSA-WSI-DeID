@@ -300,16 +300,18 @@ def ingestData(ctx, user=None):  # noqa
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
     # kick off a batch job to run OCR on new items
-    batch_job = Job().createLocalJob(
-        module='wsi_deid',
-        function='start_ocr_batch_job',
-        title=f'Batch OCR triggered by import: {user["login"]}, {datetime.datetime.now().strftime("%Y%m%d %H%M%S")}',
-        type='wsi_deid.batch_ocr',
-        user=user,
-        asynchronous=True,
-        args=(newItems,),
-    )
-    Job().scheduleJob(job=batch_job)
+    start_ocr_during_import = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
+    if start_ocr_during_import:
+        batch_job = Job().createLocalJob(
+            module='wsi_deid',
+            function='start_ocr_batch_job',
+            title=f'Batch OCR triggered by import: {user["login"]}, {datetime.datetime.now().strftime("%Y%m%d %H%M%S")}',
+            type='wsi_deid.batch_ocr',
+            user=user,
+            asynchronous=True,
+            args=(newItems,),
+        )
+        Job().scheduleJob(job=batch_job)
     file = importReport(ctx, report, excelReport, user, importPath)
     return reportSummary(report, excelReport, file=file)
 
