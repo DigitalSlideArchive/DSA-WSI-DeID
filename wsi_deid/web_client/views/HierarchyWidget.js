@@ -14,7 +14,7 @@ function performAction(action) {
         ingest: { done: 'Import completed.', fail: 'Failed to import.' },
         export: { done: 'Recent export task completed.', fail: 'Failed to export recent items.  Check export file location for disk drive space or other system issues.' },
         exportall: { done: 'Export all task completed.', fail: 'Failed to export all items.  Check export file location for disk drive space or other system issues.' },
-        ocrall: { fail: 'Failed to start background task to find label text for images.'}
+        ocrall: { done: 'Started background job to find label text on WSIs in this folder.', fail: 'Failed to start background task to find label text for images.'}
     };
 
     restRequest({
@@ -81,9 +81,9 @@ function performAction(action) {
             }
         }
         if (resp.action === 'ocrall') {
-            // TODO alert user with job id
-            console.log(resp);
-            return;
+            events.once('g:alert', () => {
+                $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.ocrJobId}`));
+            }, this)
         }
         if (resp.fileId) {
             events.once('g:alert', () => {

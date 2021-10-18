@@ -40,10 +40,8 @@ def start_ocr_item_job(job):
         )
         return
     item = job_args[0]
-    global reader
-    if reader is None:
-        reader = easyocr.Reader(['en'], gpu=False, verbose=False)
-    label_text = get_image_text(item, reader)
+    ocr_reader = get_reader()
+    label_text = get_image_text(item, ocr_reader)
     Job().updateJob(
         job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
 
@@ -55,7 +53,7 @@ def start_ocr_batch_job(job):
 
     :param job: A girder job
     """
-    Job().updateJob(job, log='Starting batch job to OCR newly imported items\n\n', status=JobStatus.RUNNING)
+    Job().updateJob(job, log='Starting batch job to find label text on items...\n\n', status=JobStatus.RUNNING)
     job_args = job.get('args', None)
     if job_args is None:
         Job().updateJob(job, log=f'Expected a list of girder items as an argument.\n', status=JobStatus.ERROR)

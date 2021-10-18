@@ -8,7 +8,6 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 import easyocr
-import traceback
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
@@ -1276,6 +1275,15 @@ def get_text_from_associated_image(tile_source, label, reader):
                 words.append(word)
     return words
 
+
+def add_label_text_to_tiff_tags(item, text):
+    tile_source = ImageItem().tileSource(item)
+    source_path = tile_source._getLargeImagePath()
+    tiffinfo = tifftools.read_tiff(source_path)
+    logger.info(f'TILE SOURCE: {tile_source}')
+    logger.info(f'\n{list(tile_source.__dict__)}\n')
+
+
 def get_image_text(item, reader=None):
     """
     Use OCR to identify and return text on any associated image.
@@ -1295,5 +1303,6 @@ def get_image_text(item, reader=None):
         key = 'macro'
     results = get_text_from_associated_image(tile_source, key, reader)
     # TODO: Evaluate adding this to the .tiff file metadata
+    add_label_text_to_tiff_tags(item, results)
     item = ImageItem().setMetadata(item, {'label_ocr': results})
     return results

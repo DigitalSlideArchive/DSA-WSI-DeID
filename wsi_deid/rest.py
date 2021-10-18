@@ -360,9 +360,27 @@ class WSIDeIDResource(Resource):
     )
     @access.user
     def ocrReadyToProcess(self):
+        # get items in the ingest folder
+        user = self.getCurrentUser()
+        itemIds = []
+        ingestFolder = Folder().load(Setting().get(PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE)
+        for _, file in Folder().fileList(ingestFolder, user, data=False):
+            itemIds.append(file['itemId'])
+        if len(itemIds) > 0:
+            jobStart = datetime.datetime.now().strftime("%Y%m%d %H%M%S")
+            batchJob = Job().createLocalJob(
+                module='wsi_deid',
+                function='start_ocr_batch_job',
+                title=f'Batch OCR triggered manually: {user["login"]}, {jobStart}',
+                type='wsi_deid.batch_ocr',
+                user=user,
+                asynchronous=True,
+                args=(itemIds,),
+            )
+            Job().scheduleJob(job=batchJob)
         return {
-            'message': 'OCR all not implemented yet',
-            'action': 'ocrall'
+            'ocrJobId': batchJob['_id'],
+            'action': 'ocrall',
         }
 
     @autoDescribeRoute(
