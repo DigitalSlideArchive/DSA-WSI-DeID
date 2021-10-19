@@ -42,6 +42,7 @@ setup(
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
         'celery<5',
+        'easyocr==1.4',
         'girder-homepage',
         'histomicsui',
         'jsonschema',
@@ -53,8 +54,6 @@ setup(
         'pyvips',
         'tifftools',
         'xlrd',
-        'pytesseract',
-        'easyocr',
     ],
     license='Apache Software License 2.0',
     long_description=readme,

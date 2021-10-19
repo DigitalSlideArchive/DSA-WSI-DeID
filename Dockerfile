@@ -18,8 +18,13 @@ RUN apt-get update && \
     curl \
     ca-certificates \
     vim \
-    tesseract-ocr && \
+    ffmpeg \
+    libsm6 \
+    libxext6 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# RUN apt-get update && \
+    # apt-get install ffmpeg libsm6 libxext6 -y
 
 RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \
     chmod +x /usr/bin/tini
