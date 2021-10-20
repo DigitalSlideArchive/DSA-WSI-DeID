@@ -14,7 +14,7 @@ import ItemViewTemplate from '../templates/ItemView.pug';
 import ItemViewNextTemplate from '../templates/ItemViewNext.pug';
 import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
-import { goToNextUnprocessedItem, pollForOcrResults } from '../utils';
+import { goToNextUnprocessedItem } from '../utils';
 
 let PHIPIITypes = [{
     category: 'Personal_Info',
@@ -395,21 +395,6 @@ wrap(ItemView, 'render', function (render) {
         }
     };
 
-    const alertResults = (results) => {
-        if (!results) {
-            results = 'Something went wrong';
-        }
-        alert(results);
-    };
-
-    const addOcrMetadata = (results) => {
-        console.log(results);
-        let metadataContainer = $('.g-widget-metadata-container');
-        console.log(metadataContainer);
-        console.log(metadataContainer.addMetadata);
-        console.log(this.model);
-    };
-
     const workflowButton = (event) => {
         const target = $(event.currentTarget);
         const action = target.attr('action');
@@ -419,7 +404,7 @@ wrap(ItemView, 'render', function (render) {
             process: { done: 'Item redacted.', fail: 'Failed to redact item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
             finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' },
-            ocr: {done: 'Started job to find label text with OCR.', failed: 'Failed to start job to find label text with OCR.'}
+            ocr: { done: 'Started job to find label text of this item.', failed: 'Failed to start job to find label text of this item.' }
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
@@ -432,7 +417,9 @@ wrap(ItemView, 'render', function (render) {
         }).done((resp) => {
             let alertMessage = actions[action].done;
             if (action === 'ocr') {
-               alertMessage = `Started Job ${resp.job_id}: ${resp.job_title}.`;
+                events.once('g:alert', () => {
+                    $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.job_id}`));
+                }, this);
             }
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
@@ -448,10 +435,7 @@ wrap(ItemView, 'render', function (render) {
                         this.model.fetch({ success: () => this.render() });
                     }
                 });
-            } else if (action === 'ocr') {
-                console.log(resp);
-                // pollForOcrResults(this.model.id, addOcrMetadata, 30);
-            }else {
+            } else {
                 this.model.fetch({ success: () => this.render() });
             }
         }).fail((resp) => {
