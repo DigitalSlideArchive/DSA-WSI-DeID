@@ -7,6 +7,7 @@ import re
 import subprocess
 import threading
 import xml.etree.ElementTree
+
 import easyocr
 import PIL.Image
 import PIL.ImageDraw
@@ -1255,7 +1256,7 @@ def redact_topleft_square(image):
 
 def image_to_byte_array(image):
     image_byte_array = io.BytesIO()
-    image.save(image_byte_array, "tiff")
+    image.save(image_byte_array, 'tiff')
     image_byte_array = image_byte_array.getvalue()
     return image_byte_array
 
@@ -1276,14 +1277,6 @@ def get_text_from_associated_image(tile_source, label, reader):
     return words
 
 
-def add_label_text_to_tiff_tags(item, text):
-    tile_source = ImageItem().tileSource(item)
-    source_path = tile_source._getLargeImagePath()
-    tiffinfo = tifftools.read_tiff(source_path)
-    logger.info(f'TILE SOURCE: {tile_source}')
-    logger.info(f'\n{list(tile_source.__dict__)}\n')
-
-
 def get_image_text(item, reader=None):
     """
     Use OCR to identify and return text on any associated image.
@@ -1302,7 +1295,6 @@ def get_image_text(item, reader=None):
     elif image_format == 'hamamatsu':
         key = 'macro'
     results = get_text_from_associated_image(tile_source, key, reader)
-    # TODO: Evaluate adding this to the .tiff file metadata
-    add_label_text_to_tiff_tags(item, results)
+    # TODO: Consider adding this to the .tiff file metadata
     item = ImageItem().setMetadata(item, {'label_ocr': results})
     return results

@@ -1,8 +1,7 @@
 import easyocr
-import psutil
-
 import girder
-from girder import plugin, events
+import psutil
+from girder import plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -15,8 +14,8 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
 from .import_export import SftpMode
-from .rest import WSIDeIDResource
 from .process import get_image_text
+from .rest import WSIDeIDResource
 
 # set up asynchronously running ocr
 reader = None
@@ -35,15 +34,18 @@ def start_ocr_item_job(job):
     if job_args is None:
         Job().updateJob(
             job,
-            log=f'Expected a Girder item as an argument\n',
+            log='Expected a Girder item as an argument\n',
             status=JobStatus.ERROR
         )
         return
     item = job_args[0]
     ocr_reader = get_reader()
     label_text = get_image_text(item, ocr_reader)
-    Job().updateJob(
-        job, log=f'Found text "{label_text}" in file {item["name"]}\n', status=JobStatus.SUCCESS)
+    if len(label_text) > 0:
+        message = f'Found label text {label_text} for file {item["name"]}\n',
+    else:
+        message = f'Could not find label tet for file {item["name"]}\n'
+    Job().updateJob(job, log=message, status=JobStatus.SUCCESS)
 
 
 def start_ocr_batch_job(job):
@@ -53,10 +55,18 @@ def start_ocr_batch_job(job):
 
     :param job: A girder job
     """
-    Job().updateJob(job, log='Starting batch job to find label text on items...\n\n', status=JobStatus.RUNNING)
+    Job().updateJob(
+        job,
+        log='Starting batch job to find label text on items...\n\n',
+        status=JobStatus.RUNNING
+    )
     job_args = job.get('args', None)
     if job_args is None:
-        Job().updateJob(job, log=f'Expected a list of girder items as an argument.\n', status=JobStatus.ERROR)
+        Job().updateJob(
+            job,
+            log='Expected a list of girder items as an argument.\n',
+            status=JobStatus.ERROR
+        )
         return
     itemIds = job_args[0]
     ocr_reader = get_reader()
@@ -65,9 +75,9 @@ def start_ocr_batch_job(job):
         Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
         label_text = get_image_text(item, ocr_reader)
         if len(label_text) > 0:
-            message = f'Found text {label_text} in file {item["name"]}.\n\n'
+            message = f'Found label text {label_text} for file {item["name"]}.\n\n'
         else:
-            message = f'Could not find text in file {item["name"]}.\n\n'
+            message = f'Could not find label text for file {item["name"]}.\n\n'
         Job().updateJob(job, log=message)
     Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
 

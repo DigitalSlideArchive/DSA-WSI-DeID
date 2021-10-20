@@ -10,8 +10,7 @@ import magic
 import openpyxl
 import pandas as pd
 import paramiko
-from girder import logger, events
-from girder_jobs.models.job import Job
+from girder import logger
 from girder.models.assetstore import Assetstore
 from girder.models.file import File
 from girder.models.folder import Folder
@@ -302,7 +301,7 @@ def ingestData(ctx, user=None):  # noqa
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     if startOcrDuringImport and len(newItems) > 1:
-        jobStart = datetime.datetime.now().strftime("%Y%m%d %H%M%S")
+        jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
         batchJob = Job().createLocalJob(
             module='wsi_deid',
             function='start_ocr_batch_job',

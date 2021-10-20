@@ -418,7 +418,7 @@ wrap(ItemView, 'render', function (render) {
             let alertMessage = actions[action].done;
             if (action === 'ocr') {
                 events.once('g:alert', () => {
-                    $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.job_id}`));
+                    $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.jobId}`));
                 }, this);
             }
             $('.g-hui-loading-overlay').remove();

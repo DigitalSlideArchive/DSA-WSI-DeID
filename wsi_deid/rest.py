@@ -16,9 +16,8 @@ from girder.models.setting import Setting
 from girder.models.upload import Upload
 from girder.models.user import User
 from girder.utility.model_importer import ModelImporter
-from girder.utility.progress import setResponseTimeLimit, ProgressContext
+from girder.utility.progress import ProgressContext, setResponseTimeLimit
 from girder_jobs.models.job import Job
-
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
@@ -204,8 +203,7 @@ def ocr_item(item, user):
     )
     Job().scheduleJob(job=ocr_job)
     return {
-        'job_id': ocr_job.get('_id', None),
-        'job_title': ocr_job.get('title', None),
+        'jobId': ocr_job.get('_id', None),
     }
 
 
@@ -288,7 +286,7 @@ class WSIDeIDResource(Resource):
         # Allow all users to do redaction actions; change to WRITE otherwise
         .modelParam('id', model=Item, level=AccessType.READ)
         .param('action', 'Action to perform on the item.  One of process, '
-               'reject, quarantine, unquarantine, finish.', paramType='path',
+               'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
                enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
         .errorResponse()
         .errorResponse('Write access was denied on the item.', 403)
@@ -363,11 +361,13 @@ class WSIDeIDResource(Resource):
         # get items in the ingest folder
         user = self.getCurrentUser()
         itemIds = []
-        ingestFolder = Folder().load(Setting().get(PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE)
+        ingestFolder = Folder().load(Setting().get(
+            PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE
+        )
         for _, file in Folder().fileList(ingestFolder, user, data=False):
             itemIds.append(file['itemId'])
         if len(itemIds) > 0:
-            jobStart = datetime.datetime.now().strftime("%Y%m%d %H%M%S")
+            jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
             batchJob = Job().createLocalJob(
                 module='wsi_deid',
                 function='start_ocr_batch_job',
