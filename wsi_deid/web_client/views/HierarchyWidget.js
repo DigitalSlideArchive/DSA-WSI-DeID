@@ -81,9 +81,13 @@ function performAction(action) {
             }
         }
         if (resp.action === 'ocrall') {
-            events.once('g:alert', () => {
-                $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.ocrJobId}`));
-            }, this);
+            if (resp.ocrJobId) {
+                events.once('g:alert', () => {
+                    $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.ocrJobId}`));
+                }, this);
+            } else {
+                text = 'No new items without existing label text metadata.';
+            }
         }
         if (resp.fileId) {
             events.once('g:alert', () => {

@@ -353,19 +353,22 @@ class WSIDeIDResource(Resource):
         return result
 
     @autoDescribeRoute(
-        Description('Run OCR to find label text on all items in the import folder')
+        Description('Run OCR to find label text on items in the import folder without OCR metadata')
         .errorResponse()
     )
     @access.user
     def ocrReadyToProcess(self):
-        # get items in the ingest folder
         user = self.getCurrentUser()
         itemIds = []
         ingestFolder = Folder().load(Setting().get(
             PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE
         )
+        resp = { 'action': 'ocrall' }
         for _, file in Folder().fileList(ingestFolder, user, data=False):
-            itemIds.append(file['itemId'])
+            itemId = file['itemId']
+            item = Item().load(itemId, force=True)
+            if item.get('meta', {}).get('label_ocr', None) is None:
+                itemIds.append(file['itemId'])
         if len(itemIds) > 0:
             jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
             batchJob = Job().createLocalJob(
@@ -378,10 +381,9 @@ class WSIDeIDResource(Resource):
                 args=(itemIds,),
             )
             Job().scheduleJob(job=batchJob)
-        return {
-            'ocrJobId': batchJob['_id'],
-            'action': 'ocrall',
-        }
+            resp['ocrJobId'] = batchJob['_id']
+        return resp
+
 
     @autoDescribeRoute(
         Description('Get the ID of the next unprocessed item.')
