@@ -40,12 +40,17 @@ def start_ocr_item_job(job):
         return
     item = job_args[0]
     ocr_reader = get_reader()
-    label_text = get_image_text(item, ocr_reader)
-    if len(label_text) > 0:
+    try:
+        label_text = get_image_text(item, ocr_reader)
+        status = JobStatus.SUCCESS
+    except Exception as e:
+        message = f'Attempting to find label text for file {item["name"]} resulted in {str(e)}.'
+        status = JobStatus.ERROR
+    if status == JobStatus.SUCCESS and len(label_text) > 0:
         message = f'Found label text {label_text} for file {item["name"]}\n',
     else:
-        message = f'Could not find label tet for file {item["name"]}\n'
-    Job().updateJob(job, log=message, status=JobStatus.SUCCESS)
+        message = f'Could not find label text for file {item["name"]}\n'
+    Job().updateJob(job, log=message, status=status)
 
 
 def start_ocr_batch_job(job):
@@ -70,17 +75,26 @@ def start_ocr_batch_job(job):
         return
     itemIds = job_args[0]
     ocr_reader = get_reader()
-    for itemId in itemIds:
-        item = Item().load(itemId, force=True)
-        Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
-        label_text = get_image_text(item, ocr_reader)
-        if len(label_text) > 0:
-            message = f'Found label text {label_text} for file {item["name"]}.\n\n'
-        else:
-            message = f'Could not find label text for file {item["name"]}.\n\n'
-        Job().updateJob(job, log=message)
-    Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
-
+    try:
+        for itemId in itemIds:
+            item = Item().load(itemId, force=True)
+            Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
+            try:
+                label_text = get_image_text(item, ocr_reader)
+                if len(label_text) > 0:
+                    message = f'Found label text {label_text} for file {item["name"]}.\n\n'
+                else:
+                    message = f'Could not find label text for file {item["name"]}.\n\n'
+                Job().updateJob(job, log=message)
+            except Exception as e:
+                raise e
+        Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
+    except Exception as e:
+        Job().updateJob(
+            job,
+            log=f'Batch job failed with the following exception: {str(e)}.',
+            status=JobStatus.ERROR,
+        )
 
 try:
     __version__ = get_distribution(__name__).version
