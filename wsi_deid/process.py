@@ -1261,19 +1261,54 @@ def image_to_byte_array(image):
     return image_byte_array
 
 
+def get_allow_list():
+    """
+    Get a string of allowed characters for EasyOCR to find.
+    """
+    return 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:&.'
+
+
 def get_text_from_associated_image(tile_source, label, reader):
     associated_image, _ = tile_source.getAssociatedImage(label)
     associated_image = PIL.Image.open(io.BytesIO(associated_image))
     words = []
-    for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
+    for idx, rotate in enumerate([None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]):
+        rotation_words = {}
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
-            text = reader.readtext(image_to_byte_array(rotated_image), detail=0)
+            text_results = reader.readtext(
+                image_to_byte_array(rotated_image),
+                allowlist=get_allow_list(),
+                contrast_ths=0.75,
+                adjust_contrast=1.0,
+                rotation_info=[90, 180, 270],
+            )
         else:
-            text = reader.readtext(image_to_byte_array(associated_image), detail=0)
-        for word in text:
-            if re.search(r'\w', word):
-                words.append(word)
+            text_results = reader.readtext(
+                image_to_byte_array(associated_image),
+                allowlist=get_allow_list(),
+                contrast_ths=0.75,
+                adjust_contrast=1.0,
+                rotation_info=[90, 180, 270],
+            )
+        confidence_levels = []
+        for idx, item in enumerate(text_results):
+            logger.info(f'\n{item}\n')
+            _, found_text, confidence = item
+            confidence_levels.append(confidence)
+            rotation_words[f'item_{idx + 1}'] = {
+                'confidence': confidence,
+                'text': found_text
+            }
+        avg_confidence = 0
+        if len(confidence_levels) > 0:
+            avg_confidence = sum(confidence_levels) / len(confidence_levels)
+        rotation_result = {
+            'num_rotations': idx,
+            'found_text': rotation_words,
+            'confidence (avg)': avg_confidence,
+        }
+        words.append(rotation_result)
     return words
 
 
