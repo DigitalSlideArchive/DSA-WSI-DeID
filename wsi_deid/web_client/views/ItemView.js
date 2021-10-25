@@ -308,6 +308,38 @@ wrap(ItemView, 'render', function (render) {
         window.setTimeout(() => resizeRedactBackground(elem), 1000);
     };
 
+    const addAssociatedImageMaps = () => {
+        this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
+            elem = $(elem);
+            let imageElem = elem.find('.g-widget-auximage-image');
+            elem.wrap($('<div class="wsi-deid-auximage-container"></div>'));
+            let keyname = elem.attr('auximage');
+            if (!['label', 'macro'].includes(keyname)) {
+                return true;
+            }
+            let mapId = `${keyname}-map`;
+            let tilesPath = `/api/v1/item/${this.model.id}/tiles`;
+            let mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
+            elem.after(mapDiv);
+
+            fetch(`${tilesPath}/images/${keyname}/metadata`)
+                .then((response) => response.json())
+                .then((imageInfo) => {
+                    let params = window.geo.util.pixelCoordinateParams(
+                        `#${mapId}`, imageInfo.sizeX, imageInfo.sizeY, imageInfo.sizeX, imageInfo.sizeY);
+                    $(`#${mapId}`).width(imageInfo.sizeX * 1.1).height(imageInfo.sizeY * 1.1);
+                    const map = window.geo.map(params.map);
+                    params.layer.url = `${tilesPath}/images/${keyname}`;
+                    map.createLayer('osm', params.layer);
+                    map.geoOn(window.geo.event.mouseclick, function (evt) {
+                        console.log(`Clicked the ${keyname} map`);
+                    });
+                    imageElem.remove();
+                    return null;
+                });
+        });
+    };
+
     const addRedactionControls = (showControls, settings) => {
         /* if showControls is false, the tabs are still adjusted and some
          * fields may be hidden, but the actual redaction controls aren't
@@ -516,6 +548,7 @@ wrap(ItemView, 'render', function (render) {
     const adjustControls = (folderType, settings) => {
         let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
         addRedactionControls(hasRedactionControls, settings || {});
+        addAssociatedImageMaps();
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
