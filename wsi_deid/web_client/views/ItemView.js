@@ -240,7 +240,11 @@ wrap(ItemView, 'render', function (render) {
             });
             elem = $('<span class="g-hui-redact-label"></span>').append(elem);
         }
-        parentElem.append(elem);
+        if (['label', 'macro'].includes(keyname)) {
+            const redactArea = ItemViewRedactAreaTemplate({ keyname: keyname });
+            this.events['click .g-widget-auximage-title .g-widget-redact-area-container button'] = redactAreaAuxImage;
+            parentElem.append(elem).append(redactArea);
+        }
     };
 
     const addNewValueEntryField = (parentElem, keyname, redactRecord, settings) => {
@@ -314,6 +318,7 @@ wrap(ItemView, 'render', function (render) {
             let imageElem = elem.find('.g-widget-auximage-image');
             elem.wrap($('<div class="wsi-deid-auximage-container"></div>'));
             let keyname = elem.attr('auximage');
+            // (WIP) Don't include label if the settings dictate to always redact label
             if (!['label', 'macro'].includes(keyname)) {
                 return true;
             }
@@ -517,6 +522,12 @@ wrap(ItemView, 'render', function (render) {
         this.putRedactList(redactList, 'handleWSIAnnotationMode');
         this.$el.find('.g-widget-redact-area-container button').removeClass('active');
         this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
+    };
+
+    const redactAreaAuxImage = (event) => {
+        event.stopPropagation();
+        console.log(event);
+        return false;
     };
 
     const redactAreaWSI = (event) => {
