@@ -318,25 +318,25 @@ wrap(ItemView, 'render', function (render) {
                 return true;
             }
             let mapId = `${keyname}-map`;
-            let tilesPath = `/api/v1/item/${this.model.id}/tiles`;
+            let tilesPath = `item/${this.model.id}/tiles`;
             let mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
             elem.after(mapDiv);
 
-            fetch(`${tilesPath}/images/${keyname}/metadata`)
-                .then((response) => response.json())
-                .then((imageInfo) => {
-                    let params = window.geo.util.pixelCoordinateParams(
-                        `#${mapId}`, imageInfo.sizeX, imageInfo.sizeY, imageInfo.sizeX, imageInfo.sizeY);
-                    $(`#${mapId}`).width(imageInfo.sizeX * 1.1).height(imageInfo.sizeY * 1.1);
-                    const map = window.geo.map(params.map);
-                    params.layer.url = `${tilesPath}/images/${keyname}`;
-                    map.createLayer('osm', params.layer);
-                    map.geoOn(window.geo.event.mouseclick, function (evt) {
-                        console.log(`Clicked the ${keyname} map`);
-                    });
-                    imageElem.remove();
-                    return null;
+            restRequest({
+                url: `${tilesPath}/images/${keyname}/metadata`,
+                error: null
+            }).done((resp) => {
+                let params = window.geo.util.pixelCoordinateParams(
+                    `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
+                $(`#${mapId}`).width(resp.sizeX * 1.1).height(resp.sizeY * 1.1);
+                const map = window.geo.map(params.map);
+                params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
+                map.createLayer('osm', params.layer);
+                map.geoOn(window.geo.event.mouseclick, function (evt) {
+                    console.log(`Clicked the ${keyname} map`);
                 });
+                imageElem.remove();
+            });
         });
     };
 
