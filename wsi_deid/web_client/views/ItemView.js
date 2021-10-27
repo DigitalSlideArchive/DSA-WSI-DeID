@@ -48,6 +48,8 @@ const formats = {
     none: ''
 };
 
+let auxImageMaps = {};
+
 wrap(ItemView, 'render', function (render) {
     this.getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
@@ -335,10 +337,13 @@ wrap(ItemView, 'render', function (render) {
                     `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
                 $(`#${mapId}`).width(resp.sizeX * 1.1).height(resp.sizeY * 1.1);
                 const map = window.geo.map(params.map);
+                auxImageMaps[keyname] = map;
                 params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
                 map.createLayer('osm', params.layer);
-                map.geoOn(window.geo.event.mouseclick, function (evt) {
-                    console.log(`Clicked the ${keyname} map`);
+                map.createLayer('annotation', {
+                    annotations: ['polygon'],
+                    showLabels: false,
+                    clickToEdit: false
                 });
                 imageElem.remove();
             });
@@ -488,11 +493,24 @@ wrap(ItemView, 'render', function (render) {
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
     };
 
+    const handleAuxImageAnnotationMode = (event) => {
+        const eventMap = event.geo._triggeredBy;
+        const annLayer = eventMap.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+        const keyname = annLayer.layerName;
+        const button = this.$el.find('.g-widget-auximage-title .g-widget-redact-area-container button').filter((el) => $(el).attr('keyname') === keyname)[0];
+        const container = button.parent();
+        if (annLayer.mode()) {
+
+        }
+        console.log(container);
+        console.log(button);
+    };
+
     const handleWSIAnnotationMode = () => {
         const annLayer = getWSIAnnotationLayer();
         if (annLayer.mode()) {
-            this.$el.find('.g-widget-redact-area-container button').addClass('active');
-            this.$el.find('.g-widget-redact-area-container').addClass('area-adding').removeClass('area-set');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container button').addClass('active');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container').addClass('area-adding').removeClass('area-set');
             return;
         }
         annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
@@ -520,26 +538,49 @@ wrap(ItemView, 'render', function (render) {
             }
         }
         this.putRedactList(redactList, 'handleWSIAnnotationMode');
-        this.$el.find('.g-widget-redact-area-container button').removeClass('active');
-        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container button').removeClass('active');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
     };
 
     const redactAreaAuxImage = (event) => {
         event.stopPropagation();
-        console.log(event);
+        let clickedButton = $(event.currentTarget);
+        let buttonContainer = clickedButton.parent();
+        let keyname = clickedButton.attr('keyname');
+        const map = auxImageMaps[keyname];
+        const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+        if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
+            clickedButton.removeClass('active');
+            buttonContainer.removeClass('area-set').removeClass('area-adding');
+            annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
+            annLayer.draw();
+            if (annLayer.mode()) {
+                annLayer.mode(null);
+            }
+            return false;
+        }
+
+        annLayer.options('clickToEdit', true);
+        annLayer.mode('polygon');
+        clickedButton.addClass('active');
+        buttonContainer.addClass('area-adding');
+
+        annLayer.geoOff(window.geo.event.annotation.mode, handleAuxImageAnnotationMode);
+        annLayer.geoOn(window.geo.event.annotation.mode, handleAuxImageAnnotationMode);
         return false;
     };
 
     const redactAreaWSI = (event) => {
         event.stopPropagation();
         const annLayer = getWSIAnnotationLayer();
-        if (this.$el.find('.g-widget-redact-area-container.area-adding,.g-widget-redact-area-container.area-set').length) {
+        console.log(annLayer.renderer());
+        if (this.$el.find('.g-item-info-header.g-widget-redact-area-container.area-adding,.g-item-info-header.g-widget-redact-area-container.area-set').length) {
             let redactList = this.getRedactList();
             redactList.area = redactList.area || {};
             delete redactList.area._wsi;
             this.putRedactList(redactList, 'redactAreaWSI');
-            this.$el.find('.g-widget-redact-area-container button').removeClass('active');
-            this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').removeClass('area-set');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container button').removeClass('active');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').removeClass('area-set');
             annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
             annLayer.draw();
             if (annLayer.mode()) {
@@ -549,8 +590,8 @@ wrap(ItemView, 'render', function (render) {
         }
         annLayer.options('clickToEdit', true);
         annLayer.mode('polygon');
-        this.$el.find('.g-widget-redact-area-container button').addClass('active');
-        this.$el.find('.g-widget-redact-area-container').addClass('area-adding');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container button').addClass('active');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').addClass('area-adding');
         // when entering any non-null mode, disable drawing on associated images
         annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
         annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);
@@ -599,7 +640,7 @@ wrap(ItemView, 'render', function (render) {
         const annLayer = getWSIAnnotationLayer();
         annLayer.geojson(redactList.area._wsi.geojson);
         annLayer.draw();
-        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').addClass('area-set');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').addClass('area-set');
         annLayer.options('clickToEdit', true);
         annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
         annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);
