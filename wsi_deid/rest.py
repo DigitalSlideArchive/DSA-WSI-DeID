@@ -1,8 +1,12 @@
+import copy
 import datetime
 import os
 import tempfile
+import time
 
+import girder_large_image
 import histomicsui.handlers
+from bson import ObjectId
 from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
@@ -262,6 +266,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('GET', ('folder', ':id', 'item_list'), self.folderItemList)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -422,3 +427,98 @@ class WSIDeIDResource(Resource):
         folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
         totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
         return {'folders': folderCount, 'items': totalCount - folderCount, 'total': totalCount}
+
+    def _folderItemListGetItem(self, item):
+        try:
+            metadata = ImageItem().getMetadata(item)
+        except Exception:
+            return None
+        internal_metadata = ImageItem().getInternalMetadata(item)
+        images = ImageItem().getAssociatedImagesList(item)
+        return {
+            'item': item,
+            'metadata': metadata,
+            'internal_metadata': internal_metadata,
+            'images': images,
+        }
+
+    def _commonValues(self, common, entry):
+        if common is None:
+            return copy.deepcopy(entry)
+        for k, v in entry.items():
+            if isinstance(v, dict):
+                if isinstance(common.get(k), dict):
+                    self._commonValues(common[k], v)
+                elif k in common:
+                    del common[k]
+            elif k in common and common.get(k) != v:
+                del common[k]
+        for k in list(common.keys()):
+            if k not in entry:
+                del common[k]
+        return common
+
+    def _allKeys(self, allkeys, entry, parent=None):
+        for k, v in entry.items():
+            subkey = tuple(list(parent or ()) + [k])
+            if isinstance(v, dict):
+                self._allKeys(allkeys, v, subkey)
+            else:
+                allkeys.add(subkey)
+
+    @autoDescribeRoute(
+        Description(
+            'Return a list of all items in a folder with enough information '
+            'to allow review and redaction.')
+        .modelParam('id', model=Folder, level=AccessType.READ)
+        .jsonParam('images', 'A list of image ids to include', required=False)
+        .pagingParams(defaultSort='lowerName')
+        .errorResponse()
+        .errorResponse('Read access was denied on the parent folder.', 403)
+    )
+    @access.public(scope=TokenScope.DATA_READ)
+    def folderItemList(self, folder, images, limit, offset, sort):
+        import concurrent.futures
+
+        starttime = time.time()
+        user = self.getCurrentUser()
+        filters = {'largeImage.fileId': {'$exists': True}}
+        if isinstance(images, list):
+            filters['_id'] = {'$in': [ObjectId(id) for id in images]}
+        cursor = Folder().childItems(
+            folder=folder, limit=limit, offset=offset, sort=sort,
+            filters=filters)
+        response = {
+            'sort': sort,
+            'offset': offset,
+            'limit': limit,
+            'count': cursor.count(),
+            'folder': folder,
+            'rootpath': Folder().parentsToRoot(folder, user=user, level=AccessType.READ),
+            'large_image_settings': {
+                k: Setting().get(k) for k in [
+                    getattr(girder_large_image.constants.PluginSettings, key)
+                    for key in dir(girder_large_image.constants.PluginSettings)
+                    if key.startswith('LARGE_IMAGE_')]},
+            'wsi_deid_settings': config.getConfig(),
+        }
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            response['items'] = [
+                item for item in
+                executor.map(self._folderItemListGetItem, cursor)
+                if item is not None]
+        images = {}
+        common = None
+        allmeta = set()
+        for item in response['items']:
+            for image in item['images']:
+                images[image] = images.get(image, 0) + 1
+            common = self._commonValues(common, item['internal_metadata'])
+            self._allKeys(allmeta, item['internal_metadata'])
+        response['images'] = images
+        response['image_names'] = [entry[-1] for entry in sorted(
+            [(key != 'label', key != 'macro', key) for key in images.keys()])]
+        response['common_internal_metadata'] = common
+        response['all_metadata_keys'] = [list(entry) for entry in sorted(allmeta)]
+        response['_time'] = time.time() - starttime
+        return response
