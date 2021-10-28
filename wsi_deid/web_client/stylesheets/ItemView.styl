@@ -41,6 +41,7 @@
   .g-widget-auximage-image img
     opacity 0.5
 
+
 .g-widget-auximage.redacted, .g-widget-auximage.redact-square
   span.g-hui-redact-square-span
     visibility visible
@@ -84,9 +85,6 @@
   .g-widget-auximage-image-redact-square:after
     background linear-gradient(to top left, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%), linear-gradient(to top right, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%)
 
-.g-widget-auximage-title > .g-widget-redact-area-container
-  display inline
-
 .g-widget-metadata-container.workflow .g-workflow-button
   margin 10px
 
@@ -121,6 +119,15 @@
   float right
   padding-right 10px
 
+.g-widget-auximage-title > .g-widget-redact-area-container
+  // display inline
+  display none
+  margin-left 10px
+
+.g-widget-auximage.redacted .g-widget-auximage-title > .g-widget-redact-area-container
+  display inline
+  margin-left 10px
+
 .g-widget-redact-area-container
   button
     padding 3px 5px
@@ -144,3 +151,6 @@
       display unset
   select.g-hui-redact
     visibility unset
+
+.no-disp
+  display none

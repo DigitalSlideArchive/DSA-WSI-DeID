@@ -314,14 +314,21 @@ wrap(ItemView, 'render', function (render) {
         window.setTimeout(() => resizeRedactBackground(elem), 1000);
     };
 
-    const addAssociatedImageMaps = () => {
+    const addAssociatedImageMaps = (settings) => {
+        const redactList = this.getRedactList();
         this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
             elem = $(elem);
             let imageElem = elem.find('.g-widget-auximage-image');
             elem.wrap($('<div class="wsi-deid-auximage-container"></div>'));
             let keyname = elem.attr('auximage');
-            // (WIP) Don't include label if the settings dictate to always redact label
+            // return true to 'continue' the loop. use configuration to drive which images to skip map creation
             if (!['label', 'macro'].includes(keyname)) {
+                return true;
+            }
+            if (keyname === 'macro' && settings.redact_macro_square) {
+                return true;
+            }
+            if (keyname === 'label' && settings.always_redact_label) {
                 return true;
             }
             let mapId = `${keyname}-map`;
@@ -346,7 +353,11 @@ wrap(ItemView, 'render', function (render) {
                     showLabels: false,
                     clickToEdit: false
                 });
-                imageElem.addClass('no-disp');
+                if (redactList.area[keyname]) {
+                    imageElem.addClass('no-disp');
+                } else {
+                    mapDiv.addClass('no-disp');
+                }
             });
         });
     };
@@ -406,8 +417,7 @@ wrap(ItemView, 'render', function (render) {
                 let redactSquare = false;
                 if (keyname === 'macro') {
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
-                    // elem.find('.g-widget-auximage-image').append(redactsquare);
-                    auxImageMaps[keyname].node().append(redactsquare);
+                    elem.find('.g-widget-auximage-image').append(redactsquare);
                     resizeRedactSquare(elem);
                     if (!settings.redact_macro_square) {
                         let check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
@@ -495,6 +505,20 @@ wrap(ItemView, 'render', function (render) {
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
     };
 
+    const toggleAuxImageMapDisplay = (map, image, showMap) => {
+        // Toggle showing the image or a geojs map of the image.
+        // If redacting the whole image or top/right square, no need to show the map.
+        // param 'map' should be the container of the geojs map
+        // param 'image' should be the container of the associated image
+        if (showMap) {
+            map.removeClass('no-disp');
+            image.addClass('no-disp');
+        } else {
+            map.addClass('no-disp');
+            image.removeClass('no-disp');
+        }
+    };
+
     const handleAuxImageAnnotationMode = (event) => {
         const eventMap = event.geo._triggeredBy;
         const annLayer = eventMap.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
@@ -580,6 +604,7 @@ wrap(ItemView, 'render', function (render) {
         let buttonContainer = clickedButton.parent();
         let keyname = clickedButton.attr('keyname');
         const map = auxImageMaps[keyname];
+        const imageElem = this.$el.find(`.g-widget-metadata-container.auximage .wsi-deid-auximage-container .g-widget-auximage[auximage=${keyname}] .g-widget-auximage-image img`);
         const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
         if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
             clickedButton.removeClass('active');
@@ -589,9 +614,11 @@ wrap(ItemView, 'render', function (render) {
             if (annLayer.mode()) {
                 annLayer.mode(null);
             }
+            toggleAuxImageMapDisplay(map.node(), imageElem.parent(), false);
             return false;
         }
 
+        toggleAuxImageMapDisplay(map.node(), imageElem.parent(), true);
         annLayer.options('clickToEdit', true);
         annLayer.mode('polygon');
         clickedButton.addClass('active');
@@ -630,8 +657,8 @@ wrap(ItemView, 'render', function (render) {
 
     const adjustControls = (folderType, settings) => {
         let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
-        addAssociatedImageMaps();
         addRedactionControls(hasRedactionControls, settings || {});
+        addAssociatedImageMaps(settings);
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
