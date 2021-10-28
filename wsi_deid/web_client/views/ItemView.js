@@ -327,6 +327,7 @@ wrap(ItemView, 'render', function (render) {
             let mapId = `${keyname}-map`;
             let tilesPath = `item/${this.model.id}/tiles`;
             let mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
+            mapDiv.attr('keyname', keyname);
             elem.after(mapDiv);
 
             restRequest({
@@ -345,7 +346,7 @@ wrap(ItemView, 'render', function (render) {
                     showLabels: false,
                     clickToEdit: false
                 });
-                imageElem.remove();
+                imageElem.addClass('no-disp');
             });
         });
     };
@@ -405,7 +406,8 @@ wrap(ItemView, 'render', function (render) {
                 let redactSquare = false;
                 if (keyname === 'macro') {
                     let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
-                    elem.find('.g-widget-auximage-image').append(redactsquare);
+                    // elem.find('.g-widget-auximage-image').append(redactsquare);
+                    auxImageMaps[keyname].node().append(redactsquare);
                     resizeRedactSquare(elem);
                     if (!settings.redact_macro_square) {
                         let check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
@@ -496,14 +498,44 @@ wrap(ItemView, 'render', function (render) {
     const handleAuxImageAnnotationMode = (event) => {
         const eventMap = event.geo._triggeredBy;
         const annLayer = eventMap.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
-        const keyname = annLayer.layerName;
-        const button = this.$el.find('.g-widget-auximage-title .g-widget-redact-area-container button').filter((el) => $(el).attr('keyname') === keyname)[0];
+        const mapContainer = eventMap.node();
+        const keyname = mapContainer.attr('keyname');
+        const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
         const container = button.parent();
-        if (annLayer.mode()) {
 
+        if (annLayer.mode()) {
+            button.addClass('active');
+            container.addClass('area-adding').removeClass('area-set');
+            return;
         }
-        console.log(container);
-        console.log(button);
+        annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
+        annLayer.draw();
+        let redactList = this.getRedactList();
+        redactList.area = redactList.area || {};
+        redactList.area[keyname] = redactList.area[keyname] || {};
+        redactList.area[keyname].geojson = annLayer.geojson();
+        if (!redactList.area[keyname].geojson) {
+            delete redactList.area[keyname];
+        } else {
+            if (!redactList.area[keyname].reason) {
+                redactList.area[keyname].reason = 'No_Reason_Collected';
+                delete redactList.area[keyname].category;
+                let reasonSelect = container.parent().find('select.g-hui-redact');
+                if (reasonSelect.length) {
+                    let reasonElem = $(':selected', reasonSelect);
+                    if (!reasonElem.length || reasonElem.val() === 'none' || !reasonElem.val()) {
+                        reasonElem = reasonSelect.find('option:last');
+                    }
+                    redactList.area[keyname].reason = reasonElem.val();
+                    redactList.area[keyname].category = reasonElem.attr('category');
+                    reasonElem.prop('selected', true);
+                }
+            }
+        }
+        // this.putRedactList(redactList, 'handleAuxImageAnnotationMode');
+        console.log(redactList);
+        button.removeClass('active');
+        container.removeClass('area-adding').toggleClass('area-set', !!redactList.area[keyname]);
     };
 
     const handleWSIAnnotationMode = () => {
@@ -573,7 +605,6 @@ wrap(ItemView, 'render', function (render) {
     const redactAreaWSI = (event) => {
         event.stopPropagation();
         const annLayer = getWSIAnnotationLayer();
-        console.log(annLayer.renderer());
         if (this.$el.find('.g-item-info-header.g-widget-redact-area-container.area-adding,.g-item-info-header.g-widget-redact-area-container.area-set').length) {
             let redactList = this.getRedactList();
             redactList.area = redactList.area || {};
@@ -599,8 +630,8 @@ wrap(ItemView, 'render', function (render) {
 
     const adjustControls = (folderType, settings) => {
         let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
-        addRedactionControls(hasRedactionControls, settings || {});
         addAssociatedImageMaps();
+        addRedactionControls(hasRedactionControls, settings || {});
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
