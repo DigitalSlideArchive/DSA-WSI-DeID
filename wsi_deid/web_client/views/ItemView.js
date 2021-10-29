@@ -652,7 +652,10 @@ wrap(ItemView, 'render', function (render) {
     const adjustControls = (folderType, settings) => {
         let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
         addRedactionControls(hasRedactionControls, settings || {});
-        addAssociatedImageMaps(settings);
+        console.log(`Has controls: ${hasRedactionControls}`);
+        if (hasRedactionControls) {
+            addAssociatedImageMaps(settings || {});
+        }
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
