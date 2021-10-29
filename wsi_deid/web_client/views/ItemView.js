@@ -348,13 +348,19 @@ wrap(ItemView, 'render', function (render) {
                 auxImageMaps[keyname] = map;
                 params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
                 map.createLayer('osm', params.layer);
-                map.createLayer('annotation', {
+                const annLayer = map.createLayer('annotation', {
                     annotations: ['polygon'],
                     showLabels: false,
                     clickToEdit: false
                 });
-                if (redactList.area[keyname]) {
+                if (redactList.images && redactList.images[keyname] && redactList.images[keyname].geojson) {
                     imageElem.addClass('no-disp');
+                    annLayer.geojson(redactList.images[keyname].geojson);
+                    annLayer.draw();
+                    const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
+                    const container = button.parent();
+                    container.addClass('area-set').removeClass('area-adding');
+                    annLayer.options('clickToEdit', true);
                 } else {
                     mapDiv.addClass('no-disp');
                 }
@@ -535,31 +541,15 @@ wrap(ItemView, 'render', function (render) {
         annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
         annLayer.draw();
         let redactList = this.getRedactList();
-        redactList.area = redactList.area || {};
-        redactList.area[keyname] = redactList.area[keyname] || {};
-        redactList.area[keyname].geojson = annLayer.geojson();
-        if (!redactList.area[keyname].geojson) {
-            delete redactList.area[keyname];
-        } else {
-            if (!redactList.area[keyname].reason) {
-                redactList.area[keyname].reason = 'No_Reason_Collected';
-                delete redactList.area[keyname].category;
-                let reasonSelect = container.parent().find('select.g-hui-redact');
-                if (reasonSelect.length) {
-                    let reasonElem = $(':selected', reasonSelect);
-                    if (!reasonElem.length || reasonElem.val() === 'none' || !reasonElem.val()) {
-                        reasonElem = reasonSelect.find('option:last');
-                    }
-                    redactList.area[keyname].reason = reasonElem.val();
-                    redactList.area[keyname].category = reasonElem.attr('category');
-                    reasonElem.prop('selected', true);
-                }
-            }
+        redactList.images = redactList.images || {};
+        redactList.images[keyname] = redactList.images[keyname] || {};
+        redactList.images[keyname].geojson = annLayer.geojson();
+        if (!redactList.images[keyname].geojson) {
+            delete redactList.images[keyname].geojson;
         }
-        // this.putRedactList(redactList, 'handleAuxImageAnnotationMode');
-        console.log(redactList);
+        this.putRedactList(redactList, 'handleAuxImageAnnotationMode');
         button.removeClass('active');
-        container.removeClass('area-adding').toggleClass('area-set', !!redactList.area[keyname]);
+        container.removeClass('area-adding').toggleClass('area-set', !!redactList.images[keyname].geojson);
     };
 
     const handleWSIAnnotationMode = () => {
@@ -609,6 +599,10 @@ wrap(ItemView, 'render', function (render) {
         if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
             clickedButton.removeClass('active');
             buttonContainer.removeClass('area-set').removeClass('area-adding');
+            let redactList = this.getRedactList();
+            redactList.images = redactList.images || {};
+            delete redactList.images[keyname].geojson;
+            this.putRedactList(redactList, 'redactAreaAuxImage');
             annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
             annLayer.draw();
             if (annLayer.mode()) {
@@ -632,7 +626,7 @@ wrap(ItemView, 'render', function (render) {
     const redactAreaWSI = (event) => {
         event.stopPropagation();
         const annLayer = getWSIAnnotationLayer();
-        if (this.$el.find('.g-item-info-header.g-widget-redact-area-container.area-adding,.g-item-info-header.g-widget-redact-area-container.area-set').length) {
+        if (this.$el.find('.g-item-info-header .g-widget-redact-area-container.area-adding,.g-item-info-header .g-widget-redact-area-container.area-set').length) {
             let redactList = this.getRedactList();
             redactList.area = redactList.area || {};
             delete redactList.area._wsi;
