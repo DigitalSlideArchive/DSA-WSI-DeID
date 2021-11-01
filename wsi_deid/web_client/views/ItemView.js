@@ -246,6 +246,8 @@ wrap(ItemView, 'render', function (render) {
             const redactArea = ItemViewRedactAreaTemplate({ keyname: keyname });
             this.events['click .g-widget-auximage-title .g-widget-redact-area-container button'] = redactAreaAuxImage;
             parentElem.append(elem).append(redactArea);
+        } else {
+            parentElem.append(elem);
         }
     };
 
@@ -314,8 +316,7 @@ wrap(ItemView, 'render', function (render) {
         window.setTimeout(() => resizeRedactBackground(elem), 1000);
     };
 
-    const addAssociatedImageMaps = (settings) => {
-        const redactList = this.getRedactList();
+    const addAssociatedImageMaps = (settings, redactList) => {
         this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
             elem = $(elem);
             let imageElem = elem.find('.g-widget-auximage-image');
@@ -442,6 +443,9 @@ wrap(ItemView, 'render', function (render) {
                 }
                 elem.toggleClass('redacted', isRedacted && !redactSquare);
             });
+            if (showControls) {
+                addAssociatedImageMaps(settings, redactList);
+            }
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
@@ -652,10 +656,6 @@ wrap(ItemView, 'render', function (render) {
     const adjustControls = (folderType, settings) => {
         let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
         addRedactionControls(hasRedactionControls, settings || {});
-        console.log(`Has controls: ${hasRedactionControls}`);
-        if (hasRedactionControls) {
-            addAssociatedImageMaps(settings || {});
-        }
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
