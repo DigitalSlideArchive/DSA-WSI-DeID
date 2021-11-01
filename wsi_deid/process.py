@@ -278,13 +278,18 @@ def fadvise_willneed(item):
 
 
 def redact_image_area(image, geojson):
-    # TODO: implement this function
+    """
+    Redact an area from a PIL image.
+
+    :param image: a PIL image.
+    :param geojson: area to be redacted in geojson format.
+    """
     width, height = image.size
     polygon_svg = polygons_to_svg(geojson_to_polygons(geojson), width, height)
     svg_image = pyvips.Image.svgload_buffer(polygon_svg.encode())
-    memory_area = io.BytesIO()
-    image.save(memory_area, 'TIFF')
-    vips_image = pyvips.Image.new_from_buffer(memory_area.getvalue(), '')
+    buffer = io.BytesIO()
+    image.save(buffer, 'TIFF')
+    vips_image = pyvips.Image.new_from_buffer(buffer.getvalue(), '')
     logger.info(f'\n\nVIPS IMAGE\n\n{vips_image}\n\n')
     redacted_image = vips_image.composite([svg_image], pyvips.BlendMode.OVER)
     if redacted_image.bands > 3:
@@ -335,7 +340,7 @@ def redact_item(item, tempdir):
             macroImage = redact_topleft_square(macroImage)
         except Exception:
             pass
-    macro_geojson = redactList.get('image', {}).get('macro', {}).get('geojson')
+    macro_geojson = redactList.get('images', {}).get('macro', {}).get('geojson')
     if macroImage is None and macro_geojson:
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
