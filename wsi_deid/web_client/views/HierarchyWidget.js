@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import _ from 'underscore';
 import events from '@girder/core/events';
 import { getCurrentUser } from '@girder/core/auth';
 import { restRequest } from '@girder/core/rest';
@@ -17,9 +18,18 @@ function performAction(action) {
         ocrall: { done: 'Started background job to find label text on WSIs in this folder.', fail: 'Failed to start background task to find label text for images.' }
     };
 
+    let data = {};
+    if (action.includes('list')) {
+        if (this.itemListView && this.itemListView.checked && this.itemListView._wsi_deid_item_list) {
+            data.ids = this.itemListView.checked.map((cid) => this.itemListView.collection.get(cid).id);
+            data.ids = data.ids.filter((id) => this.itemListView._wsi_deid_item_list.byId[id]);
+        }
+    }
+
     restRequest({
         method: 'PUT',
         url: `wsi_deid/action/${action}`,
+        data: data,
         error: null
     }).done((resp) => {
         let text = actions[action].done;
@@ -137,25 +147,74 @@ function performAction(action) {
     });
 }
 
-function addIngestControls() {
+function addControls(key, settings) {
+    const controls = {
+        ingest: [
+            {
+                key: 'redactlist',
+                text: 'Redact Checked',
+                class: 'btn-info disabled',
+                action: 'redactlist',
+                check: () => settings.show_metadata_in_lists
+            }, {
+                key: 'import',
+                text: 'Import',
+                class: 'btn-info',
+                action: 'ingest',
+                check: () => settings.show_import_button !== false
+            }, {
+                key: 'ocr',
+                text: 'Find label text',
+                class: 'btn-info',
+                action: 'ocrall',
+                check: _.constant(true)
+            }
+        ],
+        finished: [
+            {
+                key: 'export',
+                text: 'Export Recent',
+                class: 'btn-info',
+                action: 'export',
+                check: () => settings.show_export_button !== false
+            }, {
+                key: 'exportall',
+                text: 'Export All',
+                class: 'btn-info',
+                action: 'exportall',
+                check: () => settings.show_export_button !== false
+            }
+        ],
+        processed: [
+            {
+                key: 'finishlist',
+                text: 'Approve Checked',
+                class: 'btn-info disabled',
+                action: 'finishlist',
+                check: () => settings.show_metadata_in_lists
+            }
+        ],
+        quarantine: [
+            {
+                key: 'redactlist',
+                text: 'Redact Checked',
+                class: 'btn-info disabled',
+                action: 'redactlist',
+                check: () => settings.show_metadata_in_lists
+            }
+        ]
+    };
+    if (!controls[key]) {
+        return;
+    }
     var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
-    btns.prepend(
-        '<button class="wsi_deid-import-button btn btn-info">Import</button>' +
-        '<button class="wsi_deid-ocr-button btn btn-info">Find label text</button>'
-    );
-    this.events['click .wsi_deid-import-button'] = () => { performAction.call(this, 'ingest'); };
-    this.events['click .wsi_deid-ocr-button'] = () => { performAction.call(this, 'ocrall'); };
-    this.delegateEvents();
-}
-
-function addExportControls() {
-    var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
-    btns.prepend(
-        '<button class="wsi_deid-export-button btn btn-info">Export Recent</button>' +
-        '<button class="wsi_deid-exportall-button btn btn-info">Export All</button>'
-    );
-    this.events['click .wsi_deid-export-button'] = () => { performAction.call(this, 'export'); };
-    this.events['click .wsi_deid-exportall-button'] = () => { performAction.call(this, 'exportall'); };
+    for (let i = controls[key].length - 1; i >= 0; i -= 1) {
+        let control = controls[key][i];
+        if (control.check()) {
+            btns.prepend(`<button class="wsi_deid-${control.key}-button btn ${control.class}">${control.text}</button>`);
+            this.events[`click .wsi_deid-${control.key}-button`] = () => { performAction.call(this, control.action); };
+        }
+    }
     this.delegateEvents();
 }
 
@@ -172,15 +231,7 @@ wrap(HierarchyWidget, 'render', function (render) {
                     url: `wsi_deid/settings`,
                     error: null
                 }).done((settings) => {
-                    if (resp === 'ingest') {
-                        if (settings.show_import_button !== false) {
-                            addIngestControls.call(this);
-                        }
-                    } else if (resp === 'finished') {
-                        if (settings.show_export_button !== false) {
-                            addExportControls.call(this);
-                        }
-                    }
+                    addControls.call(this, resp, settings);
                 });
             }
         });

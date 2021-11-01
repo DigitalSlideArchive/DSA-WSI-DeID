@@ -9,6 +9,7 @@ import * as WSIDeID from './index';
 // import modules for side effects
 import './views/GlobalNavView';
 import './views/HierarchyWidget';
+import './views/ItemList';
 import './views/ItemView';
 
 import ConfigView from './views/ConfigView';

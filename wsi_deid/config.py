@@ -15,6 +15,8 @@ defaultConfig = {
     'show_import_button': True,
     'show_export_button': True,
     'show_next_item': True,
+    'show_metadata_in_lists': True,
+    'show_next_folder': True,
     'no_redact_control_keys': {
         r'^internal;aperio_version$': '',
         r'^internal;openslide;openslide\.(?!comment$)': '',
