@@ -10,7 +10,7 @@ defaultConfig = {
     'redact_macro_square': False,
     'always_redact_label': False,
     'require_redact_category': True,
-    'edit_meatadata': False,
+    'edit_metadata': False,
     'add_title_to_label': True,
     'show_import_button': True,
     'show_export_button': True,

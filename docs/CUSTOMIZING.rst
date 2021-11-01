@@ -27,6 +27,11 @@ Redacting the Label Image
 
 The label image can be redacted by default if the ``always_redact_label`` value is set to ``True``.  If the label image is redacted, it is replaced with a black square with the output filename printed in it.  The label image is not redacted, the output filename is added to the top of the image.
 
+Label Image Title
++++++++++++++++++
+
+Adding the filename as the title of the label image is option.  If the ``add_title_to_label`` is set to ``False``, it will not be added.  If no title is added and the label image is redacted, the image is removed.
+
 Disabling the Redaction Control
 +++++++++++++++++++++++++++++++
 
@@ -37,7 +42,7 @@ Redaction can be disabled for certain metadata fields. This can be used for fiel
 * ``no_redact_control_keys_format_hamamatsu``
 * ``no_redact_control_keys_format_philips``
 
-In order to disable redaction controls for certain metadata fields, you can add `key: value` pairs to the dictionaries in `girder.local.conf`. Both the key and value need to be regular expressions. The `key` is a regular expression that will match your target metadata. The associated `value` should be a regular expression that matches the expected metadata value. For example, if your metadata should always contain an integer value, you could use the regular expression `"\\d+"`. If you view an image and the metadata value does not match the expected expression, then redaction will be available for that metadata item.
+In order to disable redaction controls for certain metadata fields, you can add ``key: value`` pairs to the dictionaries in ``girder.local.conf``. Both the key and value need to be regular expressions. The ``key`` is a regular expression that will match your target metadata. The associated ``value`` should be a regular expression that matches the expected metadata value. For example, if your metadata should always contain an integer value, you could use the regular expression ``"\\d+"``. If you view an image and the metadata value does not match the expected expression, then redaction will be available for that metadata item.
 
 Note that fields specified in ``no_redact_control_keys`` will have redaction disabled on all image formats. If you wish to disable redaction of a metadata field on, for example, Aperio images only, you can add that metadata key and expected value to the ``no_redact_control_keys_format_aperio`` dictionary.
 
@@ -56,4 +61,14 @@ If these metadata items contain unexpected values (e.g., text where a number was
 Editing Metadata Values
 +++++++++++++++++++++++
 
-Normally, when a metadata field is redacted, its value becomes blank. In `girder.local.conf`, you can set `edit_metadata` to `True` to enable editing metadata as part of the redaction process. If editing metadata is enabled, users will have the opportunity to set the value of a redacted metadata field to any value.
+Normally, when a metadata field is redacted, its value becomes blank. In ``girder.local.conf``, you can set ``edit_metadata`` to ``True`` to enable editing metadata as part of the redaction process. If editing metadata is enabled, users will have the opportunity to set the value of a redacted metadata field to any value.
+
+Next Image Control
+++++++++++++++++++
+
+By default, a Next Image control is shown on the left menu bar below Collections and Users.  This is optional and can be removed by setting ``show_next_item`` to ``False`` in the configuration.
+
+Import and Export Controls
+++++++++++++++++++++++++++
+
+By default, new data can be imported into the ``AvailableToProcess`` folder and exported from the ``Approved`` folder via specific controls.  Imports require that a manifest spreadsheet file is next to the image files in the import directory.  Images can also be moved or imported into the ``AvailableToProcess`` folder using ordinary item controls in Girder.  If the import and export buttons are not going to be used, they can be hidden by setting the ``show_import_button`` and ``show_export_button`` values to False in the configuration.
