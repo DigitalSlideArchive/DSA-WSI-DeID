@@ -322,8 +322,8 @@ def redact_item(item, tempdir):
     tileSource = ImageItem().tileSource(item)
     labelImage = None
     label_geojson = redactList.get('images', {}).get('label', {}).get('geojson')
-    if (('label' not in redactList['images'] and not config.getConfig('always_redact_label'))
-            or label_geojson is not None):
+    if (('label' not in redactList['images'] and not config.getConfig('always_redact_label')) or
+            label_geojson is not None):
         try:
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
         except Exception:
