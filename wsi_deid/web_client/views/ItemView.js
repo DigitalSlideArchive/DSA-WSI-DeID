@@ -345,7 +345,9 @@ wrap(ItemView, 'render', function (render) {
                 try {
                     let params = window.geo.util.pixelCoordinateParams(
                         `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
-                    $(`#${mapId}`).width(resp.sizeX * 1.1).height(resp.sizeY * 1.1);
+                    let imgH = imageElem.height();
+                    let imgW = imageElem.width();
+                    $(`#${mapId}`).width(imgW).height(imgH);
                     const map = window.geo.map(params.map);
                     auxImageMaps[keyname] = map;
                     params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
