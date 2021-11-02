@@ -290,7 +290,6 @@ def redact_image_area(image, geojson):
     buffer = io.BytesIO()
     image.save(buffer, 'TIFF')
     vips_image = pyvips.Image.new_from_buffer(buffer.getvalue(), '')
-    logger.info(f'\n\nVIPS IMAGE\n\n{vips_image}\n\n')
     redacted_image = vips_image.composite([svg_image], pyvips.BlendMode.OVER)
     if redacted_image.bands > 3:
         redacted_image = redacted_image[:3]

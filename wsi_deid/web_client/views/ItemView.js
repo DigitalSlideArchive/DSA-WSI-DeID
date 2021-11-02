@@ -316,7 +316,7 @@ wrap(ItemView, 'render', function (render) {
         window.setTimeout(() => resizeRedactBackground(elem), 1000);
     };
 
-    const addAssociatedImageMaps = (settings, redactList) => {
+    const addAuxImageMaps = (settings, redactList) => {
         this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
             elem = $(elem);
             let imageElem = elem.find('.g-widget-auximage-image');
@@ -342,28 +342,33 @@ wrap(ItemView, 'render', function (render) {
                 url: `${tilesPath}/images/${keyname}/metadata`,
                 error: null
             }).done((resp) => {
-                let params = window.geo.util.pixelCoordinateParams(
-                    `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
-                $(`#${mapId}`).width(resp.sizeX * 1.1).height(resp.sizeY * 1.1);
-                const map = window.geo.map(params.map);
-                auxImageMaps[keyname] = map;
-                params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
-                map.createLayer('osm', params.layer);
-                const annLayer = map.createLayer('annotation', {
-                    annotations: ['polygon'],
-                    showLabels: false,
-                    clickToEdit: false
-                });
-                if (redactList.images && redactList.images[keyname] && redactList.images[keyname].geojson) {
-                    imageElem.addClass('no-disp');
-                    annLayer.geojson(redactList.images[keyname].geojson);
-                    annLayer.draw();
-                    const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
-                    const container = button.parent();
-                    container.addClass('area-set').removeClass('area-adding');
-                    annLayer.options('clickToEdit', true);
-                } else {
+                try {
+                    let params = window.geo.util.pixelCoordinateParams(
+                        `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
+                    $(`#${mapId}`).width(resp.sizeX * 1.1).height(resp.sizeY * 1.1);
+                    const map = window.geo.map(params.map);
+                    auxImageMaps[keyname] = map;
+                    params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
+                    map.createLayer('osm', params.layer);
+                    const annLayer = map.createLayer('annotation', {
+                        annotations: ['polygon'],
+                        showLabels: false,
+                        clickToEdit: false
+                    });
+                    if (redactList.images && redactList.images[keyname] && redactList.images[keyname].geojson) {
+                        imageElem.addClass('no-disp');
+                        annLayer.geojson(redactList.images[keyname].geojson);
+                        annLayer.draw();
+                        const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
+                        const container = button.parent();
+                        container.addClass('area-set').removeClass('area-adding');
+                        annLayer.options('clickToEdit', true);
+                    } else {
+                        mapDiv.addClass('no-disp');
+                    }
+                } catch (e) {
                     mapDiv.addClass('no-disp');
+                    console.error(`Failed to create map for ${keyname} image. ${e}.`);
                 }
             });
         });
@@ -444,7 +449,11 @@ wrap(ItemView, 'render', function (render) {
                 elem.toggleClass('redacted', isRedacted && !redactSquare);
             });
             if (showControls) {
-                addAssociatedImageMaps(settings, redactList);
+                try {
+                    addAuxImageMaps(settings, redactList);
+                } catch (e) {
+                    console.error(`Attempting to add GeoJS maps for associated images resulted in the following error: ${e}.`);
+                }
             }
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
