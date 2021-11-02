@@ -30,7 +30,9 @@ jobs:
           command: npm install -g phantomjs-prebuilt --unsafe-perm
       - run:
           name: Run server tests
-          command: tox
+          command: | 
+            PYTHONUNBUFFERED=1
+            tox
       - run:
           name: Run web tests
           command: |
