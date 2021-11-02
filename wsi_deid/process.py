@@ -332,20 +332,22 @@ def redact_item(item, tempdir):
     if config.getConfig('add_title_to_label'):
         labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
     macroImage = None
-    if (('macro' not in redactList['images'] and config.getConfig('redact_macro_square')) or
-            ('macro' in redactList['images'] and redactList['images']['macro'].get('square'))):
-        try:
-            macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
-            macroImage = redact_topleft_square(macroImage)
-        except Exception:
-            pass
     macro_geojson = redactList.get('images', {}).get('macro', {}).get('geojson')
-    if macroImage is None and macro_geojson:
+    redact_square_default = ('macro' not in redactList['images'] and
+                             config.getConfig('redact_macro_square'))
+    redact_square_manual = ('macro' in redactList['images'] and
+                            redactList['images']['macro'].get('square'))
+    redact_square = redact_square_default or redact_square_manual
+    if redact_square or macro_geojson:
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
-            macroImage = redact_image_area(macroImage, macro_geojson)
         except Exception:
             pass
+    if macroImage is not None:
+        if redact_square:
+            macroImage = redact_topleft_square(macroImage)
+        elif macro_geojson:
+            macroImage = redact_image_area(macroImage, macro_geojson)
     format = determine_format(tileSource)
     func = None
     if format is not None:
