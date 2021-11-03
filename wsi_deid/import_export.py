@@ -313,7 +313,10 @@ def ingestData(ctx, user=None):  # noqa
         )
         Job().scheduleJob(job=batchJob)
     file = importReport(ctx, report, excelReport, user, importPath)
-    return reportSummary(report, excelReport, file=file)
+    summary = reportSummary(report, excelReport, file=file)
+    if startOcrDuringImport:
+        summary['ocr_job'] = batchJob['_id']
+    return summary
 
 
 def importReport(ctx, report, excelReport, user, importPath):
