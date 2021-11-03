@@ -1271,9 +1271,8 @@ def get_allow_list():
 def get_text_from_associated_image(tile_source, label, reader):
     associated_image, _ = tile_source.getAssociatedImage(label)
     associated_image = PIL.Image.open(io.BytesIO(associated_image))
-    words = []
-    for idx, rotate in enumerate([None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]):
-        rotation_words = {}
+    words = {}
+    for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
             text_results = reader.readtext(
@@ -1291,24 +1290,16 @@ def get_text_from_associated_image(tile_source, label, reader):
                 adjust_contrast=1.0,
                 rotation_info=[90, 180, 270],
             )
-        confidence_levels = []
-        for idx, item in enumerate(text_results):
-            logger.info(f'\n{item}\n')
-            _, found_text, confidence = item
-            confidence_levels.append(confidence)
-            rotation_words[f'item_{idx + 1}'] = {
-                'confidence': confidence,
-                'text': found_text
-            }
-        avg_confidence = 0
-        if len(confidence_levels) > 0:
-            avg_confidence = sum(confidence_levels) / len(confidence_levels)
-        rotation_result = {
-            'num_rotations': idx,
-            'found_text': rotation_words,
-            'confidence (avg)': avg_confidence,
-        }
-        words.append(rotation_result)
+        for result in text_results:
+            # easyocr returns the text box coordinates, text, and confidence
+            _, found_text, confidence = result
+            result_info = words.get(found_text, {})
+            result_count = result_info.get('count', 0) + 1
+            result_info['count'] = result_count
+            result_avg_conf = result_info.get('average_confidence', 0)
+            result_avg_conf = (result_avg_conf * (result_count - 1) + confidence) / result_count
+            result_info['average_confidence'] = result_avg_conf
+            words[found_text] = result_info
     return words
 
 
@@ -1330,6 +1321,5 @@ def get_image_text(item, reader=None):
     elif image_format == 'hamamatsu':
         key = 'macro'
     results = get_text_from_associated_image(tile_source, key, reader)
-    # TODO: Consider adding this to the .tiff file metadata
-    item = ImageItem().setMetadata(item, {'label_ocr': results})
+    item = ImageItem().setMetadata(item, {f'{key}_ocr': results})
     return results

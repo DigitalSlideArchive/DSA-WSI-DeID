@@ -363,11 +363,12 @@ class WSIDeIDResource(Resource):
         ingestFolder = Folder().load(Setting().get(
             PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE
         )
-        resp = { 'action': 'ocrall' }
+        resp = {'action': 'ocrall'}
         for _, file in Folder().fileList(ingestFolder, user, data=False):
             itemId = file['itemId']
             item = Item().load(itemId, force=True)
-            if item.get('meta', {}).get('label_ocr', None) is None:
+            if (item.get('meta', {}).get('label_ocr', None) is None and
+                    item.get('meta', {}).get('macro_ocr', None) is None):
                 itemIds.append(file['itemId'])
         if len(itemIds) > 0:
             jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
@@ -383,7 +384,6 @@ class WSIDeIDResource(Resource):
             Job().scheduleJob(job=batchJob)
             resp['ocrJobId'] = batchJob['_id']
         return resp
-
 
     @autoDescribeRoute(
         Description('Get the ID of the next unprocessed item.')
