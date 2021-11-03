@@ -526,17 +526,23 @@ wrap(ItemView, 'render', function (render) {
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
     };
 
-    const toggleAuxImageMapDisplay = (map, image, showMap) => {
-        // Toggle showing the image or a geojs map of the image.
-        // If redacting the whole image or top/right square, no need to show the map.
-        // param 'map' should be the container of the geojs map
-        // param 'image' should be the container of the associated image
+    /**
+     * Toggle showing the image or a geojs map of the image.
+     * If redacting the whole image or top/right square, no need to show the map.
+     * @param {object} mapContainer The container element of the geojs map to show/hide
+     * @param {object} imageContainer The container element of the associated image to show/hide
+     * @param {boolean} showMap Truthy to show the map and hide the image, falsy to hide the map and show the original image
+     */
+    const toggleAuxImageMapDisplay = (mapContainer, imageContainer, showMap) => {
         if (showMap) {
-            map.removeClass('no-disp');
-            image.addClass('no-disp');
+            // adjust height and width of map, since they may be wrong on initial load of an image
+            mapContainer.height(imageContainer.height());
+            mapContainer.width(imageContainer.width());
+            mapContainer.removeClass('no-disp');
+            imageContainer.addClass('no-disp');
         } else {
-            map.addClass('no-disp');
-            image.removeClass('no-disp');
+            mapContainer.addClass('no-disp');
+            imageContainer.removeClass('no-disp');
         }
     };
 
