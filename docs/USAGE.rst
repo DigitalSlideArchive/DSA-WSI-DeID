@@ -280,6 +280,8 @@ Review Process for PHI/PII in Image(s) and Metadata
 
    2.3. Scroll down to the bottom of the screen and review the associated images (label, macro, and thumbnail).  If you see PHI/PII in individual associated images, select the classification of PHI in the image from the redact control. The image will show an X through it to indicate that it will be redacted.
 
+   In addition, a button will appear with the label ``Redact Area``. Clicking on this button will allow drawing on the image in order to redact a specific region instead of the entire image. This selection can be cancelled by clicking the button again.
+
    2.4. When redaction decisions have been made for all images and metadata, the user should click the ``Redact Image`` button, which will make a copy of the existing image and place that copy in the ``Original`` folder, and will move the image to the ``Redacted`` folder. As part of moving the data to the ``Redacted`` folder, the metadata fields and associated images that have been marked for redaction will be deleted.
 
 3. If after redacting, all PHI/PII has been removed, click the green ``Approved`` button.
