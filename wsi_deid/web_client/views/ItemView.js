@@ -546,6 +546,17 @@ wrap(ItemView, 'render', function (render) {
         }
     };
 
+    /**
+     * Helper function to toggle the display and remove checked status of the redact square control for macro images.
+     * @param {boolean} showControl True to show the 'redact square' control, false to hide it
+     */
+    const toggleRedactSquareControlDisplay = (showControl) => {
+        let redactSquareSpan = this.$el.find('.g-hui-redact-square-span');
+        let redactSquareInput = redactSquareSpan.find('.g-hui-redact-square');
+        redactSquareInput.prop('checked', false);
+        redactSquareSpan.toggleClass('no-disp', !showControl);
+    };
+
     const handleAuxImageAnnotationMode = (event) => {
         const eventMap = event.geo._triggeredBy;
         const annLayer = eventMap.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
@@ -617,10 +628,10 @@ wrap(ItemView, 'render', function (render) {
         const map = auxImageMaps[keyname];
         const imageElem = this.$el.find(`.g-widget-metadata-container.auximage .wsi-deid-auximage-container .g-widget-auximage[auximage=${keyname}] .g-widget-auximage-image img`);
         const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+        let redactList = this.getRedactList();
         if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
             clickedButton.removeClass('active');
             buttonContainer.removeClass('area-set').removeClass('area-adding');
-            let redactList = this.getRedactList();
             redactList.images = redactList.images || {};
             delete redactList.images[keyname].geojson;
             this.putRedactList(redactList, 'redactAreaAuxImage');
@@ -630,10 +641,20 @@ wrap(ItemView, 'render', function (render) {
                 annLayer.mode(null);
             }
             toggleAuxImageMapDisplay(map.node(), imageElem.parent(), false);
+            if (keyname === 'macro') {
+                toggleRedactSquareControlDisplay(true);
+            }
             return false;
         }
 
         toggleAuxImageMapDisplay(map.node(), imageElem.parent(), true);
+        if (keyname === 'macro') {
+            toggleRedactSquareControlDisplay(false);
+            redactList.images = redactList.images || {};
+            if (redactList.images[keyname]) {
+                delete redactList.images[keyname]['square'];
+            }
+        }
         annLayer.options('clickToEdit', true);
         annLayer.mode('polygon');
         clickedButton.addClass('active');
