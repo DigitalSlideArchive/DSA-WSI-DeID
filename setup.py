@@ -46,6 +46,7 @@ setup(
         'histomicsui',
         'jsonschema',
         'large_image[tiff,openslide,memcached,openjpeg]',
+        'large_image_converter',
         'openpyxl',
         'pandas',
         'paramiko',

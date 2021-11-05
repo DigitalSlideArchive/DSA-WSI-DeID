@@ -48,6 +48,8 @@ const formats = {
     none: ''
 };
 
+let auxImageMaps = {};
+
 wrap(ItemView, 'render', function (render) {
     this.getRedactList = () => {
         let redactList = (this.model.get('meta') || {}).redactList || {};
@@ -240,7 +242,13 @@ wrap(ItemView, 'render', function (render) {
             });
             elem = $('<span class="g-hui-redact-label"></span>').append(elem);
         }
-        parentElem.append(elem);
+        if (['label', 'macro'].includes(keyname)) {
+            const redactArea = ItemViewRedactAreaTemplate({ keyname: keyname });
+            this.events['click .g-widget-auximage-title .g-widget-redact-area-container button'] = redactAreaAuxImage;
+            parentElem.append(elem).append(redactArea);
+        } else {
+            parentElem.append(elem);
+        }
     };
 
     const addNewValueEntryField = (parentElem, keyname, redactRecord, settings) => {
@@ -306,6 +314,66 @@ wrap(ItemView, 'render', function (render) {
             return;
         }
         window.setTimeout(() => resizeRedactBackground(elem), 1000);
+    };
+
+    const addAuxImageMaps = (settings, redactList) => {
+        this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
+            elem = $(elem);
+            let imageElem = elem.find('.g-widget-auximage-image');
+            elem.wrap($('<div class="wsi-deid-auximage-container"></div>'));
+            let keyname = elem.attr('auximage');
+            // return true to 'continue' the loop. use configuration to drive which images to skip map creation
+            if (!['label', 'macro'].includes(keyname)) {
+                return true;
+            }
+            if (keyname === 'macro' && settings.redact_macro_square) {
+                return true;
+            }
+            if (keyname === 'label' && settings.always_redact_label) {
+                return true;
+            }
+            let mapId = `${keyname}-map`;
+            let tilesPath = `item/${this.model.id}/tiles`;
+            let mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
+            mapDiv.attr('keyname', keyname);
+            elem.after(mapDiv);
+
+            restRequest({
+                url: `${tilesPath}/images/${keyname}/metadata`,
+                error: null
+            }).done((resp) => {
+                try {
+                    let imgH = imageElem.height();
+                    let imgW = imageElem.width();
+                    $(`#${mapId}`).width(imgW).height(imgH);
+                    let params = window.geo.util.pixelCoordinateParams(
+                        `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
+                    const map = window.geo.map(params.map);
+                    auxImageMaps[keyname] = map;
+                    params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
+                    map.createLayer('osm', params.layer);
+                    const annLayer = map.createLayer('annotation', {
+                        annotations: ['polygon'],
+                        showLabels: false,
+                        clickToEdit: false
+                    });
+                    if (redactList.images && redactList.images[keyname] && redactList.images[keyname].geojson) {
+                        imageElem.addClass('no-disp');
+                        annLayer.geojson(redactList.images[keyname].geojson);
+                        annLayer.draw();
+                        const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
+                        const container = button.parent();
+                        container.addClass('area-set').removeClass('area-adding');
+                        annLayer.options('clickToEdit', true);
+                    } else {
+                        mapDiv.addClass('no-disp');
+                    }
+                } catch (e) {
+                    mapDiv.addClass('no-disp');
+                    console.error(`Failed to create map for ${keyname} image. ${e}.`);
+                }
+            });
+        });
     };
 
     const addRedactionControls = (showControls, settings) => {
@@ -382,6 +450,13 @@ wrap(ItemView, 'render', function (render) {
                 }
                 elem.toggleClass('redacted', isRedacted && !redactSquare);
             });
+            if (showControls) {
+                try {
+                    addAuxImageMaps(settings, redactList);
+                } catch (e) {
+                    console.error(`Attempting to add GeoJS maps for associated images resulted in the following error: ${e}.`);
+                }
+            }
             this.events['input .g-hui-redact'] = flagRedaction;
             this.events['change .g-hui-redact'] = flagRedaction;
             this.events['click a.g-hui-redact'] = flagRedaction;
@@ -451,11 +526,69 @@ wrap(ItemView, 'render', function (render) {
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
     };
 
+    /**
+     * Toggle showing the image or a geojs map of the image.
+     * If redacting the whole image or top/right square, no need to show the map.
+     * @param {object} mapContainer The container element of the geojs map to show/hide
+     * @param {object} imageContainer The container element of the associated image to show/hide
+     * @param {boolean} showMap Truthy to show the map and hide the image, falsy to hide the map and show the original image
+     */
+    const toggleAuxImageMapDisplay = (mapContainer, imageContainer, showMap) => {
+        if (showMap) {
+            // adjust height and width of map, since they may be wrong on initial load of an image
+            mapContainer.height(imageContainer.height());
+            mapContainer.width(imageContainer.width());
+            mapContainer.removeClass('no-disp');
+            imageContainer.addClass('no-disp');
+        } else {
+            mapContainer.addClass('no-disp');
+            imageContainer.removeClass('no-disp');
+        }
+    };
+
+    /**
+     * Helper function to toggle the display and remove checked status of the redact square control for macro images.
+     * @param {boolean} showControl True to show the 'redact square' control, false to hide it
+     */
+    const toggleRedactSquareControlDisplay = (showControl) => {
+        let redactSquareSpan = this.$el.find('.g-hui-redact-square-span');
+        let redactSquareInput = redactSquareSpan.find('.g-hui-redact-square');
+        redactSquareInput.prop('checked', false);
+        redactSquareSpan.toggleClass('no-disp', !showControl);
+    };
+
+    const handleAuxImageAnnotationMode = (event) => {
+        const eventMap = event.geo._triggeredBy;
+        const annLayer = eventMap.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+        const mapContainer = eventMap.node();
+        const keyname = mapContainer.attr('keyname');
+        const button = this.$el.find(`.g-widget-auximage-title .g-widget-redact-area-container button[keyname=${keyname}]`);
+        const container = button.parent();
+
+        if (annLayer.mode()) {
+            button.addClass('active');
+            container.addClass('area-adding').removeClass('area-set');
+            return;
+        }
+        annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
+        annLayer.draw();
+        let redactList = this.getRedactList();
+        redactList.images = redactList.images || {};
+        redactList.images[keyname] = redactList.images[keyname] || {};
+        redactList.images[keyname].geojson = annLayer.geojson();
+        if (!redactList.images[keyname].geojson) {
+            delete redactList.images[keyname].geojson;
+        }
+        this.putRedactList(redactList, 'handleAuxImageAnnotationMode');
+        button.removeClass('active');
+        container.removeClass('area-adding').toggleClass('area-set', !!redactList.images[keyname].geojson);
+    };
+
     const handleWSIAnnotationMode = () => {
         const annLayer = getWSIAnnotationLayer();
         if (annLayer.mode()) {
-            this.$el.find('.g-widget-redact-area-container button').addClass('active');
-            this.$el.find('.g-widget-redact-area-container').addClass('area-adding').removeClass('area-set');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container button').addClass('active');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container').addClass('area-adding').removeClass('area-set');
             return;
         }
         annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
@@ -483,20 +616,65 @@ wrap(ItemView, 'render', function (render) {
             }
         }
         this.putRedactList(redactList, 'handleWSIAnnotationMode');
-        this.$el.find('.g-widget-redact-area-container button').removeClass('active');
-        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container button').removeClass('active');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').toggleClass('area-set', !!redactList.area._wsi);
+    };
+
+    const redactAreaAuxImage = (event) => {
+        event.stopPropagation();
+        let clickedButton = $(event.currentTarget);
+        let buttonContainer = clickedButton.parent();
+        let keyname = clickedButton.attr('keyname');
+        const map = auxImageMaps[keyname];
+        const imageElem = this.$el.find(`.g-widget-metadata-container.auximage .wsi-deid-auximage-container .g-widget-auximage[auximage=${keyname}] .g-widget-auximage-image img`);
+        const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
+        let redactList = this.getRedactList();
+        if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
+            clickedButton.removeClass('active');
+            buttonContainer.removeClass('area-set').removeClass('area-adding');
+            redactList.images = redactList.images || {};
+            delete redactList.images[keyname].geojson;
+            this.putRedactList(redactList, 'redactAreaAuxImage');
+            annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
+            annLayer.draw();
+            if (annLayer.mode()) {
+                annLayer.mode(null);
+            }
+            toggleAuxImageMapDisplay(map.node(), imageElem.parent(), false);
+            if (keyname === 'macro') {
+                toggleRedactSquareControlDisplay(true);
+            }
+            return false;
+        }
+
+        toggleAuxImageMapDisplay(map.node(), imageElem.parent(), true);
+        if (keyname === 'macro') {
+            toggleRedactSquareControlDisplay(false);
+            redactList.images = redactList.images || {};
+            if (redactList.images[keyname]) {
+                delete redactList.images[keyname]['square'];
+            }
+        }
+        annLayer.options('clickToEdit', true);
+        annLayer.mode('polygon');
+        clickedButton.addClass('active');
+        buttonContainer.addClass('area-adding');
+
+        annLayer.geoOff(window.geo.event.annotation.mode, handleAuxImageAnnotationMode);
+        annLayer.geoOn(window.geo.event.annotation.mode, handleAuxImageAnnotationMode);
+        return false;
     };
 
     const redactAreaWSI = (event) => {
         event.stopPropagation();
         const annLayer = getWSIAnnotationLayer();
-        if (this.$el.find('.g-widget-redact-area-container.area-adding,.g-widget-redact-area-container.area-set').length) {
+        if (this.$el.find('.g-item-info-header .g-widget-redact-area-container.area-adding,.g-item-info-header .g-widget-redact-area-container.area-set').length) {
             let redactList = this.getRedactList();
             redactList.area = redactList.area || {};
             delete redactList.area._wsi;
             this.putRedactList(redactList, 'redactAreaWSI');
-            this.$el.find('.g-widget-redact-area-container button').removeClass('active');
-            this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').removeClass('area-set');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container button').removeClass('active');
+            this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').removeClass('area-set');
             annLayer.annotations().forEach((a) => annLayer.removeAnnotation(a));
             annLayer.draw();
             if (annLayer.mode()) {
@@ -506,8 +684,8 @@ wrap(ItemView, 'render', function (render) {
         }
         annLayer.options('clickToEdit', true);
         annLayer.mode('polygon');
-        this.$el.find('.g-widget-redact-area-container button').addClass('active');
-        this.$el.find('.g-widget-redact-area-container').addClass('area-adding');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container button').addClass('active');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').addClass('area-adding');
         // when entering any non-null mode, disable drawing on associated images
         annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
         annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);
@@ -555,7 +733,7 @@ wrap(ItemView, 'render', function (render) {
         const annLayer = getWSIAnnotationLayer();
         annLayer.geojson(redactList.area._wsi.geojson);
         annLayer.draw();
-        this.$el.find('.g-widget-redact-area-container').removeClass('area-adding').addClass('area-set');
+        this.$el.find('.g-item-info-header .g-widget-redact-area-container').removeClass('area-adding').addClass('area-set');
         annLayer.options('clickToEdit', true);
         annLayer.geoOff(window.geo.event.annotation.mode, handleWSIAnnotationMode);
         annLayer.geoOn(window.geo.event.annotation.mode, handleWSIAnnotationMode);

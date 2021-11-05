@@ -277,6 +277,29 @@ def fadvise_willneed(item):
         pass
 
 
+def redact_image_area(image, geojson):
+    """
+    Redact an area from a PIL image.
+
+    :param image: a PIL image.
+    :param geojson: area to be redacted in geojson format.
+    """
+    width, height = image.size
+    polygon_svg = polygons_to_svg(geojson_to_polygons(geojson), width, height)
+    svg_image = pyvips.Image.svgload_buffer(polygon_svg.encode())
+    buffer = io.BytesIO()
+    image.save(buffer, 'TIFF')
+    vips_image = pyvips.Image.new_from_buffer(buffer.getvalue(), '')
+    redacted_image = vips_image.composite([svg_image], pyvips.BlendMode.OVER)
+    if redacted_image.bands > 3:
+        redacted_image = redacted_image[:3]
+    elif redacted_image.bands == 2:
+        redacted_image = redacted_image[:1]
+    redacted_data = redacted_image.write_to_buffer('.tiff')
+    redacted_image = PIL.Image.open(io.BytesIO(redacted_data))
+    return redacted_image
+
+
 def redact_item(item, tempdir):
     """
     Redact a Girder item.  Based on the redact metadata, determine what
@@ -297,21 +320,34 @@ def redact_item(item, tempdir):
     newTitle = get_generated_title(item)
     tileSource = ImageItem().tileSource(item)
     labelImage = None
-    if 'label' not in redactList['images'] and not config.getConfig('always_redact_label'):
+    label_geojson = redactList.get('images', {}).get('label', {}).get('geojson')
+    if (('label' not in redactList['images'] and not config.getConfig('always_redact_label')) or
+            label_geojson is not None):
         try:
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
         except Exception:
             pass
+    if label_geojson is not None and labelImage is not None:
+        labelImage = redact_image_area(labelImage, label_geojson)
     if config.getConfig('add_title_to_label'):
         labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
     macroImage = None
-    if (('macro' not in redactList['images'] and config.getConfig('redact_macro_square')) or
-            ('macro' in redactList['images'] and redactList['images']['macro'].get('square'))):
+    macro_geojson = redactList.get('images', {}).get('macro', {}).get('geojson')
+    redact_square_default = ('macro' not in redactList['images'] and
+                             config.getConfig('redact_macro_square'))
+    redact_square_manual = ('macro' in redactList['images'] and
+                            redactList['images']['macro'].get('square'))
+    redact_square = redact_square_default or redact_square_manual
+    if redact_square or macro_geojson:
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
-            macroImage = redact_topleft_square(macroImage)
         except Exception:
             pass
+    if macroImage is not None:
+        if redact_square:
+            macroImage = redact_topleft_square(macroImage)
+        elif macro_geojson:
+            macroImage = redact_image_area(macroImage, macro_geojson)
     format = determine_format(tileSource)
     func = None
     if format is not None:
