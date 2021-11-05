@@ -343,11 +343,11 @@ wrap(ItemView, 'render', function (render) {
                 error: null
             }).done((resp) => {
                 try {
-                    let params = window.geo.util.pixelCoordinateParams(
-                        `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
                     let imgH = imageElem.height();
                     let imgW = imageElem.width();
                     $(`#${mapId}`).width(imgW).height(imgH);
+                    let params = window.geo.util.pixelCoordinateParams(
+                        `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
                     const map = window.geo.map(params.map);
                     auxImageMaps[keyname] = map;
                     params.layer.url = `/api/v1/${tilesPath}/images/${keyname}`;
