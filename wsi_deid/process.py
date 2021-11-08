@@ -8,9 +8,11 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 
+import easyocr
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
+import PIL.ImageOps
 import pyvips
 import tifftools
 from girder import logger
@@ -1286,3 +1288,74 @@ def redact_topleft_square(image):
     imageDraw = PIL.ImageDraw.Draw(newImage)
     imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
+
+
+def image_to_byte_array(image):
+    image_byte_array = io.BytesIO()
+    image.save(image_byte_array, 'tiff')
+    image_byte_array = image_byte_array.getvalue()
+    return image_byte_array
+
+
+def get_allow_list():
+    """
+    Get a string of allowed characters for EasyOCR to find.
+    """
+    return 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-:&.'
+
+
+def get_text_from_associated_image(tile_source, label, reader):
+    associated_image, _ = tile_source.getAssociatedImage(label)
+    associated_image = PIL.Image.open(io.BytesIO(associated_image))
+    words = {}
+    for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
+        if rotate is not None:
+            rotated_image = associated_image.transpose(rotate)
+            text_results = reader.readtext(
+                image_to_byte_array(rotated_image),
+                allowlist=get_allow_list(),
+                contrast_ths=0.75,
+                adjust_contrast=1.0,
+                rotation_info=[90, 180, 270],
+            )
+        else:
+            text_results = reader.readtext(
+                image_to_byte_array(associated_image),
+                allowlist=get_allow_list(),
+                contrast_ths=0.75,
+                adjust_contrast=1.0,
+                rotation_info=[90, 180, 270],
+            )
+        for result in text_results:
+            # easyocr returns the text box coordinates, text, and confidence
+            _, found_text, confidence = result
+            result_info = words.get(found_text, {})
+            result_count = result_info.get('count', 0) + 1
+            result_info['count'] = result_count
+            result_avg_conf = result_info.get('average_confidence', 0)
+            result_avg_conf = (result_avg_conf * (result_count - 1) + confidence) / result_count
+            result_info['average_confidence'] = result_avg_conf
+            words[found_text] = result_info
+    return words
+
+
+def get_image_text(item, reader=None):
+    """
+    Use OCR to identify and return text on any associated image.
+
+    :param item: a girder item.
+    :param reader: an EasyOCR reader object. If a reader is not provided, one will be created.
+    :returns: a list of found text .
+    """
+    if reader is None:
+        reader = easyocr.Reader(['en'], gpu=False)
+    results = []
+    tile_source = ImageItem().tileSource(item)
+    image_format = determine_format(tile_source)
+    if image_format in ['aperio', 'philips']:
+        key = 'label'
+    elif image_format == 'hamamatsu':
+        key = 'macro'
+    results = get_text_from_associated_image(tile_source, key, reader)
+    item = ImageItem().setMetadata(item, {f'{key}_ocr': results})
+    return results

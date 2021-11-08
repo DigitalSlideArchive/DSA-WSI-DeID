@@ -478,7 +478,8 @@ wrap(ItemView, 'render', function (render) {
             unquarantine: { done: 'Item unquarantined.', fail: 'Failed to unquarantine item.' },
             process: { done: 'Item redacted.', fail: 'Failed to redact item.' },
             reject: { done: 'Item rejected.', fail: 'Failed to reject item.' },
-            finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' }
+            finish: { done: 'Item moved to approved folder.', fail: 'Failed to approve item.' },
+            ocr: { done: 'Started job to find label text of this item.', failed: 'Failed to start job to find label text of this item.' }
         };
         $('body').append(
             '<div class="g-hui-loading-overlay"><div>' +
@@ -489,10 +490,16 @@ wrap(ItemView, 'render', function (render) {
             url: 'wsi_deid/item/' + this.model.id + '/action/' + action,
             error: null
         }).done((resp) => {
+            let alertMessage = actions[action].done;
+            if (action === 'ocr') {
+                events.once('g:alert', () => {
+                    $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.jobId}`));
+                }, this);
+            }
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
-                text: actions[action].done,
+                text: alertMessage,
                 type: 'success',
                 timeout: 4000
             });

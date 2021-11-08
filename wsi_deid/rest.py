@@ -17,6 +17,7 @@ from girder.models.upload import Upload
 from girder.models.user import User
 from girder.utility.model_importer import ModelImporter
 from girder.utility.progress import ProgressContext, setResponseTimeLimit
+from girder_jobs.models.job import Job
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
@@ -189,6 +190,23 @@ def process_item(item, user=None):
     return item
 
 
+def ocr_item(item, user):
+    job_title = f'Finding label text for image: {item["name"]}'
+    ocr_job = Job().createLocalJob(
+        module='wsi_deid',
+        function='start_ocr_item_job',
+        title=job_title,
+        type='wsi_deid.ocr_job',
+        user=user,
+        asynchronous=True,
+        args=(item,)
+    )
+    Job().scheduleJob(job=ocr_job)
+    return {
+        'jobId': ocr_job.get('_id', None),
+    }
+
+
 def get_first_item(folder, user):
     """
     Get the first item in a folder or any subfolder of that folder.  The items
@@ -241,6 +259,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
+        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
 
@@ -267,8 +286,8 @@ class WSIDeIDResource(Resource):
         # Allow all users to do redaction actions; change to WRITE otherwise
         .modelParam('id', model=Item, level=AccessType.READ)
         .param('action', 'Action to perform on the item.  One of process, '
-               'reject, quarantine, unquarantine, finish.', paramType='path',
-               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish'])
+               'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
+               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
         .errorResponse()
         .errorResponse('Write access was denied on the item.', 403)
     )
@@ -282,6 +301,7 @@ class WSIDeIDResource(Resource):
             'reject': (move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER)),
             'finish': (move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER)),
             'process': (process_item, (item, user)),
+            'ocr': (ocr_item, (item, user)),
         }
         actionfunc, actionargs = actionmap[action]
         return actionfunc(*actionargs)
@@ -331,6 +351,39 @@ class WSIDeIDResource(Resource):
             result = import_export.exportItems(ctx, user, True)
         result['action'] = 'exportall'
         return result
+
+    @autoDescribeRoute(
+        Description('Run OCR to find label text on items in the import folder without OCR metadata')
+        .errorResponse()
+    )
+    @access.user
+    def ocrReadyToProcess(self):
+        user = self.getCurrentUser()
+        itemIds = []
+        ingestFolder = Folder().load(Setting().get(
+            PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE
+        )
+        resp = {'action': 'ocrall'}
+        for _, file in Folder().fileList(ingestFolder, user, data=False):
+            itemId = file['itemId']
+            item = Item().load(itemId, force=True)
+            if (item.get('meta', {}).get('label_ocr', None) is None and
+                    item.get('meta', {}).get('macro_ocr', None) is None):
+                itemIds.append(file['itemId'])
+        if len(itemIds) > 0:
+            jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+            batchJob = Job().createLocalJob(
+                module='wsi_deid',
+                function='start_ocr_batch_job',
+                title=f'Batch OCR triggered manually: {user["login"]}, {jobStart}',
+                type='wsi_deid.batch_ocr',
+                user=user,
+                asynchronous=True,
+                args=(itemIds,),
+            )
+            Job().scheduleJob(job=batchJob)
+            resp['ocrJobId'] = batchJob['_id']
+        return resp
 
     @autoDescribeRoute(
         Description('Get the ID of the next unprocessed item.')

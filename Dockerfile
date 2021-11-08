@@ -17,7 +17,10 @@ RUN apt-get update && \
     # libsasl2-dev \
     curl \
     ca-certificates \
-    vim && \
+    vim \
+    ffmpeg \
+    libsm6 \
+    libxext6 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \

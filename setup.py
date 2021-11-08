@@ -42,6 +42,7 @@ setup(
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
         'celery<5',
+        'easyocr!=1.4.1',
         'girder-homepage',
         'histomicsui',
         'jsonschema',

@@ -174,7 +174,7 @@ def readExcelFiles(filelist, ctx):
     return manifest, report
 
 
-def ingestOneItem(importFolder, imagePath, record, ctx, user):
+def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     """
     Ingest a single image.
 
@@ -183,6 +183,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
     :param record: a dictionary of information from the excel file.
     :param ctx: a progress context.
     :param user: the user triggering this.
+    :param newItems: a list which should be appended with newly added items
     """
     status = 'added'
     stat = os.stat(imagePath)
@@ -225,6 +226,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user):
         ctx.update(message='Failed to import %s' % name)
         return 'failed'
     item = Item().setMetadata(item, {'redactList': redactList})
+    newItems.append(item['_id'])
     ctx.update(message='Imported %s' % name)
     return status
 
@@ -268,6 +270,7 @@ def ingestData(ctx, user=None):  # noqa
     manifest, excelReport = readExcelFiles(excelFiles, ctx)
     missingImages = []
     report = []
+    newItems = []
     for record in manifest.values():
         try:
             imagePath = os.path.join(os.path.dirname(record['excel']), record['name'])
@@ -289,14 +292,31 @@ def ingestData(ctx, user=None):  # noqa
         if record.get('errors'):
             status = 'badentry'
         else:
-            status = ingestOneItem(importFolder, imagePath, record, ctx, user)
+            status = ingestOneItem(importFolder, imagePath, record, ctx, user, newItems)
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     for image in imageFiles:
         status = 'unlisted'
         report.append({'record': None, 'status': status, 'path': image})
+    # kick off a batch job to run OCR on new items
+    startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
+    if startOcrDuringImport and len(newItems) > 1:
+        jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+        batchJob = Job().createLocalJob(
+            module='wsi_deid',
+            function='start_ocr_batch_job',
+            title=f'Batch OCR triggered by import: {user["login"]}, {jobStart}',
+            type='wsi_deid.batch_ocr',
+            user=user,
+            asynchronous=True,
+            args=(newItems,),
+        )
+        Job().scheduleJob(job=batchJob)
     file = importReport(ctx, report, excelReport, user, importPath)
-    return reportSummary(report, excelReport, file=file)
+    summary = reportSummary(report, excelReport, file=file)
+    if startOcrDuringImport:
+        summary['ocr_job'] = batchJob['_id']
+    return summary
 
 
 def importReport(ctx, report, excelReport, user, importPath):

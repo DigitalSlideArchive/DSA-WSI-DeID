@@ -142,6 +142,11 @@ form#g-wsi_deid-form(role="form")
       option(value='local', selected=(settings['wsi_deid.sftp_mode'] === 'local')) Local export only
       option(value='remote', selected=(settings['wsi_deid.sftp_mode'] === 'remote')) Remote (SFTP) transfer only
       option(value='both', selected=(settings['wsi_deid.sftp_mode'] === 'both')) Local export and remote transfer
+  .form-group
+    label(for="g-wsi-deid-ocr-on-import") Find Label Text on Import
+    p.g-hui-description
+      | Kick off a local job to find label text on new images during an import
+    input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save
