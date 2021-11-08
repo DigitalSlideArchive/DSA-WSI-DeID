@@ -13,6 +13,9 @@ services:
       # Uncomment to use a custom girder configuration file.  This can be a
       # relative path or an absolute path.
       # - ./girder.local.conf:/conf/girder.local.conf
+      # Uncomment to use a custom import schema. This can be a relative path
+      # or an absolute path.
+      # - ../../wsi_deid/schema/importManifestSchema.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
     # Use a specific quantity of memory; this is necessary on some Windows/OSX
     # deployments.  Uncomment if needed.
     # deploy:
