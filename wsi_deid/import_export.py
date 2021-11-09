@@ -185,6 +185,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     :param user: the user triggering this.
     :param newItems: a list which should be appended with newly added items
     """
+    logger.info('in ingestOneItem')
     status = 'added'
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
@@ -206,15 +207,26 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     mimeType = 'image/tiff'
     if Item().findOne({'name': {'$regex': '^%s\\.' % record['ImageID']}}):
         return 'duplicate'
+    logger.info('creating item')
     item = Item().createItem(name=name, creator=user, folder=parentFolder)
+    logger.info('finished creating item')
+    logger.info('creating file')
     file = File().createFile(
         name=name, creator=user, item=item, reuseExisting=False,
         assetstore=assetstore, mimeType=mimeType, size=stat.st_size,
         saveFile=False)
+    logger.info('finished creating file')
     file['path'] = os.path.abspath(os.path.expanduser(imagePath))
     file['mtime'] = stat.st_mtime
     file['imported'] = True
-    file = File().save(file)
+    logger.info('saving file')
+    try:
+        file = File().save(file)
+    except Exception as e:
+        logger.info(f'{e}')
+        logger.info('caught an exception')
+        return
+    logger.info('saved file')
     # Reload the item as it will have changed
     item = Item().load(item['_id'], force=True)
     item = Item().setMetadata(item, {'deidUpload': record['fields']})
@@ -245,6 +257,7 @@ def ingestData(ctx, user=None):  # noqa
     :param ctx: a progress context.
     :param user: the user triggering this.
     """
+    logger.info('importing items')
     importPath = Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)
     importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     if not importPath or not importFolderId:
@@ -267,7 +280,9 @@ def ingestData(ctx, user=None):  # noqa
         ctx.update(message='Failed to find any excel files in import directory.')
     if not len(imageFiles):
         ctx.update(message='Failed to find any image files in import directory.')
+    logger.info('reading excel files')
     manifest, excelReport = readExcelFiles(excelFiles, ctx)
+    logger.info('finished reading excel files')
     missingImages = []
     report = []
     newItems = []
@@ -292,7 +307,9 @@ def ingestData(ctx, user=None):  # noqa
         if record.get('errors'):
             status = 'badentry'
         else:
+            logger.info('reading one item')
             status = ingestOneItem(importFolder, imagePath, record, ctx, user, newItems)
+            logger.info('finished reading one item')
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     for image in imageFiles:
@@ -317,6 +334,7 @@ def ingestData(ctx, user=None):  # noqa
     summary = reportSummary(report, excelReport, file=file)
     if startOcrDuringImport and batchJob:
         summary['ocr_job'] = batchJob['_id']
+    logger.info('finished importing items')
     return summary
 
 
@@ -800,6 +818,11 @@ def exportNoteRejected(report, user, all, metadataProperty, allFiles=True):
             })
 
 
+def getExportFields():
+    export_fields_string = Setting().get(PluginSettings.WSI_DEID_EXPORT_FIELDS)
+    return [field.strip() for field in export_fields_string.split(',')]
+
+
 def buildExportDataSet(report):
     """
     Build a dataframe with export data. The results of this method
@@ -817,11 +840,15 @@ def buildExportDataSet(report):
         'processed': 'ReadyForApproval',
         'different': 'FailedToExport',
     }
+    exportFields = getExportFields()
     curtime = datetime.datetime.utcnow()
     dataList = []
     timeformat = '%m%d%Y: %H%M%S'
     for row in report:
         row['item']['meta'].setdefault('deidUpload', {})
+        uploadData = row['item']['meta']['deidUpload']
+        uploadData = {key: value for key, value in uploadData.items() if key in exportFields}
+        row['item']['meta']['deidUpload'] = uploadData
         data = {}
         data.update(row['item']['meta']['deidUpload'])
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
