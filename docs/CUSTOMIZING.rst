@@ -73,6 +73,11 @@ Import and Export Controls
 
 By default, new data can be imported into the ``AvailableToProcess`` folder and exported from the ``Approved`` folder via specific controls.  Imports require that a manifest spreadsheet file is next to the image files in the import directory.  Images can also be moved or imported into the ``AvailableToProcess`` folder using ordinary item controls in Girder.  If the import and export buttons are not going to be used, they can be hidden by setting the ``show_import_button`` and ``show_export_button`` values to False in the configuration.
 
+Customizing Import and Export Reports
++++++++++++++++++++++++++++++++++++++
+
+If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``. By default, this is set to a subset of the fields in the default import schema.
+
 Import Schema Modification
 --------------------------
 
