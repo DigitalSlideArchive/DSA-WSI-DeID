@@ -69,6 +69,17 @@ form#g-wsi_deid-form(role="form")
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
   .form-group
+    label(for="g-wsi-deid-unfiled-folder") Unfiled Folder
+    p.g-hui-description
+      | When an item is ingested without being associated with a row on the import spreadsheet, it is placed here until more information can be determined.
+    .input-group.input-group-sm
+      input#g-wsi-deid-unfiled-folder.form-control.input-sm(
+          type="text", value=settings['wsi_deid.unfiled_folder'] || '',
+          title="A folder to store images that are yet to be identified.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
     label(for="g-hui-reports-folder") Reports Folder
     p.g-hui-description
       | This is the location where import and export reports are stored.
