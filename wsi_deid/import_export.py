@@ -292,9 +292,7 @@ def ingestData(ctx, user=None):  # noqa
         if record.get('errors'):
             status = 'badentry'
         else:
-            logger.info('reading one item')
             status = ingestOneItem(importFolder, imagePath, record, ctx, user, newItems)
-            logger.info('finished reading one item')
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     for image in imageFiles:
