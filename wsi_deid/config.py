@@ -46,6 +46,9 @@ defaultConfig = {
         ): NUMERIC_VALUES,
     },
     'hide_metadata_keys_format_philips': {},
+    'upload_metadata_for_export_report': [
+        'ImageID', 'Proc_Seq', 'Proc_Type', 'Slide_ID', 'Spec_Site', 'TokenID'
+    ],
 }
 
 

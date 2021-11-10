@@ -20,7 +20,7 @@ from girder.models.upload import Upload
 from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
-from . import process
+from . import config, process
 from .constants import ExportResult, PluginSettings, SftpMode
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -358,6 +358,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         'excel': 'ExcelFilePath',
     }
     dataList = []
+    reportFields = config.getConfig('upload_metadata_for_export_report')
     statusKey = 'SoftwareStatus'
     reasonKey = 'Status/FailureReason'
     anyErrors = False
@@ -379,6 +380,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         }
         if row.get('record'):
             fields = row['record'].get('fields')
+            fields = {key: value for key, value in fields.items() if key in reportFields}
             data.update(fields)
             for k, v in row['record'].items():
                 if k == 'excel' and v:
@@ -403,10 +405,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         if not row.get(reasonKey) and row.get(statusKey):
             row[reasonKey] = row[statusKey]
     df = pd.DataFrame(dataList, columns=[
-        'ExcelFilePath', 'WSIFilePath', statusKey,
-        'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
-        reasonKey
-    ])
+        'ExcelFilePath', 'WSIFilePath', statusKey, *reportFields, reasonKey])
     reportName = 'DeID Import Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     reportFolder = 'Import Job Reports'
     with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
@@ -818,10 +817,14 @@ def buildExportDataSet(report):
         'different': 'FailedToExport',
     }
     curtime = datetime.datetime.utcnow()
+    exportFields = config.getConfig('upload_metadata_for_export_report')
     dataList = []
     timeformat = '%m%d%Y: %H%M%S'
     for row in report:
         row['item']['meta'].setdefault('deidUpload', {})
+        uploadData = row['item']['meta']['deidUpload']
+        uploadData = {key: value for key, value in uploadData.items() if key in exportFields}
+        row['item']['meta']['deidUpload'] = uploadData
         data = {}
         data.update(row['item']['meta']['deidUpload'])
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
@@ -878,7 +881,7 @@ def buildExportDataSet(report):
         dataList.append(data)
     df = pd.DataFrame(dataList, columns=[
         'Last_DEID_RunDate', 'Date_DEID_Export',
-        'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
+        *exportFields,
         'ScannerMake', 'ScannerModel',
         'DSAImageStatus',
         'ByteSize_InboundWSI',
