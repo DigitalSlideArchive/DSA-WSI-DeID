@@ -129,7 +129,6 @@ def validateSettingsFolder(doc):
     PluginSettings.WSI_DEID_REMOTE_USER,
     PluginSettings.WSI_DEID_REMOTE_PASSWORD,
     PluginSettings.WSI_DEID_OCR_ON_IMPORT,
-    PluginSettings.WSI_DEID_EXPORT_FIELDS,
 })
 def validateSettingsImportExport(doc):
     if not doc.get('value', None):

@@ -147,14 +147,6 @@ form#g-wsi_deid-form(role="form")
     p.g-hui-description
       | Kick off a local job to find label text on new images during an import
     input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
-  .form-group
-    label(for="g-wsi-deid-export-fields") Export Data
-    p.g-hui-description
-      | A comma-delimited list of upload metadata fields to be included in the export report
-    input#g-wsi-deid-export-fields.form-control.input-lg(
-      type="text", value=settings['wsi_deid.export_fields'] || '',
-      title="List of uploda metadata fields to be exported",
-      spellcheck="false")
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save
