@@ -111,6 +111,8 @@ def readExcelFiles(filelist, ctx):
     manifest = {}
     report = []
     validator = getSchemaValidator()
+    properties = list(validator.schema['properties'])
+    logger.info(f'Schema properties: {properties}')
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
@@ -151,10 +153,22 @@ def readExcelFiles(filelist, ctx):
                     ctx.update(message=message)
                     logger.info(message)
                 totalErrors.append({'name': name, 'errors': errors})
-            if not name:
-                continue
             count += 1
-            if name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
+            if not name and not errors:
+                # If name is none and there are no errors, then we still want this row in the
+                # manifest to run OCR and try to match the row to an image in the future
+                manifest['unlisted'] = manifest.get('unlisted', {})
+                unlistedEntry = manifest['unlisted'].get(row.ImageID, None)
+                if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
+                    manifest['unlisted'][row.ImageID] = {
+                        'timestamp': timestamp,
+                        'TokenID': row.TokenID,
+                        'ImageID': row.ImageID,
+                        'excel': filepath,
+                        'fields': rowAsDict,
+                        'errors': errors,
+                    }
+            elif name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
                 manifest[name] = {
                     'timestamp': timestamp,
                     'ImageID': row.ImageID,
@@ -171,6 +185,9 @@ def readExcelFiles(filelist, ctx):
             'errors': totalErrors,
         })
         logger.info('Read %s; parsed %d valid rows' % (filepath, count))
+    import pprint
+    mani_str = pprint.pformat(manifest)
+    logger.info(mani_str)
     return manifest, report
 
 
