@@ -4,9 +4,11 @@
 
 ### Features
 - Allow redacting an area from a WSI ([#224](../../pull/224))
+- Allow redacting an area from the label or macro image ([#238](../../pull/238))
 - Add an option to allow editing redacted metadata ([#221](../../pull/221))
 - Add options to determine which metadata is visible and redactable ([#219](../../pull/219))
 - Add options for SFTP export ([#223](../../pull/223))
+- Support for scanning image labels with OCR ([#233](../../pull/233))
 
 ### Improvements
 - Added more logging during export ([#222](../../pull/222))

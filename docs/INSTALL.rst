@@ -24,6 +24,13 @@ The software is known to work with a variety of operating systems:
 
 - Windows Server 2019.  This operating system require some additional changes beyond the default install configuration, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
 
+Virtual Servers
+~~~~~~~~~~~~~~~
+
+The system can work on virtualized servers, such as inside a VirtualBox instance of Ubuntu or a virtualized Windows Server.  In order for this to work, passthrough virtualization needs to be enabled on the host operating system in both hardware and software.  See Docker's documentation on this topic if you have issues getting the system to work on a virtualized server.
+
+As an example, to run the system on a virtualized Windows server in a cloud service, such as EC2, container support needs to be enabled and WSL installed.  This combination may require special permissions beyond the standard available machine instances that are readily available in your cloud service.
+
 Import and Export Paths
 -----------------------
 
@@ -272,7 +279,7 @@ Install our software::
     cd c:\project\DSA-WSI-DeID-master\devops\wsi_deid
     copy docker-compose.example-ws2019.local.yml docker-compose.local.yml
 
-If needed, edit ``docker-compose.local.yml``.  For this installation. the ``command:`` line was uncommented.
+If needed, edit ``docker-compose.local.yml``.  For this installation the ``command:`` line was uncommented.
 
 Start the software::
 
@@ -295,7 +302,7 @@ To modify these business rules, it is recommended that this repository is forked
 Vulnerability Security
 ======================
 
-Since the program is installed and run using Docker, most of its security is dependent on Docker.  The standard deployment uses some standard docker images including MongoDB and Memcached.  These imagess are produced by external sources and are scanned for vulnerabilities by Docker.  There is one custom image used by this program that is created as part of a Continuous Integration (CI) pipeline.  As part of the CI process, this container is scanned for vulnerabilities.
+Since the program is installed and run using Docker, most of its security is dependent on Docker.  The standard deployment uses some standard docker images including MongoDB and Memcached.  These images are produced by external sources and are scanned for vulnerabilities by Docker.  There is one custom image used by this program that is created as part of a Continuous Integration (CI) pipeline.  As part of the CI process, this container is scanned for vulnerabilities.
 
 The CI process uses `trivy <https://aquasecurity.github.io/trivy>`_ to scan the generated docker image for vulnerabilities.  This uses standard public databases of known problems (see the list of Data Sources on Trivy).  Other tools, such as ``docker scan`` use these same databases of issues.  The CI process ensures that there are no high- or critical-level issues before publishing the docker image.  Low- and medium- level issues are periodically reviewed to ensure that they are either inapplicable or guarded in an alternate manner.  For example, there are warnings about nodejs server, but this is not used -- nodejs is used internally as part of the build process, but the server is not part of the running software and therefore issues with the nodejs server cannot affect the final program.
 
