@@ -56,7 +56,7 @@ RUN python3.9 -m pip install --no-cache-dir \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
-    girder[mount] \
+    # girder[mount] \
     # Add additional girder plugins here \
     # girder-homepage \
     # Use prebuilt wheels whenever possible \
@@ -64,7 +64,7 @@ RUN python3.9 -m pip install --no-cache-dir \
 
 # Build the girder web client
 RUN girder build && \
-    # Git rid of unnecessary files to keep the docker image smaller \
+    # Get rid of unnecessary files to keep the docker image smaller \
     find /usr/local/lib/python3.9 -name node_modules -exec rm -rf {} \+ && \
     find /usr/local/lib/python3.9 -name package-lock.json -exec rm -f {} \+ && \
     rm -rf /tmp/npm*
