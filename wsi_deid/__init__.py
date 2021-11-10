@@ -1,4 +1,3 @@
-import easyocr
 import girder
 import psutil
 from girder import plugin
@@ -24,6 +23,8 @@ reader = None
 def get_reader():
     global reader
     if reader is None:
+        import easyocr
+
         reader = easyocr.Reader(['en'], gpu=False, verbose=False)
     return reader
 
