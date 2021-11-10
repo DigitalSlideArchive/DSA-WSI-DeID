@@ -113,6 +113,7 @@ except DistributionNotFound:
     PluginSettings.HUI_ORIGINAL_FOLDER,
     PluginSettings.HUI_FINISHED_FOLDER,
     PluginSettings.HUI_REPORTS_FOLDER,
+    PluginSettings.WSI_DEID_UNFILED_FOLDER,
 })
 def validateSettingsFolder(doc):
     if not doc.get('value', None):

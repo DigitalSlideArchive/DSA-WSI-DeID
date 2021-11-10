@@ -47,6 +47,7 @@ WSI DeID Version: %s
         PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', True),
         PluginSettings.HUI_FINISHED_FOLDER: ('Approved', True),
         PluginSettings.HUI_REPORTS_FOLDER: ('Reports', True),
+        PluginSettings.WSI_DEID_UNFILED_FOLDER: ('Unfiled', True),
     }
     for settingKey, (folderName, public) in folders.items():
         folder = None
