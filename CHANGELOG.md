@@ -9,6 +9,7 @@
 - Add options to determine which metadata is visible and redactable ([#219](../../pull/219))
 - Add options for SFTP export ([#223](../../pull/223))
 - Support for scanning image labels with OCR ([#233](../../pull/233))
+- Allow changing field in import and export reports ([#244](../../pull/244))
 
 ### Improvements
 - Added more logging during export ([#222](../../pull/222))
