@@ -358,6 +358,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         'excel': 'ExcelFilePath',
     }
     dataList = []
+    reportFields = config.getConfig('upload_metadata_for_export_report')
     statusKey = 'SoftwareStatus'
     reasonKey = 'Status/FailureReason'
     anyErrors = False
@@ -379,6 +380,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         }
         if row.get('record'):
             fields = row['record'].get('fields')
+            fields = {key: value for key, value in fields.items() if key in reportFields}
             data.update(fields)
             for k, v in row['record'].items():
                 if k == 'excel' and v:
@@ -403,10 +405,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         if not row.get(reasonKey) and row.get(statusKey):
             row[reasonKey] = row[statusKey]
     df = pd.DataFrame(dataList, columns=[
-        'ExcelFilePath', 'WSIFilePath', statusKey,
-        'TokenID', 'Proc_Seq', 'Proc_Type', 'Spec_Site', 'Slide_ID', 'ImageID',
-        reasonKey
-    ])
+        'ExcelFilePath', 'WSIFilePath', statusKey, *reportFields, reasonKey])
     reportName = 'DeID Import Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     reportFolder = 'Import Job Reports'
     with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
