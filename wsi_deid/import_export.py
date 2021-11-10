@@ -300,6 +300,7 @@ def ingestData(ctx, user=None):  # noqa
         report.append({'record': None, 'status': status, 'path': image})
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
+    batchJob = None
     if startOcrDuringImport and len(newItems) > 1:
         jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
         batchJob = Job().createLocalJob(
@@ -314,7 +315,7 @@ def ingestData(ctx, user=None):  # noqa
         Job().scheduleJob(job=batchJob)
     file = importReport(ctx, report, excelReport, user, importPath)
     summary = reportSummary(report, excelReport, file=file)
-    if startOcrDuringImport:
+    if startOcrDuringImport and batchJob:
         summary['ocr_job'] = batchJob['_id']
     return summary
 

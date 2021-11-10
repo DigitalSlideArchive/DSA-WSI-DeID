@@ -8,7 +8,6 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 
-import easyocr
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
@@ -1348,6 +1347,8 @@ def get_image_text(item, reader=None):
     :returns: a list of found text .
     """
     if reader is None:
+        import easyocr
+
         reader = easyocr.Reader(['en'], gpu=False)
     results = []
     tile_source = ImageItem().tileSource(item)
