@@ -24,9 +24,11 @@ function performAction(action) {
         if (this.itemListView && this.itemListView.checked && this.itemListView._wsi_deid_item_list) {
             let ids = this.itemListView.checked.map((cid) => this.itemListView.collection.get(cid).id);
             ids = ids.filter((id) => this.itemListView._wsi_deid_item_list.byId[id]);
+            if (!ids.length) {
+                return;
+            }
             data.ids = JSON.stringify(ids);
-        }
-        if (!data.ids || !data.ids.length) {
+        } else {
             return;
         }
     }
