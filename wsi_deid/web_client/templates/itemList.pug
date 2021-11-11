@@ -1,0 +1,99 @@
+.wsi_deid_bulk_wrapper
+  table.wsi_deid_bulk_table
+    thead
+      tr
+        //- checkbox
+        th
+        th WSI
+        for key in info.image_names
+          th
+            = key
+        th Item
+        for keylist in info._redactable
+          th
+            = keylist[keylist.length - 1]
+        if showAllVisible
+          for keylist in info._visible
+            th
+              = keylist[keylist.length - 1]
+    tbody.g-item-list
+      each item in items
+        tr.g-item-list-entry(class=(highlightItem && item.id === selectedItemId ? 'g-selected' : ''), public=(isParentPublic ? 'true' : 'false'), item_id=item.id)
+          td
+            input.g-list-checkbox(type="checkbox", g-item-cid=item.cid)
+          td
+            if info.byId[item.id]
+              a.g-item-list-link(g-item-cid=item.cid, href=`#item/${item.id}`)
+                .large_image_thumbnail
+                  img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/thumbnail?width=160&amp;height=100")
+          for key in info.image_names
+            td
+              if info.byId[item.id] && info.byId[item.id].images.indexOf(key) >= 0
+                a.g-item-list-link(g-item-cid=item.cid, href=`#item/${item.id}`)
+                  .large_image_thumbnail
+                    img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/images/" + key + "?width=160&amp;height=100")
+
+          td
+            a.g-item-list-link.g-right-border(g-item-cid=item.cid, href=`#item/${item.id}`)
+              i.icon-doc-text-inv
+              = item.name()
+            if downloadLinks
+              a(title="Download item", href=item.downloadUrl())
+                i.icon-download
+            if viewLinks
+              a.g-view-inline(title="View in browser", target="_blank", rel="noopener noreferrer",
+                  href=item.downloadUrl({contentDisposition: 'inline'}))
+                i.icon-eye
+            if showSizes
+              .g-item-size= formatSize(item.get('size'))
+          if info.byId[item.id]
+            for keylist in info._redactable
+              td
+                - var keyname = 'internal;' + keylist.join(';')
+                if info.byId[item.id]._metadict[keyname] !== undefined
+                  - var redactable = info.byId[item.id]._redactable.indexOf(keylist) >= 0
+                  - var visible = info.byId[item.id]._visible.indexOf(keylist) >= 0
+                  if (!hasRedactionControls && redactable) || (showAllVisible && visible)
+                    = info.byId[item.id]._metadict[keyname]
+                  if hasRedactionControls && redactable
+                    // redaction controls here
+                    -
+                      var redactList = info.byId[item.id]._redactList;
+                      var isRedacted = redactList.metadata[keyname] !== undefined;
+                      var redactButtonAllowed = true;
+                      var redactReason = isRedacted ? redactList.metadata[keyname].reason : '';
+                    span.large_image_metadata_value(class=isRedacted ? 'redacted' : '')
+                      = info.byId[item.id]._metadict[keyname]
+                      if isRedacted && redactList.metadata[keyname] && redactList.metadata[keyname].value && (redactReason === systemRedactedReason || redactReason === undefined)
+                        span.redact-replacement
+                          = redactList.metadata[keyname].value
+                          - redactButtonAllowed = false
+                      else
+                        if info.wsi_deid_settings.edit_metadata
+                          -
+                            var inputId = "redact-value-" + keyname
+                          span.wsi-deid-replace-value(keyname=keyname, category="metadata")
+                            label(for=inputId) New value:
+                              input.wsi-deid-replace-value-input(type="text", id=inputId, value=(redactList.metadata[keyname] || {}).value || "")
+                          if info.wsi_deid_settings.require_redact_category !== false
+                            span.g-hui-redact-label Redact
+                              select.g-hui-redact(keyname=keyname, category="metadata", title="Redact this metadata")
+                                option(value="none") Keep (do not redact)
+                                for cat in PHIPIITypes
+                                  if cat.types
+                                    optgroup(label=cat.text)
+                                      for phitype in cat.types
+                                        option(value=phitype.key, category=cat.category, selected=(redactReason === phitype.key))
+                                          = phitype.text
+                                  else
+                                    option(value=cat.key, category=cat.category, selected=(redactReason === cat.key))
+                                      = cat.text
+                          else
+                            a.g-hui-redact(class=redactRecord && redactRecord.reason ? " undo" : "", keyname=keyname, category="metadata", title="Toggle redacting this metadata") Redact
+
+            if showAllVisible
+              for keylist in info._redactable
+                td
+                  - var keyname = 'internal;' + keylist.join(';')
+                  if info.byId[item.id]._metadict[keyname] !== undefined
+                    = info.byId[item.id]._metadict[keyname]
