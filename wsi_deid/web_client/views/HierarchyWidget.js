@@ -56,7 +56,8 @@ function performAction(action) {
                 ['missing', 'missing from import folder.  Check DeID Upload File and WSI image filenames'],
                 ['badentry', 'with invalid data in a DeID Upload File'],
                 ['unlisted', 'in the import folder, but not listed in a DeID Upload Excel/CSV file'],
-                ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format']
+                ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format'],
+                ['unfiled', 'not yet associated with a row from the import sheet. Uploaded to the Unfiled folder']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     if (key === 'unlisted' && !resp.parsed && !resp.notexcel && !resp.badformat) {

@@ -46,10 +46,7 @@ def readExcelData(filepath):
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
-        if (
-                'TokenID' in df.columns and
-                'ImageID' in df.columns and
-                any(key in df.columns for key in {'ScannedFileName', 'InputFileName'})):
+        if 'TokenID' in df.columns and 'ImageID' in df.columns:
             return df, potential_header
         potential_header += 1
         df = reader(filepath, header=potential_header, dtype=str)
@@ -112,7 +109,6 @@ def readExcelFiles(filelist, ctx):
     report = []
     validator = getSchemaValidator()
     properties = list(validator.schema['properties'])
-    logger.info(f'Schema properties: {properties}')
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
@@ -154,20 +150,24 @@ def readExcelFiles(filelist, ctx):
                     logger.info(message)
                 totalErrors.append({'name': name, 'errors': errors})
             count += 1
-            if not name and not errors:
-                # If name is none and there are no errors, then we still want this row in the
-                # manifest to run OCR and try to match the row to an image in the future
-                manifest['unlisted'] = manifest.get('unlisted', {})
-                unlistedEntry = manifest['unlisted'].get(row.ImageID, None)
-                if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
-                    manifest['unlisted'][row.ImageID] = {
-                        'timestamp': timestamp,
-                        'TokenID': row.TokenID,
-                        'ImageID': row.ImageID,
-                        'excel': filepath,
-                        'fields': rowAsDict,
-                        'errors': errors,
-                    }
+            if not name:
+                if (not errors and
+                     ('ScannedFileName' not in properties and 'InputFileName' not in properties)):
+                    # If name is none and there are no errors, then we still want this row in the
+                    # manifest to run OCR and try to match the row to an image in the future
+                    manifest['unfiled'] = manifest.get('unfiled', {})
+                    unlistedEntry = manifest['unfiled'].get(row.ImageID, None)
+                    if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
+                        manifest['unfiled'][row.ImageID] = {
+                            'timestamp': timestamp,
+                            'TokenID': row.TokenID,
+                            'ImageID': row.ImageID,
+                            'excel': filepath,
+                            'fields': rowAsDict,
+                            'errors': errors,
+                        }
+                else:
+                    pass
             elif name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
                 manifest[name] = {
                     'timestamp': timestamp,
@@ -248,6 +248,32 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     return status
 
 
+def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
+    logger.info(f'{imagePath}')
+    stat = os.stat(imagePath)
+    existing = File().findOne({'path': imagePath, 'imported': True})
+    if existing:
+        if existing['size'] == stat.st_size:
+            # file already present
+            return
+        item = Item().load(existing['itemId'], force=True)
+        ctx.update(message='Removing unfiled image %s since the size has changed' % imagePath)
+        Item().remove(item)
+    ctx.update(message='Uploading %s to the Unfiled folder' % imagePath)
+    assetstore = Assetstore().getCurrent()
+    _, name = os.path.split(imagePath)
+    mimeType = 'image/tiff'
+    item = Item().createItem(name=name, creator=user, folder=unfiledFolder)
+    file = File().createFile(
+        name=name, creator=user, item=item, reuseExisting=False,
+        assetstore=assetstore, mimeType=mimeType, size=stat.st_size, saveFile=False)
+    file['path'] = os.path.abspath(os.path.expanduser(imagePath))
+    file['mtime'] = stat.st_mtime
+    file['imported'] = True
+    file = File().save(file)
+    unfiledItems.append(item['_id'])
+
+
 def ingestData(ctx, user=None):  # noqa
     """
     Scan the import folder for image and excel files.  For each excel file,
@@ -278,13 +304,16 @@ def ingestData(ctx, user=None):  # noqa
                 excelFiles.append(filePath)
             # ignore some extensions
             elif (ext.lower() not in {'.zip', '.txt', '.xml', '.swp', '.xlk'} and
-                    not file.startswith('~$')):
+                    not file.startswith('~$') and not file.startswith('.~')):
                 imageFiles.append(filePath)
     if not len(excelFiles):
         ctx.update(message='Failed to find any excel files in import directory.')
     if not len(imageFiles):
         ctx.update(message='Failed to find any image files in import directory.')
     manifest, excelReport = readExcelFiles(excelFiles, ctx)
+    unfiledImages = None
+    if manifest.get('unfiled', None) is not None:
+        unfiledImages = manifest.pop('unfiled')
     missingImages = []
     report = []
     newItems = []
@@ -312,9 +341,22 @@ def ingestData(ctx, user=None):  # noqa
             status = ingestOneItem(importFolder, imagePath, record, ctx, user, newItems)
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
+    unfiledFolder = None
+    unfiledItems = []
+    if unfiledImages is not None:
+        logger.info(f'{unfiledImages}')
+        unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
+        if unfiledFolderId:
+            unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
+        else:
+            logger.info('Unfiled folder not specified.')
     for image in imageFiles:
-        status = 'unlisted'
-        report.append({'record': None, 'status': status, 'path': image})
+        if unfiledFolder is None:
+            status = 'unlisted'
+            report.append({'record': None, 'status': status, 'path': image})
+        else:
+            ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems)
+            report.append({'status': 'unfiled', 'path': image})
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     batchJob = None
@@ -364,12 +406,15 @@ def importReport(ctx, report, excelReport, user, importPath):
         'badentry': 'Error in DeID Upload file',
         'failed': 'Failed to import',
         'duplicate': 'Duplicate ImageID',
+        'unfiled': 'Unfiled Image',
     }
     statusExplanation = {
         'failed': 'Image file is not an accepted WSI format',
         'duplicate': 'A different image with the same ImageID was previously imported',
         'replaced': 'File size was different than that already present; '
                     'existing image was replaced',
+        'unfiled': 'The file could not be associated with a row in the import spreadsheet '
+                    'at the time of import',
     }
     keyToColumns = {
         'excel': 'ExcelFilePath',
