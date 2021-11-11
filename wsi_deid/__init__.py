@@ -98,6 +98,51 @@ def start_ocr_batch_job(job):
         )
 
 
+def associate_unfiled_images(job):
+    """
+    Function to be run for girder jobs of type wsi_deid.associate_unfiled. Jobs using this function
+    should include a list of girder item ids as the first argument, and associated data from the
+    import spreadsheet as the second argument.
+
+    :param job: a girder job
+    """
+    Job().updateJob(job, log='Starting job to associate unfiled images with upload data...\n\n', status=JobStatus.RUNNING)
+    job_args = job.get('args', None)
+    if job_args is None or len(job_args) != 2:
+        Job().updateJob(job, log='Expected a list of girder items and upload information as arguments.\n', status=JobStatus.ERROR)
+        return
+    itemIds = job_args[0]
+    uploadInfo = job_args[1]
+    ocr_reader = get_reader()
+    try:
+        for itemId in itemIds:
+            label_text = ''
+            item = Item().load(itemId, force=True)
+            Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
+            try:
+                label_text = get_image_text(item, ocr_reader)
+                if len(label_text) > 0:
+                    message = f'Found label text {label_text} for file {item["name"]}.\n\n'
+                else:
+                    message = f'Could not find label text for file {item["name"]}.\n\n'
+                Job().updateJob(job, log=message)
+            except Exception as e:
+                raise e
+            if len(label_text) > 0:
+                Job().updateJob(job, log=f'Attempting to associate upload data with {item["name"]}...\n')
+                for key, value in uploadInfo.items():
+                    # key is the TokenID from the import spreadsheet, and value is associated info
+                    pass
+        Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
+    except Exception as e:
+        Job().updateJob(
+            job,
+            log=f'Job failed with the following exceptions: {str(e)}.',
+            status=JobStatus.ERROR,
+        )
+
+
+
 try:
     __version__ = get_distribution(__name__).version
 except DistributionNotFound:

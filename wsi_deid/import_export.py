@@ -274,6 +274,24 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
     unfiledItems.append(item['_id'])
 
 
+def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
+    logger.info(f'IDs: {itemIds}')
+    logger.info(f'Info Dict: {imageInfoDict}')
+    logger.info(f'User: {user}')
+    jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    unfiledJob = Job().createLocalJob(
+        module='wsi_deid',
+        function='start_ocr_batch_job',
+        title=f'Attempting to associate unfiled images: {user["login"]}, {jobStart}',
+        type='wsi_deid.associate_unfiled',
+        user=user,
+        asynchronous=True,
+        args=(itemIds, imageInfoDict)
+    )
+    Job().scheduleJob(unfiledJob)
+    return unfiledJob['_id']
+
+
 def ingestData(ctx, user=None):  # noqa
     """
     Scan the import folder for image and excel files.  For each excel file,
@@ -343,6 +361,7 @@ def ingestData(ctx, user=None):  # noqa
     # imageFiles are images that have no manifest record
     unfiledFolder = None
     unfiledItems = []
+    unfiledJobId = None
     if unfiledImages is not None:
         logger.info(f'{unfiledImages}')
         unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
@@ -357,6 +376,9 @@ def ingestData(ctx, user=None):  # noqa
         else:
             ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems)
             report.append({'status': 'unfiled', 'path': image})
+    if len(unfiledItems) > 0:
+        unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
+        logger.info(unfiledJobId)
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     batchJob = None
