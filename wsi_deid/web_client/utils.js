@@ -66,6 +66,40 @@ function goToNextUnprocessedItem(callback) {
     return false;
 }
 
+function goToNextUnprocessedFolder(callback, skipId) {
+    restRequest({
+        url: 'wsi_deid/next_unprocessed_folders',
+        error: null
+    }).done((resp) => {
+        if (resp && resp.length > 1) {
+            events.trigger('g:alert', {
+                icon: 'right-big',
+                text: 'Switching to next unprocessed folder',
+                timeout: 4000
+            });
+            let id = resp.filter((i) => i !== skipId)[0];
+            router.navigate('folder/' + id, { trigger: true });
+            window.scrollTo(0, 0);
+        } else {
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: 'All folders are processed or in use',
+                type: 'success',
+                timeout: 4000
+            });
+            if (resp) {
+                let id = resp.filter((i) => i !== skipId)[0];
+                router.navigate('folder/' + id, { trigger: true });
+                window.scrollTo(0, 0);
+            }
+        }
+        if (callback) {
+            callback(resp);
+        }
+    });
+    return false;
+}
+
 function getRedactList(itemModel) {
     let redactList = ((itemModel.get && itemModel.get('meta')) || itemModel.meta || {}).redactList || {};
     redactList.metadata = redactList.metadata || {};
@@ -215,6 +249,7 @@ export {
     getHiddenMetadataPatterns,
     getRedactionDisabledPatterns,
     getRedactList,
+    goToNextUnprocessedFolder,
     goToNextUnprocessedItem,
     matchFieldPattern,
     putRedactList

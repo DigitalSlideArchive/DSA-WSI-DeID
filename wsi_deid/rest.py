@@ -2,6 +2,7 @@ import copy
 import datetime
 import os
 import tempfile
+import threading
 import time
 
 import girder_large_image
@@ -35,6 +36,12 @@ ProjectFolders = {
     'original': PluginSettings.HUI_ORIGINAL_FOLDER,
     'finished': PluginSettings.HUI_FINISHED_FOLDER,
 }
+
+
+IngestLock = threading.Lock()
+ExportLock = threading.Lock()
+ItemActionLock = threading.Lock()
+ItemActionList = []
 
 
 def create_folder_hierarchy(item, user, folder):
@@ -211,21 +218,37 @@ def ocr_item(item, user):
     }
 
 
-def get_first_item(folder, user):
+def get_first_item(folder, user, exclude=None, excludeFolders=False):
     """
     Get the first item in a folder or any subfolder of that folder.  The items
-    are sorted aalphabetically.
+    are sorted alphabetically.
 
     :param folder: the folder to search
+    :param user: the user with permissions to use for searching.
+    :param exclude: if not None, exclude items in this list of folders (does
+        not include their subfolders).
+    :param excludeFolders: if True, add the folders of items in the current
+        ItemActionList to the list of excluded folders.
     :returns: an item or None.
     """
-    for item in Folder().childItems(folder, limit=1, sort=[('lowerName', SortDir.ASCENDING)]):
-        return item
+    if excludeFolders:
+        exclude = (exclude or [])[:]
+        with ItemActionLock:
+            for item in ItemActionList:
+                exclude.append({'_id': item['folderId']})
+    excludeset = (str(entry['_id']) for entry in exclude) if exclude else set()
+    if str(folder['_id']) not in excludeset:
+        for item in Folder().childItems(folder, limit=1, sort=[('lowerName', SortDir.ASCENDING)]):
+            with ItemActionLock:
+                if item['_id'] not in [entry['_id'] for entry in ItemActionList]:
+                    return item
     for subfolder in Folder().childFolders(
             folder, 'folder', user=user, sort=[('lowerName', SortDir.ASCENDING)]):
-        item = get_first_item(subfolder, user)
-        if item is not None:
-            return item
+        item = get_first_item(subfolder, user, exclude)
+        if item is not None and str(subfolder['_id']) not in excludeset:
+            with ItemActionLock:
+                if item['_id'] not in [entry['_id'] for entry in ItemActionList]:
+                    return item
 
 
 def ingestData(user=None, progress=True):
@@ -235,7 +258,8 @@ def ingestData(user=None, progress=True):
     :param user: the user that started this.
     """
     with ProgressContext(progress, user=user, title='Importing data') as ctx:
-        result = import_export.ingestData(ctx, user)
+        with IngestLock:
+            result = import_export.ingestData(ctx, user)
     result['action'] = 'ingest'
     return result
 
@@ -247,7 +271,8 @@ def exportData(user=None, progress=True):
     :param user: the user that started this.
     """
     with ProgressContext(progress, user=user, title='Exporting recent finished items') as ctx:
-        result = import_export.exportItems(ctx, user)
+        with ExportLock:
+            result = import_export.exportItems(ctx, user)
     result['action'] = 'export'
     return result
 
@@ -258,12 +283,15 @@ class WSIDeIDResource(Resource):
         self.resourceName = 'wsi_deid'
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
+        self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
+        # self.route('PUT', ('action', 'finishlist'), self.finishItemList)
         self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
+        self.route('PUT', ('action', 'list', ':action'), self.itemListAction)
         self.route('GET', ('settings',), self.getSettings)
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
         self.route('GET', ('folder', ':id', 'item_list'), self.folderItemList)
@@ -286,6 +314,39 @@ class WSIDeIDResource(Resource):
             folder = Folder().load(folder['parentId'], force=True)
         return None
 
+    def _actionForItem(self, item, user, action):
+        """
+        Given an item, user, an action, return a function and parameters to
+        execute that action.
+
+        :param item: an item document.
+        :param user: the user document.
+        :param action: an action string.
+        :returns: the action function, a tuple of arguments to pass to it, the
+            name of the action, and the present participle of the action.
+        """
+        actionmap = {
+            'quarantine': (
+                histomicsui.handlers.quarantine_item, (item, user, False),
+                'quarantine', 'quarantining'),
+            'unquarantine': (
+                histomicsui.handlers.restore_quarantine_item, (item, user),
+                'unquarantine', 'unquaranting'),
+            'reject': (
+                move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER),
+                'reject', 'rejecting'),
+            'finish': (
+                move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER),
+                'approve', 'approving'),
+            'process': (
+                process_item, (item, user),
+                'redact', 'redacting'),
+            'ocr': (
+                ocr_item, (item, user),
+                'scan', 'scanning'),
+        }
+        return actionmap[action]
+
     @autoDescribeRoute(
         Description('Perform an action on an item.')
         # Allow all users to do redaction actions; change to WRITE otherwise
@@ -300,15 +361,13 @@ class WSIDeIDResource(Resource):
     def itemAction(self, item, action):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
-        actionmap = {
-            'quarantine': (histomicsui.handlers.quarantine_item, (item, user, False)),
-            'unquarantine': (histomicsui.handlers.restore_quarantine_item, (item, user)),
-            'reject': (move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER)),
-            'finish': (move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER)),
-            'process': (process_item, (item, user)),
-            'ocr': (ocr_item, (item, user)),
-        }
-        actionfunc, actionargs = actionmap[action]
+        with ItemActionLock:
+            ItemActionList.append(item)
+        try:
+            actionfunc, actionargs, name, pp = self._actionForItem(item, user, action)
+        finally:
+            with ItemActionLock:
+                ItemActionList.remove(item)
         return actionfunc(*actionargs)
 
     @autoDescribeRoute(
@@ -398,11 +457,41 @@ class WSIDeIDResource(Resource):
     def nextUnprocessedItem(self):
         user = self.getCurrentUser()
         for settingKey in (
-                PluginSettings.HUI_INGEST_FOLDER, PluginSettings.HUI_QUARANTINE_FOLDER):
+                PluginSettings.HUI_INGEST_FOLDER,
+                PluginSettings.HUI_QUARANTINE_FOLDER,
+                PluginSettings.HUI_PROCESSED_FOLDER):
             folder = Folder().load(Setting().get(settingKey), user=user, level=AccessType.READ)
             item = get_first_item(folder, user)
             if item is not None:
                 return str(item['_id'])
+
+    @autoDescribeRoute(
+        Description(
+            'Get the IDs of the next two folders with unprocessed items and '
+            'the id of the finished folder.')
+        .errorResponse()
+    )
+    @access.user
+    def nextUnprocessedFolders(self):
+        user = self.getCurrentUser()
+        folders = []
+        exclude = None
+        for _ in range(2):
+            for settingKey in (
+                    PluginSettings.HUI_INGEST_FOLDER,
+                    PluginSettings.HUI_QUARANTINE_FOLDER,
+                    PluginSettings.HUI_PROCESSED_FOLDER):
+                folder = Folder().load(Setting().get(settingKey), user=user, level=AccessType.READ)
+                item = get_first_item(folder, user, exclude, exclude is not None)
+                if item is not None:
+                    parent = Folder().load(item['folderId'], user=user, level=AccessType.READ)
+                    folders.append(str(parent['_id']))
+                    exclude = [parent]
+                    break
+            if not exclude:
+                break
+        folders.append(Setting().get(PluginSettings.HUI_FINISHED_FOLDER))
+        return folders
 
     @autoDescribeRoute(
         Description('Get settings that affect the UI.')
@@ -522,3 +611,50 @@ class WSIDeIDResource(Resource):
         response['all_metadata_keys'] = [list(entry) for entry in sorted(allmeta)]
         response['_time'] = time.time() - starttime
         return response
+
+    @autoDescribeRoute(
+        Description('Perform an action on a list of items.')
+        .jsonParam('ids', 'A list of item ids to redact', required=True)
+        # Allow all users to do redaction actions; change to WRITE otherwise
+        .param('action', 'Action to perform on the item.  One of process, '
+               'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
+               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
+        .errorResponse()
+        .errorResponse('Write access was denied on the item.', 403)
+    )
+    @access.user
+    def itemListAction(self, ids, action):
+        setResponseTimeLimit(86400)
+        if not len(ids):
+            return
+        user = self.getCurrentUser()
+        items = [Item().load(id=id, user=user, level=AccessType.READ) for id in ids]
+        actionfunc, actionargs, actname, pp = self._actionForItem(items[0], user, action)
+        with ItemActionLock:
+            ItemActionList.extend(items)
+        try:
+            with ProgressContext(
+                True, user=user, title='%s items' % pp.capitalize(),
+                message='%s %s' % (pp.capitalize(), items[0]['name']),
+                total=len(ids), current=0
+            ) as ctx:
+                try:
+                    for idx, item in enumerate(items):
+                        actionfunc, actionargs, actname, pp = self._actionForItem(
+                            item, user, action)
+                        ctx.update(
+                            message='%s %s' % (pp.capitalize(), item['name']),
+                            total=len(ids), current=idx)
+                        try:
+                            actionfunc(*actionargs)
+                        except Exception:
+                            logger.exception('Failed to %s item' % actname)
+                            ctx.update('Error %s %s' % (pp, item['name']))
+                            raise
+                    ctx.update(message='Done %s' % pp, total=len(ids), current=len(ids))
+                except Exception:
+                    pass
+        finally:
+            with ItemActionLock:
+                for item in items:
+                    ItemActionList.remove(item)

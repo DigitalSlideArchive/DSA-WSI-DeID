@@ -8,6 +8,7 @@ import { wrap } from '@girder/core/utilities/PluginUtils';
 import HierarchyWidget from '@girder/core/views/widgets/HierarchyWidget';
 import { formatCount } from '@girder/core/misc';
 
+import { goToNextUnprocessedFolder } from '../utils';
 import '../stylesheets/HierarchyWidget.styl';
 
 function performAction(action) {
@@ -19,10 +20,14 @@ function performAction(action) {
     };
 
     let data = {};
-    if (action.includes('list')) {
+    if (action.startsWith('list/')) {
         if (this.itemListView && this.itemListView.checked && this.itemListView._wsi_deid_item_list) {
-            data.ids = this.itemListView.checked.map((cid) => this.itemListView.collection.get(cid).id);
-            data.ids = data.ids.filter((id) => this.itemListView._wsi_deid_item_list.byId[id]);
+            let ids = this.itemListView.checked.map((cid) => this.itemListView.collection.get(cid).id);
+            ids = ids.filter((id) => this.itemListView._wsi_deid_item_list.byId[id]);
+            data.ids = JSON.stringify(ids);
+        }
+        if (!data.ids || !data.ids.length) {
+            return;
         }
     }
 
@@ -32,6 +37,9 @@ function performAction(action) {
         data: data,
         error: null
     }).done((resp) => {
+        if (!actions[action]) {
+            return;
+        }
         let text = actions[action].done;
         let any = false;
         if (resp.action === 'ingest') {
@@ -145,6 +153,9 @@ function performAction(action) {
             timeout: 0
         });
     });
+    if (action.startsWith('list/')) {
+        goToNextUnprocessedFolder(undefined, this.parentModel.id);
+    }
 }
 
 function addControls(key, settings) {
@@ -154,7 +165,7 @@ function addControls(key, settings) {
                 key: 'redactlist',
                 text: 'Redact Checked',
                 class: 'btn-info disabled',
-                action: 'redactlist',
+                action: 'list/process',
                 check: () => settings.show_metadata_in_lists
             }, {
                 key: 'import',
@@ -190,7 +201,7 @@ function addControls(key, settings) {
                 key: 'finishlist',
                 text: 'Approve Checked',
                 class: 'btn-info disabled',
-                action: 'finishlist',
+                action: 'list/finish',
                 check: () => settings.show_metadata_in_lists
             }
         ],
@@ -199,7 +210,7 @@ function addControls(key, settings) {
                 key: 'redactlist',
                 text: 'Redact Checked',
                 class: 'btn-info disabled',
-                action: 'redactlist',
+                action: 'list/process',
                 check: () => settings.show_metadata_in_lists
             }
         ]
