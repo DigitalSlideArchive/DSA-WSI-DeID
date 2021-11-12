@@ -1,4 +1,5 @@
 import girder
+from girder.models.user import User
 import psutil
 from girder import plugin
 from girder.constants import AssetstoreType
@@ -70,10 +71,29 @@ def get_label_text_for_item(item, ocr_reader, job):
         raise e
 
 
-def associate_images(imageIdsToItems, uploadInfo):
-    for imageId, imageInfo in imageIdsToItems.items():
-
-        pass
+def associate_images(imageIdsToItems, uploadInfo, userId, job):
+    user = User().load(userId)
+    for imageId, possibleMatches in imageIdsToItems.items():
+        tokenId = uploadInfo[imageId]['TokenID']
+        Job().updateJob(job, log=f'{tokenId}.\n')
+        if len(possibleMatches) != 1:
+            # continue for now, might be worth updating the item metadata
+            continue
+        bestMatch = possibleMatches[0]
+        Job().updateJob(job, log=f'bestMatch: {bestMatch}.\n')
+        item = Item().load(bestMatch, force=True)
+        Job().updateJob(job, log=f'item: {item}.\n')
+        ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
+        ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
+        Job().updateJob(job, log=f'ingestFolder: {ingestFolder}.\n')
+        parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder})
+        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
+        if not parentFolder:
+            parentFolder = Folder().createFolder(ingestFolder, tokenId)
+        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
+        newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+        readyToProcessItem = Item().copyItem(item, user, newImageName, parentFolder)
+        Item().setMetadata(readyToProcessItem, {'deidUpload': uploadInfo['fields']})
 
 
 def start_ocr_batch_job(job):
@@ -142,7 +162,7 @@ def associate_unfiled_images(job):
             rowToImageMatches[key] = []
         for itemId in itemIds:
             item = Item().load(itemId, force=True)
-            label_text = get_label_text_for_item(itemId, ocr_reader, job)
+            label_text = get_label_text_for_item(item, ocr_reader, job)
             imageToRowMatches = []
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]
@@ -166,6 +186,7 @@ def associate_unfiled_images(job):
             Job().updateJob(job, message)
         import pprint
         Job().updateJob(job, log=f'Potential matches by ImageId: {pprint.pformat(rowToImageMatches)}\n\n')
+        associate_images(rowToImageMatches, uploadInfo, job['userId'], job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
         Job().updateJob(
