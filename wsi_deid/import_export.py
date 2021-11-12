@@ -281,7 +281,7 @@ def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
     jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     unfiledJob = Job().createLocalJob(
         module='wsi_deid',
-        function='start_ocr_batch_job',
+        function='associate_unfiled_images',
         title=f'Attempting to associate unfiled images: {user["login"]}, {jobStart}',
         type='wsi_deid.associate_unfiled',
         user=user,

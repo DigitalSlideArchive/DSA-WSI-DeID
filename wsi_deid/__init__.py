@@ -16,6 +16,8 @@ from .import_export import SftpMode
 from .process import get_image_text
 from .rest import WSIDeIDResource
 
+from . import config
+
 # set up asynchronously running ocr
 reader = None
 
@@ -52,6 +54,26 @@ def start_ocr_item_job(job):
     else:
         message = f'Could not find label text for file {item["name"]}\n'
     Job().updateJob(job, log=message, status=status)
+
+
+def get_label_text_for_item(item, ocr_reader, job):
+    Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
+    try:
+        label_text = get_image_text(item, ocr_reader)
+        if len(label_text) > 0:
+            message = f'Found label text {label_text} for file {item["name"]}.\n\n'
+        else:
+            message = f'Could not find label text for file {item["name"]}.\n\n'
+        Job().updateJob(job, log=message)
+        return label_text
+    except Exception as e:
+        raise e
+
+
+def associate_images(imageIdsToItems, uploadInfo):
+    for imageId, imageInfo in imageIdsToItems.items():
+
+        pass
 
 
 def start_ocr_batch_job(job):
@@ -115,24 +137,35 @@ def associate_unfiled_images(job):
     uploadInfo = job_args[1]
     ocr_reader = get_reader()
     try:
+        rowToImageMatches = {}
+        for key in list(uploadInfo):
+            rowToImageMatches[key] = []
         for itemId in itemIds:
-            label_text = ''
             item = Item().load(itemId, force=True)
-            Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
-            try:
-                label_text = get_image_text(item, ocr_reader)
-                if len(label_text) > 0:
-                    message = f'Found label text {label_text} for file {item["name"]}.\n\n'
-                else:
-                    message = f'Could not find label text for file {item["name"]}.\n\n'
-                Job().updateJob(job, log=message)
-            except Exception as e:
-                raise e
+            label_text = get_label_text_for_item(itemId, ocr_reader, job)
+            imageToRowMatches = []
+            # Don't rely on matching tokens that are only 1 character in length
+            label_text = [word for word in label_text if len(word) > 1]
             if len(label_text) > 0:
                 Job().updateJob(job, log=f'Attempting to associate upload data with {item["name"]}...\n')
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info
-                    pass
+                    matchTextField = config.getConfig('import_text_association_column')
+                    uploadFields = value.get('fields', {})
+                    if not matchTextField or matchTextField not in uploadFields:
+                        Job.updateJob(job, log='No label text lookup field specified. Please make sure "import_text_association_column" is set in your configuration.', status=JobStatus.ERROR)
+                        return
+                    text_to_match = uploadFields[matchTextField]
+                    if text_to_match in label_text:
+                        rowToImageMatches[key].append(item['_id'])
+                        imageToRowMatches.append(key)
+            if len(imageToRowMatches) > 0:
+                message = f'{item["name"]} matched to ImageIDs {imageToRowMatches}.\n\n'
+            else:
+                message = f'Unable to find a match for {item["name"]}.\n\n'
+            Job().updateJob(job, message)
+        import pprint
+        Job().updateJob(job, log=f'Potential matches by ImageId: {pprint.pformat(rowToImageMatches)}\n\n')
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
         Job().updateJob(
