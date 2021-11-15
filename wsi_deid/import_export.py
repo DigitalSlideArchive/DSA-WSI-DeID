@@ -113,13 +113,18 @@ def readExcelFiles(filelist, ctx):
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
             df, header_row_number = readExcelData(filepath)
+            for key in ['ScannedFileName', 'InputFileName']:
+                if key in properties:
+                    df[key] = df[key].fillna('')
             df = df.dropna(how='all', axis='columns')
         except Exception as exc:
             if isinstance(exc, ValueError):
+                logger.info(f'Exception: {exc}')
                 message = 'Cannot read %s; it is not formatted correctly' % (
                     os.path.basename(filepath), )
                 status = 'badformat'
             else:
+                logger.info(f'{exc}')
                 message = 'Cannot read %s; it is not an Excel file' % (
                     os.path.basename(filepath), )
                 status = 'notexcel'
@@ -151,9 +156,9 @@ def readExcelFiles(filelist, ctx):
                 totalErrors.append({'name': name, 'errors': errors})
             count += 1
             if not name:
-                if (not errors and
-                   ('ScannedFileName' not in properties and 'InputFileName' not in properties)):
-                    # If name is none and there are no errors, then we still want this row in the
+                if not errors:
+                    # If name is none and there are no errors, then we know that ScannedFileName
+                    # and InputFile name are not required, and we still want this row in the
                     # manifest to run OCR and try to match the row to an image in the future
                     manifest['unfiled'] = manifest.get('unfiled', {})
                     unlistedEntry = manifest['unfiled'].get(row.ImageID, None)
@@ -185,9 +190,6 @@ def readExcelFiles(filelist, ctx):
             'errors': totalErrors,
         })
         logger.info('Read %s; parsed %d valid rows' % (filepath, count))
-    import pprint
-    mani_str = pprint.pformat(manifest)
-    logger.info(mani_str)
     return manifest, report
 
 
