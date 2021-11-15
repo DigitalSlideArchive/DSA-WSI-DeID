@@ -188,18 +188,22 @@ def associate_unfiled_images(job):
                 )
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info
-                    matchTextField = config.getConfig('import_text_association_column')
+                    matchTextFields = config.getConfig('import_text_association_columns')
                     uploadFields = value.get('fields', {})
-                    if not matchTextField or matchTextField not in uploadFields:
+                    matchTextFieldsValid = True
+                    for field in matchTextFields:
+                        if field not in list(uploadFields):
+                            matchTextFieldsValid = False
+                    if not matchTextFields or not matchTextFieldsValid:
                         Job.updateJob(
                             job,
                             log='No label text lookup field specified. Please make sure'
-                                '"import_text_association_column" is set in your configuration.',
+                                '"import_text_association_columns" is set properly in your configuration.',
                             status=JobStatus.ERROR
                         )
                         return
-                    text_to_match = uploadFields[matchTextField]
-                    if text_to_match in label_text:
+                    text_to_match = [uploadFields[field] for field in matchTextFields]
+                    if len(set(text_to_match) & set(label_text)) > 0:
                         rowToImageMatches[key].append(item['_id'])
                         imageToRowMatches.append(key)
             if len(imageToRowMatches) > 0:
