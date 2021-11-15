@@ -71,29 +71,6 @@ def get_label_text_for_item(item, ocr_reader, job):
         raise e
 
 
-def associate_images(imageIdsToItems, uploadInfo, userId, job):
-    user = User().load(userId)
-    for imageId, possibleMatches in imageIdsToItems.items():
-        tokenId = uploadInfo[imageId]['TokenID']
-        Job().updateJob(job, log=f'{tokenId}.\n')
-        if len(possibleMatches) != 1:
-            # continue for now, might be worth updating the item metadata
-            continue
-        bestMatch = possibleMatches[0]
-        Job().updateJob(job, log=f'bestMatch: {bestMatch}.\n')
-        item = Item().load(bestMatch, force=True)
-        Job().updateJob(job, log=f'item: {item}.\n')
-        ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
-        ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
-        Job().updateJob(job, log=f'ingestFolder: {ingestFolder}.\n')
-        parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder})
-        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
-        if not parentFolder:
-            parentFolder = Folder().createFolder(ingestFolder, tokenId)
-        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
-        newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
-        readyToProcessItem = Item().copyItem(item, user, newImageName, parentFolder)
-        Item().setMetadata(readyToProcessItem, {'deidUpload': uploadInfo['fields']})
 
 
 def start_ocr_batch_job(job):
@@ -140,6 +117,30 @@ def start_ocr_batch_job(job):
         )
 
 
+def associate_images(imageIdsToItems, uploadInfo, userId, job):
+    ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
+    ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
+    user = User().load(userId, force=True)
+    for imageId, possibleMatches in imageIdsToItems.items():
+        tokenId = uploadInfo[imageId]['TokenID']
+        if len(possibleMatches) != 1:
+            # continue for now, might be worth updating the item metadata
+            continue
+        bestMatch = possibleMatches[0]
+        item = Item().load(bestMatch, force=True)
+        parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
+        # parentFolder = Folder().findOne({'name': tokenId, 'parentId': importFolder['_id']})
+        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
+        if not parentFolder:
+            parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
+            Job().updateJob(job, log=f'Created folder {parentFolder["name"]} in the ingest folder.\n\n')
+        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
+        newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+        readyToProcessItem = Item().copyItem(item, user, newImageName, parentFolder)
+        Job().updateJob(job, log='Copied item\n')
+        Item().setMetadata(readyToProcessItem, {'deidUpload': uploadInfo[imageId]['fields']})
+
+
 def associate_unfiled_images(job):
     """
     Function to be run for girder jobs of type wsi_deid.associate_unfiled. Jobs using this function
@@ -184,8 +185,6 @@ def associate_unfiled_images(job):
             else:
                 message = f'Unable to find a match for {item["name"]}.\n\n'
             Job().updateJob(job, message)
-        import pprint
-        Job().updateJob(job, log=f'Potential matches by ImageId: {pprint.pformat(rowToImageMatches)}\n\n')
         associate_images(rowToImageMatches, uploadInfo, job['userId'], job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
