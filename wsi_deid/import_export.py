@@ -249,7 +249,6 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
 
 
 def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
-    logger.info(f'{imagePath}')
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
     if existing:
@@ -275,9 +274,6 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
 
 
 def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
-    logger.info(f'IDs: {itemIds}')
-    logger.info(f'Info Dict: {imageInfoDict}')
-    logger.info(f'User: {user}')
     jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     unfiledJob = Job().createLocalJob(
         module='wsi_deid',

@@ -14,7 +14,7 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
 from .import_export import SftpMode
-from .process import get_image_text
+from .process import get_image_text, get_standard_redactions
 from .rest import WSIDeIDResource
 
 from . import config
@@ -125,20 +125,29 @@ def associate_images(imageIdsToItems, uploadInfo, userId, job):
         tokenId = uploadInfo[imageId]['TokenID']
         if len(possibleMatches) != 1:
             # continue for now, might be worth updating the item metadata
+            if len(possibleMatches) == 0:
+                message = f'No items could be matched with TokenID {tokenId} at this time.\n'
+            else:
+                message = f'More than one item matched with TokenID {tokenId}. Cannot transfer.\n'
+            Job().updateJob(job, log=message)
             continue
         bestMatch = possibleMatches[0]
         item = Item().load(bestMatch, force=True)
         parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
-        # parentFolder = Folder().findOne({'name': tokenId, 'parentId': importFolder['_id']})
-        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
         if not parentFolder:
             parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
-            Job().updateJob(job, log=f'Created folder {parentFolder["name"]} in the ingest folder.\n\n')
-        Job().updateJob(job, log=f'parentFolder: {parentFolder}.\n')
         newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
         readyToProcessItem = Item().copyItem(item, user, newImageName, parentFolder)
-        Job().updateJob(job, log='Copied item\n')
-        Item().setMetadata(readyToProcessItem, {'deidUpload': uploadInfo[imageId]['fields']})
+        Job().updateJob(
+            job,
+            log=f'Copied item {item["name"]} to folder {parentFolder["name"]} as {newImageName}\n'
+        )
+        redactList = get_standard_redactions(readyToProcessItem, imageId)
+        itemMetadata = {
+            'deidUpload': uploadInfo[imageId]['fields'],
+            'redactList': redactList,
+        }
+        Item().setMetadata(readyToProcessItem, itemMetadata)
 
 
 def associate_unfiled_images(job):
@@ -149,10 +158,18 @@ def associate_unfiled_images(job):
 
     :param job: a girder job
     """
-    Job().updateJob(job, log='Starting job to associate unfiled images with upload data...\n\n', status=JobStatus.RUNNING)
+    Job().updateJob(
+        job,
+        log='Starting job to associate unfiled images with upload data...\n\n',
+        status=JobStatus.RUNNING
+    )
     job_args = job.get('args', None)
     if job_args is None or len(job_args) != 2:
-        Job().updateJob(job, log='Expected a list of girder items and upload information as arguments.\n', status=JobStatus.ERROR)
+        Job().updateJob(
+            job,
+            log='Expected a list of girder items and upload information as arguments.\n',
+            status=JobStatus.ERROR
+        )
         return
     itemIds = job_args[0]
     uploadInfo = job_args[1]
@@ -168,13 +185,21 @@ def associate_unfiled_images(job):
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]
             if len(label_text) > 0:
-                Job().updateJob(job, log=f'Attempting to associate upload data with {item["name"]}...\n')
+                Job().updateJob(
+                    job,
+                    log=f'Attempting to associate upload data with {item["name"]}...\n'
+                )
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info
                     matchTextField = config.getConfig('import_text_association_column')
                     uploadFields = value.get('fields', {})
                     if not matchTextField or matchTextField not in uploadFields:
-                        Job.updateJob(job, log='No label text lookup field specified. Please make sure "import_text_association_column" is set in your configuration.', status=JobStatus.ERROR)
+                        Job.updateJob(
+                            job,
+                            log='No label text lookup field specified. Please make sure'
+                                '"import_text_association_column" is set in your configuration.',
+                            status=JobStatus.ERROR
+                        )
                         return
                     text_to_match = uploadFields[matchTextField]
                     if text_to_match in label_text:
