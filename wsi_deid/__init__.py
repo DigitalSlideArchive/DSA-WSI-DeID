@@ -198,7 +198,7 @@ def associate_unfiled_images(job):
                         Job.updateJob(
                             job,
                             log='No label text lookup field specified. Please make sure'
-                                '"import_text_association_columns" is set properly in your configuration.',
+                                '"import_text_association_columns" is set in your configuration.',
                             status=JobStatus.ERROR
                         )
                         return
