@@ -152,7 +152,7 @@ def readExcelFiles(filelist, ctx):
             count += 1
             if not name:
                 if (not errors and
-                     ('ScannedFileName' not in properties and 'InputFileName' not in properties)):
+                   ('ScannedFileName' not in properties and 'InputFileName' not in properties)):
                     # If name is none and there are no errors, then we still want this row in the
                     # manifest to run OCR and try to match the row to an image in the future
                     manifest['unfiled'] = manifest.get('unfiled', {})

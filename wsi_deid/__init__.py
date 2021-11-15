@@ -1,5 +1,4 @@
 import girder
-from girder.models.user import User
 import psutil
 from girder import plugin
 from girder.constants import AssetstoreType
@@ -8,16 +7,16 @@ from girder.models.assetstore import Assetstore
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.models.user import User
 from girder.utility import setting_utilities
 from girder_jobs.models.job import Job, JobStatus
 from pkg_resources import DistributionNotFound, get_distribution
 
+from . import config
 from .constants import PluginSettings
 from .import_export import SftpMode
 from .process import get_image_text, get_standard_redactions
 from .rest import WSIDeIDResource
-
-from . import config
 
 # set up asynchronously running ocr
 reader = None
@@ -71,8 +70,6 @@ def get_label_text_for_item(item, ocr_reader, job):
         raise e
 
 
-
-
 def start_ocr_batch_job(job):
     """
     Function to be run for girder jobs of type wsi_deid.batch_ocr. Jobs using this function
@@ -117,7 +114,7 @@ def start_ocr_batch_job(job):
         )
 
 
-def associate_images(imageIdsToItems, uploadInfo, userId, job):
+def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
     ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
     user = User().load(userId, force=True)
@@ -210,7 +207,7 @@ def associate_unfiled_images(job):
             else:
                 message = f'Unable to find a match for {item["name"]}.\n\n'
             Job().updateJob(job, message)
-        associate_images(rowToImageMatches, uploadInfo, job['userId'], job)
+        match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
         Job().updateJob(
@@ -218,7 +215,6 @@ def associate_unfiled_images(job):
             log=f'Job failed with the following exceptions: {str(e)}.',
             status=JobStatus.ERROR,
         )
-
 
 
 try:
