@@ -114,13 +114,27 @@ def start_ocr_batch_job(job):
         )
 
 
+def find_best_match(matches):
+    minimumMatchCount = 1
+    currentMatches = matches.copy()
+    while len(currentMatches) > 1:
+       minimumMatchCount += 1
+       currentMatches = [
+           match for match in currentMatches if match['matchedWordCount'] >= minimumMatchCount
+        ]
+    if len(currentMatches) == 1:
+        return currentMatches[0].get('itemId', None)
+    return None
+
+
 def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
     ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
     user = User().load(userId, force=True)
     for imageId, possibleMatches in imageIdsToItems.items():
         tokenId = uploadInfo[imageId]['TokenID']
-        if len(possibleMatches) != 1:
+        bestMatch = find_best_match(possibleMatches)
+        if not bestMatch:
             # continue for now, might be worth updating the item metadata
             if len(possibleMatches) == 0:
                 message = f'No items could be matched with TokenID {tokenId} at this time.\n'
@@ -128,7 +142,6 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
                 message = f'More than one item matched with TokenID {tokenId}. Cannot transfer.\n'
             Job().updateJob(job, log=message)
             continue
-        bestMatch = possibleMatches[0]
         item = Item().load(bestMatch, force=True)
         parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
         if not parentFolder:
@@ -204,7 +217,10 @@ def associate_unfiled_images(job):
                         return
                     text_to_match = [uploadFields[field] for field in matchTextFields]
                     if len(set(text_to_match) & set(label_text)) > 0:
-                        rowToImageMatches[key].append(item['_id'])
+                        rowToImageMatches[key].append({
+                            'itemId': item['_id'],
+                            'matchedWordCount': len(set(text_to_match) & set(label_text))
+                        })
                         imageToRowMatches.append(key)
             if len(imageToRowMatches) > 0:
                 message = f'{item["name"]} matched to ImageIDs {imageToRowMatches}.\n\n'
