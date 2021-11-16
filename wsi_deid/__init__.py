@@ -118,9 +118,9 @@ def find_best_match(matches):
     minimumMatchCount = 1
     currentMatches = matches.copy()
     while len(currentMatches) > 1:
-       minimumMatchCount += 1
-       currentMatches = [
-           match for match in currentMatches if match['matchedWordCount'] >= minimumMatchCount
+        minimumMatchCount += 1
+        currentMatches = [
+            match for match in currentMatches if match['matchedWordCount'] >= minimumMatchCount
         ]
     if len(currentMatches) == 1:
         return currentMatches[0].get('itemId', None)
