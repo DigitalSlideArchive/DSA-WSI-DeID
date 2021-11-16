@@ -125,13 +125,19 @@ function performAction(action) {
                 $('#g-alerts-container:last div.alert:last').append(sftpAlertInfo);
             }, this);
         }
-        if (resp.action === 'ingest' && resp['ocr_job']) {
+        if (resp.action === 'ingest') {
             // If import launches an ocr batch job, add that info at the very end of the alert
-            const message = ' Started background job to find label text on WSIs in this folder.';
-            let ocrImportAlertInfo = $(`<span>${message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.ocr_job}`));
-            events.once('g:alert', () => {
-                $('#g-alerts-container:last div.alert:last').append(ocrImportAlertInfo);
-            }, this);
+            [
+                {id: resp['ocr_job'], message: ' Started background job to find label text on WSIs in this folder.'},
+                {id: resp['unfiled_job'], message: ' Started background job to match unfiled images with upload data.'}
+            ].forEach((jobInfo) => {
+                if (!!jobInfo.id) {
+                    let jobAlertInfo = $(`<span>${jobInfo.message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${jobInfo.id}`));
+                    events.once('g:alert', () => {
+                        $('#g-alerts-container:last div.alert:last').append(jobAlertInfo);
+                    }, this);
+                }
+            });
         }
         events.trigger('g:alert', {
             icon: 'ok',

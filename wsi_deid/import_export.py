@@ -94,7 +94,7 @@ def getSchemaValidator():
         os.path.dirname(__file__), 'schema', 'importManifestSchema.json'))))
 
 
-def readExcelFiles(filelist, ctx):
+def readExcelFiles(filelist, ctx): # noqa
     """
     Read each excel file, use pandas to parse it.  Collect the results, where,
     if a file is stored twice, the value from the newest excel file wins.
@@ -376,7 +376,6 @@ def ingestData(ctx, user=None):  # noqa
             report.append({'status': 'unfiled', 'path': image})
     if len(unfiledItems) > 0:
         unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
-        logger.info(unfiledJobId)
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     batchJob = None
@@ -396,6 +395,8 @@ def ingestData(ctx, user=None):  # noqa
     summary = reportSummary(report, excelReport, file=file)
     if startOcrDuringImport and batchJob:
         summary['ocr_job'] = batchJob['_id']
+    if len(unfiledItems) > 0 and unfiledJobId:
+        summary['unfiled_job'] = unfiledJobId
     return summary
 
 
