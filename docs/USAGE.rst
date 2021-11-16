@@ -277,7 +277,7 @@ Enter a new name for the item and click ``Save``.
 
 Next, navigate back to the ``Unfiled`` directory. Check the box next to the item (or items) that you just renamed. From the ``Checked items`` dropdown, click ``Picked checked resources for Move or Copy``.
 
-.. image:: screenshots/check_items_menu.png
+.. image:: screenshots/checked_items_menu.png
    :alt: checked items menu
 
 Once your items are picked, navigate to the ``AvailableToProcess`` directory. From the ``Checked items`` dropdown, click ``Move checked resources here``.
