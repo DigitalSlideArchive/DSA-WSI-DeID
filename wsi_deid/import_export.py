@@ -138,8 +138,10 @@ def readExcelFiles(filelist, ctx):
         totalErrors = []
         for row_num, row in enumerate(df.itertuples()):
             rowAsDict = dict(row._asdict())
+            # Make sure we don't have any NaNs.  They don't serialize
+            rowAsDict = {k: v if pd.notnull(v) else None for k, v in rowAsDict.items()}
             rowAsDict.pop('Index')
-            if all(not val or str(val) == 'nan' for val in rowAsDict.values()):
+            if all(not val for val in rowAsDict.values()):
                 continue
             errors = validateDataRow(validator, rowAsDict, header_row_number + 2 + row_num, df)
             name = None
