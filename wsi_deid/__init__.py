@@ -67,7 +67,8 @@ def get_label_text_for_item(item, ocr_reader, job):
         Job().updateJob(job, log=message)
         return label_text
     except Exception as e:
-        raise e
+        Job().updateJob(job, log=f'Failed to process file {item["name"]}; {e}\n\n')
+        return []
 
 
 def start_ocr_batch_job(job):

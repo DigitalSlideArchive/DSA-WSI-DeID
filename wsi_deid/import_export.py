@@ -114,7 +114,7 @@ def readExcelFiles(filelist, ctx): # noqa
         try:
             df, header_row_number = readExcelData(filepath)
             for key in ['ScannedFileName', 'InputFileName']:
-                if key in properties:
+                if key in properties and key in df:
                     df[key] = df[key].fillna('')
             df = df.dropna(how='all', axis='columns')
         except Exception as exc:
@@ -260,7 +260,7 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
         item = Item().load(existing['itemId'], force=True)
         ctx.update(message='Removing unfiled image %s since the size has changed' % imagePath)
         Item().remove(item)
-    ctx.update(message='Uploading %s to the Unfiled folder' % imagePath)
+    ctx.update(message='Importing %s to the Unfiled folder' % imagePath)
     assetstore = Assetstore().getCurrent()
     _, name = os.path.split(imagePath)
     mimeType = 'image/tiff'
