@@ -56,7 +56,8 @@ function performAction(action) {
                 ['missing', 'missing from import folder.  Check DeID Upload File and WSI image filenames'],
                 ['badentry', 'with invalid data in a DeID Upload File'],
                 ['unlisted', 'in the import folder, but not listed in a DeID Upload Excel/CSV file'],
-                ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format']
+                ['failed', 'failed to import.  Check if image file(s) are in an accepted WSI format'],
+                ['unfiled', 'not yet associated with a row from the import sheet. Uploaded to the Unfiled folder']
             ].forEach(([key, desc]) => {
                 if (resp[key]) {
                     if (key === 'unlisted' && !resp.parsed && !resp.notexcel && !resp.badformat) {
@@ -124,13 +125,19 @@ function performAction(action) {
                 $('#g-alerts-container:last div.alert:last').append(sftpAlertInfo);
             }, this);
         }
-        if (resp.action === 'ingest' && resp['ocr_job']) {
+        if (resp.action === 'ingest') {
             // If import launches an ocr batch job, add that info at the very end of the alert
-            const message = ' Started background job to find label text on WSIs in this folder.';
-            let ocrImportAlertInfo = $(`<span>${message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.ocr_job}`));
-            events.once('g:alert', () => {
-                $('#g-alerts-container:last div.alert:last').append(ocrImportAlertInfo);
-            }, this);
+            [
+                { id: resp['ocr_job'], message: ' Started background job to find label text on WSIs in this folder.' },
+                { id: resp['unfiled_job'], message: ' Started background job to match unfiled images with upload data.' }
+            ].forEach((jobInfo) => {
+                if (jobInfo.id) {
+                    let jobAlertInfo = $(`<span>${jobInfo.message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${jobInfo.id}`));
+                    events.once('g:alert', () => {
+                        $('#g-alerts-container:last div.alert:last').append(jobAlertInfo);
+                    }, this);
+                }
+            });
         }
         events.trigger('g:alert', {
             icon: 'ok',

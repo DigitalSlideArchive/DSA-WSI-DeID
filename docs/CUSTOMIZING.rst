@@ -98,3 +98,13 @@ Import excel files can be customized, allowing for additional metadata to be cap
 Currently, import logic requires ``TokenID``, ``Proc_Seq``, ``Slide_ID``, and ``InputFileName`` in order to properly find and rename images in the import directory. These properties in the schema should not be modified at this time.
 
 See ``docker-compose.example.local.yml`` for instructions on using a custom schema for imports.
+
+Using a Schema with no ``InputFileName`` Field
+++++++++++++++++++++++++++++++++++++++++++++++
+
+If you would like to use Optical Character Recognition (OCR) to match images in your import directory with rows on your upload excel/csv file, you need to make the following changes to your schema:
+
+* Ensure your schema does not have a field ``InputFileName``, and there is no corresponding column on your upload file
+* Ensure your schema contains a column for target text, and that the column is specified in ``girder.local.conf``. The property to set is ``import_text_association_column``.
+
+The target text column should contain label text of WSIs in the import directory. During the ingest process, all images in your specified import directory will be ingested into the ``Unfiled`` folder in the ``WSI DeID`` collection. Then, those images will be associated with data found on the upload file. Progress can be tracked as a girder job. If no match can be determined, images will remain in the ``Unfiled`` folder. Images with a match will be transferred to the ``AvailableToProcess`` folder.

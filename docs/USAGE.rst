@@ -75,6 +75,7 @@ There are six Folders an image file can be in within the WSI DeID Tool, includin
 - ``Rejected``
 - ``Original``
 - ``Approved``
+- ``Unfiled``
 
 The workflow is depicted in the overall workflow diagram below.
 
@@ -244,6 +245,7 @@ After the WSI file names and information in the DeID Upload file are reconciled,
 - ``Failed to import``: The listed file cannot be read as an image file.
 - ``Error in DeID Upload file``: The row in the DeID Upload file failed to validate; the reason is shown in the report.
 - ``Duplicate ImageID``: The same image ID was repeated in the DeID Upload file(s) for different filenames.
+- ``Unfiled``: At the time of import, the WSI file could not be associated with a row in the DeID Upload file. The file was ingested to the ``Unfiled`` directory, and the system will attempt to match it to upload data.
 
 Step 4 Import Status is Displayed
 ---------------------------------
@@ -257,6 +259,28 @@ Below is a screenshot of a message presented to the user after an import. See th
 .. image:: screenshots/import_message_highlighted.png
    :alt: import message
 
+Following Up on Unfiled Images
+------------------------------
+
+If your import schema does not have or does not requre an ``InputFileName`` field, any WSIs in your import folder that could not be associated with a row on the DeID Upload file will first be ingested into the ``Unfiled`` directory.
+
+After all files are ingested in this way, the system will attempt to match unfiled images to upload data by running Optical Character Recognition (OCR) to extract label text. If the system finds a match, that image will be copied to the ``AvailableToProcess`` directory, where redaction can continue as normal.
+
+If a match cannot be determined, the image will remain in the ``Unfiled`` directory. In order to continue the redaction process, the image should be renamed and moved to the ``AvailableToProcess`` folder manually. See the screenshots below for more information.
+
+In the item view for an item you would like to rename and transfer, from the Girder ``Actions`` button, click ``Edit Item``.
+
+.. image:: screenshots/edit_girder_item.png
+   :alt: actions button
+
+Enter a new name for the item and click ``Save``.
+
+Next, navigate back to the ``Unfiled`` directory. Check the box next to the item (or items) that you just renamed. From the ``Checked items`` dropdown, click ``Picked checked resources for Move or Copy``.
+
+.. image:: screenshots/checked_items_menu.png
+   :alt: checked items menu
+
+Once your items are picked, navigate to the ``AvailableToProcess`` directory. From the ``Checked items`` dropdown, click ``Move checked resources here``.
 
 Redaction
 =========

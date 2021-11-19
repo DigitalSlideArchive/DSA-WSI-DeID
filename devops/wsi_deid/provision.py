@@ -1,5 +1,6 @@
 import os
 
+import girder.utility.config
 from girder.models.assetstore import Assetstore
 from girder.models.collection import Collection
 from girder.models.folder import Folder
@@ -48,6 +49,12 @@ WSI DeID Version: %s
         PluginSettings.HUI_FINISHED_FOLDER: ('Approved', True),
         PluginSettings.HUI_REPORTS_FOLDER: ('Reports', True),
     }
+    configDict = girder.utility.config.getConfig().get('wsi_deid', {})
+    matchTextFields = configDict.get('import_text_association_columns', [])
+    if matchTextFields:
+        # if this setting is not an empty list, then we will provision the Unfiled folder,
+        # since it is likely we will need to support a schema with no file names
+        folders[PluginSettings.WSI_DEID_UNFILED_FOLDER] = ('Unfiled', True)
     for settingKey, (folderName, public) in folders.items():
         folder = None
         folderId = Setting().get(settingKey)
