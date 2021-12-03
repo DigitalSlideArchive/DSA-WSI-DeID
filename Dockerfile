@@ -18,9 +18,12 @@ RUN apt-get update && \
     curl \
     ca-certificates \
     vim \
-    ffmpeg \
+    # needed for easyocr
     libsm6 \
-    libxext6 && \
+    libxext6 \
+    libxrender-dev \
+    libgl1-mesa-dev \
+    && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \

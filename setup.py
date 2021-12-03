@@ -43,6 +43,7 @@ setup(
     install_requires=[
         'celery<5',
         'easyocr!=1.4.1',
+        'girder>=3.1.7',
         'girder-homepage',
         'histomicsui',
         'jsonschema',
