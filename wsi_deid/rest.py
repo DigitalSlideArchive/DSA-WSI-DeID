@@ -35,6 +35,7 @@ ProjectFolders = {
     'rejected': PluginSettings.HUI_REJECTED_FOLDER,
     'original': PluginSettings.HUI_ORIGINAL_FOLDER,
     'finished': PluginSettings.HUI_FINISHED_FOLDER,
+    'unfiled': PluginSettings.WSI_DEID_UNFILED_FOLDER,
 }
 
 
