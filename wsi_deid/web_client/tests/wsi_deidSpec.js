@@ -1,6 +1,6 @@
 /* globals girderTest, describe, it, expect, waitsFor, runs, $ */
 
-girderTest.importPlugin('homepage', 'jobs', 'worker', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'wsi_deid');
+girderTest.importPlugin('homepage', 'jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'wsi_deid');
 
 girderTest.startApp();
 

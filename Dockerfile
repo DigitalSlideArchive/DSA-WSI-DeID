@@ -66,7 +66,8 @@ RUN python3.9 -m pip install --no-cache-dir \
     --find-links https://girder.github.io/large_image_wheels
 
 # Build the girder web client
-RUN girder build && \
+RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM_CONFIG_LOGLEVEL=warn NPM_CONFIG_PROGRESS=false NPM_CONFIG_PREFER_OFFLINE=true \
+    girder build && \
     # Get rid of unnecessary files to keep the docker image smaller \
     find /usr/local/lib/python3.9 -name node_modules -exec rm -rf {} \+ && \
     find /usr/local/lib/python3.9 -name package-lock.json -exec rm -f {} \+ && \

@@ -30,7 +30,7 @@ jobs:
           command: npm install -g phantomjs-prebuilt --unsafe-perm
       - run:
           name: Install libraries for easyocr
-          command: apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
+          command: apt-get update && apt-get install -y libsm6 libxext6 libxrender-dev libgl1-mesa-dev
       - run:
           name: Run server tests
           no_output_timeout: 15m
