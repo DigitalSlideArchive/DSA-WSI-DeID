@@ -18,18 +18,6 @@ from .import_export import SftpMode
 from .process import get_image_text, get_standard_redactions
 from .rest import WSIDeIDResource
 
-# set up asynchronously running ocr
-reader = None
-
-
-def get_reader():
-    global reader
-    if reader is None:
-        import easyocr
-
-        reader = easyocr.Reader(['en'], gpu=False, verbose=False)
-    return reader
-
 
 def start_ocr_item_job(job):
     Job().updateJob(job, log=f'Job {job.get("title")} started\n', status=JobStatus.RUNNING)
@@ -42,9 +30,8 @@ def start_ocr_item_job(job):
         )
         return
     item = job_args[0]
-    ocr_reader = get_reader()
     try:
-        label_text = get_image_text(item, ocr_reader)
+        label_text = get_image_text(item)
         status = JobStatus.SUCCESS
     except Exception as e:
         message = f'Attempting to find label text for file {item["name"]} resulted in {str(e)}.'
@@ -56,10 +43,10 @@ def start_ocr_item_job(job):
     Job().updateJob(job, log=message, status=status)
 
 
-def get_label_text_for_item(item, ocr_reader, job):
+def get_label_text_for_item(item, job):
     Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
     try:
-        label_text = get_image_text(item, ocr_reader)
+        label_text = get_image_text(item)
         if len(label_text) > 0:
             message = f'Found label text {label_text} for file {item["name"]}.\n\n'
         else:
@@ -92,13 +79,12 @@ def start_ocr_batch_job(job):
         )
         return
     itemIds = job_args[0]
-    ocr_reader = get_reader()
     try:
         for itemId in itemIds:
             item = Item().load(itemId, force=True)
             Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
             try:
-                label_text = get_image_text(item, ocr_reader)
+                label_text = get_image_text(item)
                 if len(label_text) > 0:
                     message = f'Found label text {label_text} for file {item["name"]}.\n\n'
                 else:
@@ -184,14 +170,13 @@ def associate_unfiled_images(job):
         return
     itemIds = job_args[0]
     uploadInfo = job_args[1]
-    ocr_reader = get_reader()
     try:
         rowToImageMatches = {}
         for key in list(uploadInfo):
             rowToImageMatches[key] = []
         for itemId in itemIds:
             item = Item().load(itemId, force=True)
-            label_text = get_label_text_for_item(item, ocr_reader, job)
+            label_text = get_label_text_for_item(item, job)
             imageToRowMatches = []
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]

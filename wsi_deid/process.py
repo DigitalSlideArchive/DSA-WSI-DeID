@@ -8,6 +8,7 @@ import subprocess
 import threading
 import xml.etree.ElementTree
 
+import numpy
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
@@ -19,6 +20,17 @@ from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 
 from . import config
+
+reader = None
+
+
+def get_reader():
+    global reader
+    if reader is None:
+        import easyocr
+
+        reader = easyocr.Reader(['en'], verbose=False)
+    return reader
 
 
 def generate_system_redaction_list_entry(newValue):
@@ -1289,13 +1301,6 @@ def redact_topleft_square(image):
     return newImage
 
 
-def image_to_byte_array(image):
-    image_byte_array = io.BytesIO()
-    image.save(image_byte_array, 'tiff')
-    image_byte_array = image_byte_array.getvalue()
-    return image_byte_array
-
-
 def get_allow_list():
     """
     Get a string of allowed characters for EasyOCR to find.
@@ -1310,21 +1315,13 @@ def get_text_from_associated_image(tile_source, label, reader):
     for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
-            text_results = reader.readtext(
-                image_to_byte_array(rotated_image),
-                allowlist=get_allow_list(),
-                contrast_ths=0.75,
-                adjust_contrast=1.0,
-                rotation_info=[90, 180, 270],
-            )
-        else:
-            text_results = reader.readtext(
-                image_to_byte_array(associated_image),
-                allowlist=get_allow_list(),
-                contrast_ths=0.75,
-                adjust_contrast=1.0,
-                rotation_info=[90, 180, 270],
-            )
+        text_results = reader.readtext(
+            numpy.asarray(associated_image if rotate is None else rotated_image),
+            allowlist=get_allow_list(),
+            contrast_ths=0.75,
+            adjust_contrast=1.0,
+            rotation_info=[90, 180, 270],
+        )
         for result in text_results:
             # easyocr returns the text box coordinates, text, and confidence
             _, found_text, confidence = result
@@ -1338,18 +1335,14 @@ def get_text_from_associated_image(tile_source, label, reader):
     return words
 
 
-def get_image_text(item, reader=None):
+def get_image_text(item):
     """
     Use OCR to identify and return text on any associated image.
 
     :param item: a girder item.
-    :param reader: an EasyOCR reader object. If a reader is not provided, one will be created.
     :returns: a list of found text .
     """
-    if reader is None:
-        import easyocr
-
-        reader = easyocr.Reader(['en'], gpu=False)
+    reader = get_reader()
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
