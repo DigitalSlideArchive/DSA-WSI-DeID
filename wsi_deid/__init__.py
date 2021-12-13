@@ -1,6 +1,6 @@
 import girder
 import psutil
-from girder import plugin
+from girder import logger, plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -138,9 +138,9 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
         if not bestMatch:
             # continue for now, might be worth updating the item metadata
             if len(possibleMatches) == 0:
-                message = f'No items could be matched with TokenID {tokenId} at this time.\n'
+                message = f'No items could be matched via OCR with ImageID {imageId}.\n'
             else:
-                message = f'More than one item matched with TokenID {tokenId}. Cannot transfer.\n'
+                message = f'More than one item matched via OCR with ImageID {imageId}.\n'
             Job().updateJob(job, log=message)
             continue
         item = Item().load(bestMatch, force=True)
@@ -204,23 +204,15 @@ def associate_unfiled_images(job):
                     # key is the TokenID from the import spreadsheet, and value is associated info
                     matchTextFields = config.getConfig('import_text_association_columns')
                     uploadFields = value.get('fields', {})
-                    matchTextFieldsValid = True
-                    for field in matchTextFields:
-                        if field not in list(uploadFields):
-                            matchTextFieldsValid = False
-                    if not matchTextFields or not matchTextFieldsValid:
-                        Job.updateJob(
-                            job,
-                            log='No label text lookup field specified. Please make sure'
-                                '"import_text_association_columns" is set in your configuration.',
-                            status=JobStatus.ERROR
-                        )
-                        return
-                    text_to_match = [uploadFields[field] for field in matchTextFields]
-                    if len(set(text_to_match) & set(label_text)) > 0:
+                    text_to_match = [
+                        uploadFields[field] for field in matchTextFields if field in uploadFields]
+                    matchedWordCount = len(set(text_to_match) & set(label_text))
+                    logger.info('Checking matches for %s: %r to %r: %d' % (
+                        key, set(text_to_match), set(label_text), matchedWordCount))
+                    if matchedWordCount > 0:
                         rowToImageMatches[key].append({
                             'itemId': item['_id'],
-                            'matchedWordCount': len(set(text_to_match) & set(label_text))
+                            'matchedWordCount': matchedWordCount,
                         })
                         imageToRowMatches.append(key)
             if len(imageToRowMatches) > 0:
@@ -231,6 +223,7 @@ def associate_unfiled_images(job):
         match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
+        logger.exception('Job failed')
         Job().updateJob(
             job,
             log=f'Job failed with the following exceptions: {str(e)}.',
