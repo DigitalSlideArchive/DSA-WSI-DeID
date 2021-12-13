@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import threading
+import time
 import xml.etree.ElementTree
 
 import numpy
@@ -1309,19 +1310,28 @@ def get_allow_list():
 
 
 def get_text_from_associated_image(tile_source, label, reader):
+    starttime = time.time()
     associated_image, _ = tile_source.getAssociatedImage(label)
     associated_image = PIL.Image.open(io.BytesIO(associated_image))
+    logger.info('%s %s size %r', tile_source.item['name'], label, associated_image.size)
+    maxSize = 2048 if label == 'macro' else 1024
+    if max(associated_image.size) > maxSize:
+        associated_image.thumbnail((maxSize, maxSize), PIL.Image.LANCZOS)
     words = {}
     for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
+        # logger.info('Running OCR on %s %s: %r', tile_source.item['name'], label, rotate)
         text_results = reader.readtext(
             numpy.asarray(associated_image if rotate is None else rotated_image),
             allowlist=get_allow_list(),
             contrast_ths=0.75,
             adjust_contrast=1.0,
-            rotation_info=[90, 180, 270],
+            # This probably isn't useful if we are already trying all rotations
+            # rotation_info=[90, 180, 270],
+            # Note: batch_size didn't help anything
         )
+        # logger.info('Got OCR on %s', tile_source.item['name'])
         for result in text_results:
             # easyocr returns the text box coordinates, text, and confidence
             _, found_text, confidence = result
@@ -1332,6 +1342,8 @@ def get_text_from_associated_image(tile_source, label, reader):
             result_avg_conf = (result_avg_conf * (result_count - 1) + confidence) / result_count
             result_info['average_confidence'] = result_avg_conf
             words[found_text] = result_info
+    logger.info('Ran OCR on %s %s in %5.3fs', tile_source.item['name'],
+                label, time.time() - starttime)
     return words
 
 
