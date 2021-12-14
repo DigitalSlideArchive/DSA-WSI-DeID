@@ -280,7 +280,7 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
 def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
     jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     unfiledJob = Job().createLocalJob(
-        module='wsi_deid',
+        module='wsi_deid.jobs',
         function='associate_unfiled_images',
         title=f'Attempting to associate unfiled images: {user["login"]}, {jobStart}',
         type='wsi_deid.associate_unfiled',
@@ -376,15 +376,15 @@ def ingestData(ctx, user=None):  # noqa
         else:
             ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems)
             report.append({'status': 'unfiled', 'path': image})
-    if len(unfiledItems) > 0:
+    if len(unfiledItems):
         unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     batchJob = None
-    if startOcrDuringImport and len(newItems) > 1:
+    if startOcrDuringImport and len(newItems):
         jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
         batchJob = Job().createLocalJob(
-            module='wsi_deid',
+            module='wsi_deid.jobs',
             function='start_ocr_batch_job',
             title=f'Batch OCR triggered by import: {user["login"]}, {jobStart}',
             type='wsi_deid.batch_ocr',
@@ -397,7 +397,7 @@ def ingestData(ctx, user=None):  # noqa
     summary = reportSummary(report, excelReport, file=file)
     if startOcrDuringImport and batchJob:
         summary['ocr_job'] = batchJob['_id']
-    if len(unfiledItems) > 0 and unfiledJobId:
+    if len(unfiledItems) and unfiledJobId:
         summary['unfiled_job'] = unfiledJobId
     return summary
 
