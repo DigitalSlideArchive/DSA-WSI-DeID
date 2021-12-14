@@ -156,7 +156,7 @@ form#g-wsi_deid-form(role="form")
   .form-group
     label(for="g-wsi-deid-ocr-on-import") Find Label Text on Import
     p.g-hui-description
-      | Kick off a local job to find label text on new images during an import
+      | Run a background job to find label text on new images during an import
     input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons

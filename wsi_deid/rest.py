@@ -205,7 +205,7 @@ def process_item(item, user=None):
 def ocr_item(item, user):
     job_title = f'Finding label text for image: {item["name"]}'
     ocr_job = Job().createLocalJob(
-        module='wsi_deid',
+        module='wsi_deid.jobs',
         function='start_ocr_item_job',
         title=job_title,
         type='wsi_deid.ocr_job',
@@ -438,7 +438,7 @@ class WSIDeIDResource(Resource):
         if len(itemIds) > 0:
             jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
             batchJob = Job().createLocalJob(
-                module='wsi_deid',
+                module='wsi_deid.jobs',
                 function='start_ocr_batch_job',
                 title=f'Batch OCR triggered manually: {user["login"]}, {jobStart}',
                 type='wsi_deid.batch_ocr',
