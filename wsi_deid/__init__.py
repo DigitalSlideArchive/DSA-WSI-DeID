@@ -1,3 +1,5 @@
+import concurrent.futures
+
 import girder
 import psutil
 from girder import logger, plugin
@@ -37,25 +39,26 @@ def start_ocr_item_job(job):
         message = f'Attempting to find label text for file {item["name"]} resulted in {str(e)}.'
         status = JobStatus.ERROR
     if status == JobStatus.SUCCESS and len(label_text) > 0:
-        message = f'Found label text {label_text} for file {item["name"]}\n',
+        message = f'Found label text for file {item["name"]}: {label_text}.\n',
     else:
         message = f'Could not find label text for file {item["name"]}\n'
     Job().updateJob(job, log=message, status=status)
 
 
-def get_label_text_for_item(item, job):
-    Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
+def get_label_text_for_item(itemId, job):
+    item = Item().load(itemId, force=True)
+    Job().updateJob(job, log=f'Finding label text for file: {item["name"]}.\n')
     try:
         label_text = get_image_text(item)
         if len(label_text) > 0:
-            message = f'Found label text {label_text} for file {item["name"]}.\n\n'
+            message = f'Found label text for file {item["name"]}: {label_text}.\n'
         else:
-            message = f'Could not find label text for file {item["name"]}.\n\n'
+            message = f'Could not find label text for file {item["name"]}.\n'
         Job().updateJob(job, log=message)
         return label_text
     except Exception as e:
-        Job().updateJob(job, log=f'Failed to process file {item["name"]}; {e}\n\n')
-        return []
+        Job().updateJob(job, log=f'Failed to process file {item["name"]}; {e}\n')
+        return {}
 
 
 def start_ocr_batch_job(job):
@@ -67,7 +70,7 @@ def start_ocr_batch_job(job):
     """
     Job().updateJob(
         job,
-        log='Starting batch job to find label text on items...\n\n',
+        log='Starting batch job to find label text on items.\n',
         status=JobStatus.RUNNING
     )
     job_args = job.get('args', None)
@@ -81,22 +84,12 @@ def start_ocr_batch_job(job):
     itemIds = job_args[0]
     try:
         for itemId in itemIds:
-            item = Item().load(itemId, force=True)
-            Job().updateJob(job, log=f'Finding label text for file: {item["name"]}...\n')
-            try:
-                label_text = get_image_text(item)
-                if len(label_text) > 0:
-                    message = f'Found label text {label_text} for file {item["name"]}.\n\n'
-                else:
-                    message = f'Could not find label text for file {item["name"]}.\n\n'
-                Job().updateJob(job, log=message)
-            except Exception as e:
-                raise e
+            get_label_text_for_item(itemId, job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
     except Exception as e:
         Job().updateJob(
             job,
-            log=f'Batch job failed with the following exception: {str(e)}.',
+            log=f'Batch job failed with the following exception: {str(e)}.\n',
             status=JobStatus.ERROR,
         )
 
@@ -157,7 +150,7 @@ def associate_unfiled_images(job):
     """
     Job().updateJob(
         job,
-        log='Starting job to associate unfiled images with upload data...\n\n',
+        log='Starting job to associate unfiled images with upload data.\n',
         status=JobStatus.RUNNING
     )
     job_args = job.get('args', None)
@@ -174,17 +167,24 @@ def associate_unfiled_images(job):
         rowToImageMatches = {}
         for key in list(uploadInfo):
             rowToImageMatches[key] = []
-        for itemId in itemIds:
+        # Without concurrent.futures, this is:
+        # for itemId in itemIds:
+        #     label_text = get_label_text_for_item(itemId, job)
+        label_text_list = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = []
+            for itemId in itemIds:
+                futures.append(executor.submit(get_label_text_for_item, itemId, job))
+            for future in futures:
+                label_text_list.append(future.result())
+        for idx, itemId in enumerate(itemIds):
+            label_text = label_text_list[idx]
+            # And, without concurrent futures, the code resumes here
             item = Item().load(itemId, force=True)
-            label_text = get_label_text_for_item(item, job)
             imageToRowMatches = []
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]
             if len(label_text) > 0:
-                Job().updateJob(
-                    job,
-                    log=f'Attempting to associate upload data with {item["name"]}...\n'
-                )
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info
                     matchTextFields = config.getConfig('import_text_association_columns')
@@ -201,9 +201,9 @@ def associate_unfiled_images(job):
                         })
                         imageToRowMatches.append(key)
             if len(imageToRowMatches) > 0:
-                message = f'{item["name"]} matched to ImageIDs {imageToRowMatches}.\n\n'
+                message = f'{item["name"]} matched to ImageIDs {imageToRowMatches}.\n'
             else:
-                message = f'Unable to find a match for {item["name"]}.\n\n'
+                message = f'Unable to find a match for {item["name"]}.\n'
             Job().updateJob(job, message)
         match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
@@ -211,7 +211,7 @@ def associate_unfiled_images(job):
         logger.exception('Job failed')
         Job().updateJob(
             job,
-            log=f'Job failed with the following exceptions: {str(e)}.',
+            log=f'Job failed with the following exceptions: {str(e)}.\n',
             status=JobStatus.ERROR,
         )
 

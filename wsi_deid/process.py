@@ -22,16 +22,18 @@ from large_image.tilesource import dictToEtree
 
 from . import config
 
-reader = None
+OCRLock = threading.Lock()
+OCRReader = None
 
 
 def get_reader():
-    global reader
-    if reader is None:
-        import easyocr
+    global OCRReader
+    with OCRLock:
+        if OCRReader is None:
+            import easyocr
 
-        reader = easyocr.Reader(['en'], verbose=False)
-    return reader
+            OCRReader = easyocr.Reader(['en'], verbose=False)
+        return OCRReader
 
 
 def generate_system_redaction_list_entry(newValue):
@@ -1321,7 +1323,6 @@ def get_text_from_associated_image(tile_source, label, reader):
     for rotate in [None, PIL.Image.ROTATE_90, PIL.Image.ROTATE_180, PIL.Image.ROTATE_270]:
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
-        # logger.info('Running OCR on %s %s: %r', tile_source.item['name'], label, rotate)
         text_results = reader.readtext(
             numpy.asarray(associated_image if rotate is None else rotated_image),
             allowlist=get_allow_list(),
@@ -1331,7 +1332,6 @@ def get_text_from_associated_image(tile_source, label, reader):
             # rotation_info=[90, 180, 270],
             # Note: batch_size didn't help anything
         )
-        # logger.info('Got OCR on %s', tile_source.item['name'])
         for result in text_results:
             # easyocr returns the text box coordinates, text, and confidence
             _, found_text, confidence = result
@@ -1342,6 +1342,8 @@ def get_text_from_associated_image(tile_source, label, reader):
             result_avg_conf = (result_avg_conf * (result_count - 1) + confidence) / result_count
             result_info['average_confidence'] = result_avg_conf
             words[found_text] = result_info
+    # Sort so the most confident is first
+    words = {k: v for _, k, v in sorted((-v['average_confidence'], k, v) for k, v in words.items())}
     logger.info('Ran OCR on %s %s in %5.3fs', tile_source.item['name'],
                 label, time.time() - starttime)
     return words
