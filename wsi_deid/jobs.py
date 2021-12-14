@@ -118,17 +118,18 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
         if not parentFolder:
             parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
         newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
-        readyToProcessItem = Item().copyItem(item, user, newImageName, parentFolder)
         Job().updateJob(
             job,
             log=f'Copied item {item["name"]} to folder {parentFolder["name"]} as {newImageName}\n'
         )
-        redactList = get_standard_redactions(readyToProcessItem, imageId)
+        item['name'] = newImageName
+        item = Item().move(item, parentFolder)
+        redactList = get_standard_redactions(item, imageId)
         itemMetadata = {
             'deidUpload': uploadInfo[imageId]['fields'],
             'redactList': redactList,
         }
-        Item().setMetadata(readyToProcessItem, itemMetadata)
+        Item().setMetadata(item, itemMetadata)
 
 
 def associate_unfiled_images(job):

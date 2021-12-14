@@ -282,6 +282,11 @@ Next, navigate back to the ``Unfiled`` directory. Check the box next to the item
 
 Once your items are picked, navigate to the ``AvailableToProcess`` directory. From the ``Checked items`` dropdown, click ``Move checked resources here``.
 
+Checking on Running Jobs
+------------------------
+
+You can check on running background jobs by selecting your user name in the upper right and selecting "My Jobs".  The Jobs page shows running and completed jobs.  Selecting a running job will show its progress.
+
 Redaction
 =========
 

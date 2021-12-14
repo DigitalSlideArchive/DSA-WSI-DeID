@@ -376,6 +376,7 @@ def ingestData(ctx, user=None):  # noqa
         else:
             ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems)
             report.append({'status': 'unfiled', 'path': image})
+    print(len(unfiledItems), len(newItems))  # ##DWM::
     if len(unfiledItems):
         unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
     # kick off a batch job to run OCR on new items

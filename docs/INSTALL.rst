@@ -24,6 +24,15 @@ The software is known to work with a variety of operating systems:
 
 - Windows Server 2019.  This operating system require some additional changes beyond the default install configuration, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
 
+Hardware Requirements
+~~~~~~~~~~~~~~~~~~~~~
+
+The recommended hardware is 32 GBytes of memory on a system with at least 4 cores.  If you are using OCR, it is highly recommended to have an NVidia Cuda-capable GPU.
+
+The minimum hardware is 4 GBytes of memory on a system with at least 2 cores.
+
+The speed of your storage greatly affects the speed of the system.  SSD drives will for import, local storage, and export are recommended.
+
 Virtual Servers
 ~~~~~~~~~~~~~~~
 
