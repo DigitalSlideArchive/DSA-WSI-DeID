@@ -359,6 +359,57 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
+    const refileButton = (event) => {
+        let imageId = this.$el.find('.g-refile-select').val();
+        let tokenId;
+        if (imageId === '__none__') {
+            imageId = this.$el.find('.g-refile-imageid').val();
+            tokenId = this.$el.find('.g-refile-tokenid').val();
+        }
+        if (!imageId) {
+            events.trigger('g:alert', {
+                icon: 'cancel',
+                text: 'An ImageID must be specified',
+                type: 'danger',
+                timeout: 5000
+            });
+            return;
+        }
+        $('body').append(
+            '<div class="g-hui-loading-overlay"><div>' +
+            '<i class="icon-spin4 animate-spin"></i>' +
+            '</div></div>');
+        restRequest({
+            method: 'PUT',
+            url: 'wsi_deid/item/' + this.model.id + '/action/refile',
+            data: { imageId: imageId, tokenId: tokenId },
+            error: null
+        }).done((resp) => {
+            let alertMessage = 'Item refiled.';
+            $('.g-hui-loading-overlay').remove();
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: alertMessage,
+                type: 'success',
+                timeout: 4000
+            });
+            delete this.model.parent;
+            this.model.fetch({ success: () => this.render() });
+        }).fail((resp) => {
+            $('.g-hui-loading-overlay').remove();
+            let text = 'Failed to refile item.';
+            if (resp.responseJSON && resp.responseJSON.message) {
+                text += ' ' + resp.responseJSON.message;
+            }
+            events.trigger('g:alert', {
+                icon: 'cancel',
+                text: text,
+                type: 'danger',
+                timeout: 5000
+            });
+        });
+    };
+
     const getWSIAnnotationLayer = () => {
         const map = this.imageViewerSelect.currentViewer.viewer;
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
@@ -541,9 +592,23 @@ wrap(ItemView, 'render', function (render) {
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType
         }));
+        if (folderType === 'unfiled') {
+            restRequest({
+                url: `wsi_deid/item/${this.model.id}/refileList`,
+                error: null
+            }).done((resp) => {
+                if (resp) {
+                    const select = this.$el.find('.g-refile-select');
+                    resp.forEach((name) => {
+                        select.append($('<option>').text(name).attr('value', name));
+                    });
+                }
+            });
+        }
         /* Place a copy of any reject buttons in the item header */
         this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
         this.events['click .g-workflow-button'] = workflowButton;
+        this.events['click .g-refile-button'] = refileButton;
         /* Place an area redaction control in the item header */
         if (hasRedactionControls) {
             const redactArea = ItemViewRedactAreaTemplate({});

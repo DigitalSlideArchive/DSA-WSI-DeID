@@ -5,7 +5,8 @@
     processed: ['quarantine', 'finish'],
     rejected: ['quarantine'],
     original: ['quarantine'],
-    finished: ['quarantine']
+    finished: ['quarantine'],
+    unfiled: []
   };
   var buttons = {
     process: {name: 'Redact Image', title: 'Keep a copy of the original image, redact marked fields, and move the result to the redacted folder', color: 'success'},
@@ -14,6 +15,7 @@
     unquarantine: {name: 'Undo Quarantine', title: 'Move this image back to its previous location before it was quarantined', color: 'default'},
     finish: {name: 'Approve', title: 'Move this image to the approved folder', color: 'primary'},
     ocr: {name: 'Find Label Text', title: 'Perform OCR on this image', color: 'default'},
+    refile: {name: 'Refile Image', title: 'Pick or assign a name to the image and move it to be processed.', color: 'success'}
   };
   var buttonList = folderButtonList[project_folder] || ['quarantine']
 
@@ -21,5 +23,17 @@
   i.icon-right-circled
   |  WSI DeID Workflow
 .g-widget-metadata-container.workflow
+  if project_folder === 'unfiled'
+    span.g-refile-controls
+      | File as
+      select.g-refile-select
+        option(value='__none__') Manually specify
+      span(title="Refile with this TokenID (folder) name")
+        | TokenID
+        input.g-refile-tokenid
+      span(title="Refile with this ImageID (item) name")
+        | ImageID
+        input.g-refile-imageid
+      button.g-refile-button.btn(class='btn-'+buttons.refile.color, action=button, title=buttons.refile.title) #{buttons.refile.name}
   for button in buttonList
     button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title) #{buttons[button].name}

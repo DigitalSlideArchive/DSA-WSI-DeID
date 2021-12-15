@@ -1,6 +1,7 @@
 import copy
 import datetime
 import os
+import re
 import tempfile
 import threading
 import time
@@ -13,7 +14,7 @@ from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
 from girder.api.rest import Resource
 from girder.constants import AccessType, SortDir, TokenScope
-from girder.exceptions import RestException
+from girder.exceptions import AccessException, RestException
 from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
@@ -285,8 +286,10 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
         self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
         self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
+        self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
+        self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
@@ -458,13 +461,21 @@ class WSIDeIDResource(Resource):
     def nextUnprocessedItem(self):
         user = self.getCurrentUser()
         for settingKey in (
+                PluginSettings.WSI_DEID_UNFILED_FOLDER,
                 PluginSettings.HUI_INGEST_FOLDER,
                 PluginSettings.HUI_QUARANTINE_FOLDER,
                 PluginSettings.HUI_PROCESSED_FOLDER):
-            folder = Folder().load(Setting().get(settingKey), user=user, level=AccessType.READ)
-            item = get_first_item(folder, user)
-            if item is not None:
-                return str(item['_id'])
+            folderId = Setting().get(settingKey)
+            if folderId:
+                try:
+                    folder = Folder().load(folderId, user=user, level=AccessType.READ)
+                except AccessException:
+                    # Don't return a result if we don't have read access
+                    continue
+                if folder:
+                    item = get_first_item(folder, user)
+                    if item is not None:
+                        return str(item['_id'])
 
     @autoDescribeRoute(
         Description(
@@ -659,3 +670,42 @@ class WSIDeIDResource(Resource):
             with ItemActionLock:
                 for item in items:
                     ItemActionList.remove(item)
+
+    @autoDescribeRoute(
+        Description('Get the list of known and allowed image names for refiling.')
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .errorResponse()
+    )
+    @access.user
+    def getRefileList(self, item):
+        imageIds = []
+        for imageId in item.get('wsi_uploadInfo', {}):
+            if not Item().findOne({
+                    'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
+                imageIds.append(imageId)
+        return sorted(imageIds)
+
+    @autoDescribeRoute(
+        Description('Perform an action on an item.')
+        .responseClass('Item')
+        # Allow all users to do redaction actions; change to WRITE otherwise
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .param('imageId', 'The new imageId')
+        .param('tokenId', 'The new tokenId', required=False)
+        .errorResponse()
+        .errorResponse('Write access was denied on the item.', 403)
+    )
+    @access.user
+    def refileItem(self, item, imageId, tokenId):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        if imageId != item['name'].split('.', 1)[0] and Item().findOne({
+                'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
+            raise RestException('An image with that name already exists.')
+        uploadInfo = item.get('wsi_uploadInfo')
+        if uploadInfo and imageId in uploadInfo:
+            tokenId = uploadInfo[imageId].get('TokenID', tokenId)
+        if not tokenId:
+            tokenId = imageId.split('_', 1)[0]
+        item = process.refile_image(item, user, tokenId, imageId, uploadInfo)
+        return item
