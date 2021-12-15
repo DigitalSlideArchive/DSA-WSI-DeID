@@ -252,7 +252,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     return status
 
 
-def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
+def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems, uploadInfo):
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
     if existing:
@@ -267,6 +267,8 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems):
     _, name = os.path.split(imagePath)
     mimeType = 'image/tiff'
     item = Item().createItem(name=name, creator=user, folder=unfiledFolder)
+    item['wsi_uploadInfo'] = uploadInfo
+    item = Item().save(item)
     file = File().createFile(
         name=name, creator=user, item=item, reuseExisting=False,
         assetstore=assetstore, mimeType=mimeType, size=stat.st_size, saveFile=False)
@@ -374,9 +376,8 @@ def ingestData(ctx, user=None):  # noqa
             status = 'unlisted'
             report.append({'record': None, 'status': status, 'path': image})
         else:
-            ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems)
+            ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems, unfiledImages)
             report.append({'status': 'unfiled', 'path': image})
-    print(len(unfiledItems), len(newItems))  # ##DWM::
     if len(unfiledItems):
         unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
     # kick off a batch job to run OCR on new items

@@ -17,10 +17,14 @@ import PIL.ImageOps
 import pyvips
 import tifftools
 from girder import logger
+from girder.models.folder import Folder
+from girder.models.item import Item
+from girder.models.setting import Setting
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 
 from . import config
+from .constants import PluginSettings
 
 OCRLock = threading.Lock()
 OCRReader = None
@@ -1367,3 +1371,37 @@ def get_image_text(item):
     results = get_text_from_associated_image(tile_source, key, reader)
     item = ImageItem().setMetadata(item, {f'{key}_ocr': results})
     return results
+
+
+def refile_image(item, user, tokenId, imageId, uploadInfo=None):
+    """
+    Refile an item to a new name and folder.
+
+    :param item: the girder item to move.
+    :param user: the user authorizing the move.
+    :param tokenId: the new folder name.
+    :param imageId: the new item name without extension.
+    :param uploadInfo: a dictionary of imageIds that contain additional fields.
+        If it doesn't exist or the imageId is not present in it, it is not
+        used.
+    :returns: the modified girder item.
+    """
+    ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
+    ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
+    parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
+    if not parentFolder:
+        parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
+    newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+    item['name'] = newImageName
+    item = Item().move(item, parentFolder)
+    redactList = get_standard_redactions(item, imageId)
+    itemMetadata = {
+        'redactList': redactList,
+    }
+    if uploadInfo and imageId in uploadInfo:
+        itemMetadata['deidUpload'] = uploadInfo[imageId]['fields'],
+    item = Item().setMetadata(item, itemMetadata)
+    if 'wsi_uploadInfo' in item:
+        del item['wsi_uploadInfo']
+        item = Item().save(item)
+    return item

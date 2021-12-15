@@ -266,9 +266,14 @@ If your import schema does not have or does not requre an ``InputFileName`` fiel
 
 After all files are ingested in this way, the system will attempt to match unfiled images to upload data by running Optical Character Recognition (OCR) to extract label text. If the system finds a match, that image will be copied to the ``AvailableToProcess`` directory, where redaction can continue as normal.
 
-If a match cannot be determined, the image will remain in the ``Unfiled`` directory. In order to continue the redaction process, the image should be renamed and moved to the ``AvailableToProcess`` folder manually. See the screenshots below for more information.
+If a match cannot be determined, the image will remain in the ``Unfiled`` directory. 
 
-In the item view for an item you would like to rename and transfer, from the Girder ``Actions`` button, click ``Edit Item``.
+Unfiled images can be refiled using the controls at the bottom of the item page.  The ImageID becomes the new name of the image.  If manually specified, a distinct TokenID can be given as the new folder name; otherwise this is taken from the original import data or the base of the ImageID.  These controls appear as shown below:
+
+.. image:: screenshots/refile_options.png
+   :alt: refile options
+
+You can also rename an unfiled image manually.  The image should be renamed and moved to the ``AvailableToProcess`` folder. See the screenshots below for more information.  In the item view for an item you would like to rename and transfer, from the Girder ``Actions`` button, click ``Edit Item``.
 
 .. image:: screenshots/edit_girder_item.png
    :alt: actions button

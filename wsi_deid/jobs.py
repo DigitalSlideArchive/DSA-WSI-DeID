@@ -1,15 +1,12 @@
 import concurrent.futures
 
 from girder import logger
-from girder.models.folder import Folder
 from girder.models.item import Item
-from girder.models.setting import Setting
 from girder.models.user import User
 from girder_jobs.models.job import Job, JobStatus
 
 from . import config
-from .constants import PluginSettings
-from .process import get_image_text, get_standard_redactions
+from .process import get_image_text, refile_image
 
 
 def start_ocr_item_job(job):
@@ -99,8 +96,6 @@ def find_best_match(matches):
 
 
 def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
-    ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
-    ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
     user = User().load(userId, force=True)
     for imageId, possibleMatches in imageIdsToItems.items():
         tokenId = uploadInfo[imageId]['TokenID']
@@ -114,22 +109,12 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
             Job().updateJob(job, log=message)
             continue
         item = Item().load(bestMatch, force=True)
-        parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
-        if not parentFolder:
-            parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
-        newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+        oldName = item['name']
+        item = refile_image(item, user, tokenId, imageId, uploadInfo)
         Job().updateJob(
             job,
-            log=f'Copied item {item["name"]} to folder {parentFolder["name"]} as {newImageName}\n'
+            log=f'Moved item {oldName} to folder {tokenId} as {item["name"]}\n',
         )
-        item['name'] = newImageName
-        item = Item().move(item, parentFolder)
-        redactList = get_standard_redactions(item, imageId)
-        itemMetadata = {
-            'deidUpload': uploadInfo[imageId]['fields'],
-            'redactList': redactList,
-        }
-        Item().setMetadata(item, itemMetadata)
 
 
 def associate_unfiled_images(job):
