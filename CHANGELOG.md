@@ -11,6 +11,7 @@
 - Support for scanning image labels with OCR ([#233](../../pull/233))
 - Allow changing field in import and export reports ([#244](../../pull/244))
 - Allow redacting and approving lists of images ([#247](../../pull/247))
+- Allow schemas that do not require file names ([#250](../../pull/250))
 
 ### Improvements
 - Added more logging during export ([#222](../../pull/222))
