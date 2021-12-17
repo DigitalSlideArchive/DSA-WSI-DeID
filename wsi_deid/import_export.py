@@ -37,6 +37,8 @@ def readExcelData(filepath):
     :returns: a pandas dataframe of the excel data rows.
     :returns: the header row number.
     """
+    folderNameField = config.getConfig('folder_name_field', 'TokenID')
+    imageNameField = config.getConfig('image_name_field', 'ImageID')
     potential_header = 0
     reader = pd.read_csv
     mimetype = magic.from_file(filepath, mime=True)
@@ -46,7 +48,7 @@ def readExcelData(filepath):
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
-        if 'TokenID' in df.columns and 'ImageID' in df.columns:
+        if folderNameField in df.columns and imageNameField in df.columns:
             return df, potential_header
         potential_header += 1
         df = reader(filepath, header=potential_header, dtype=str)
@@ -65,6 +67,9 @@ def validateDataRow(validator, row, rowNumber, df):
     :param df: the pandas dataframe.  Used to determine column number.
     :returns: None for no errors, otherwise a list of error messages.
     """
+    folderNameField = config.getConfig('folder_name_field', 'TokenID')
+    imageNameField = config.getConfig('image_name_field', 'ImageID')
+    validateImageIDField = config.getConfig('validate_image_id_field', True)
     if validator.is_valid(row):
         return
     errors = []
@@ -78,7 +83,8 @@ def validateDataRow(validator, row, rowNumber, df):
             errorMsg = f'Invalid row {rowNumber} ({error.message})'
             columnNumber = None
         errors.append(errorMsg)
-    if row['ImageID'] != '%s_%s_%s' % (row['TokenID'], row['Proc_Seq'], row['Slide_ID']):
+    if validateImageIDField and row[imageNameField] != '%s_%s_%s' % (
+            row[folderNameField], row['Proc_Seq'], row['Slide_ID']):
         errors.append(
             f'Invalid ImageID in row {rowNumber}; not composed of TokenID, Proc_Seq, and Slide_ID')
     return errors
@@ -105,6 +111,8 @@ def readExcelFiles(filelist, ctx): # noqa
         contains an ImageID, TokenID, name (the scanned file name), excel (the
         path from the excel file), and timestamp (the mtime of the excel file).
     """
+    folderNameField = config.getConfig('folder_name_field', 'TokenID')
+    imageNameField = config.getConfig('image_name_field', 'ImageID')
     manifest = {}
     report = []
     validator = getSchemaValidator()
@@ -167,8 +175,8 @@ def readExcelFiles(filelist, ctx): # noqa
                     if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
                         manifest['unfiled'][row.ImageID] = {
                             'timestamp': timestamp,
-                            'TokenID': row.TokenID,
-                            'ImageID': row.ImageID,
+                            folderNameField: row.TokenID,
+                            imageNameField: row.ImageID,
                             'excel': filepath,
                             'fields': rowAsDict,
                             'errors': errors,
@@ -178,8 +186,8 @@ def readExcelFiles(filelist, ctx): # noqa
             elif name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
                 manifest[name] = {
                     'timestamp': timestamp,
-                    'ImageID': row.ImageID,
-                    'TokenID': row.TokenID,
+                    imageNameField: row.ImageID,
+                    folderNameField: row.TokenID,
                     'name': name,
                     'excel': filepath,
                     'fields': rowAsDict,
@@ -206,6 +214,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     :param user: the user triggering this.
     :param newItems: a list which should be appended with newly added items
     """
+    folderNameField = config.getConfig('folder_name_field', 'TokenID')
+    imageNameField = config.getConfig('image_name_field', 'ImageID')
     status = 'added'
     stat = os.stat(imagePath)
     existing = File().findOne({'path': imagePath, 'imported': True})
@@ -217,15 +227,16 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
         ctx.update(message='Removing existing %s since the size has changed' % imagePath)
         Item().remove(item)
         status = 'replaced'
-    parentFolder = Folder().findOne({'name': record['TokenID'], 'parentId': importFolder['_id']})
+    parentFolder = Folder().findOne({
+        'name': record[folderNameField], 'parentId': importFolder['_id']})
     if not parentFolder:
-        parentFolder = Folder().createFolder(importFolder, record['TokenID'], creator=user)
+        parentFolder = Folder().createFolder(importFolder, record[folderNameField], creator=user)
     # TODO: (a) use the getTargetAssetstore method from Upload(), (b) ensure
     # that the assetstore is a filesystem assestore.
     assetstore = Assetstore().getCurrent()
-    name = record['ImageID'] + os.path.splitext(record['name'])[1]
+    name = record[imageNameField] + os.path.splitext(record['name'])[1]
     mimeType = 'image/tiff'
-    if Item().findOne({'name': {'$regex': '^%s\\.' % record['ImageID']}}):
+    if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
         return 'duplicate'
     item = Item().createItem(name=name, creator=user, folder=parentFolder)
     file = File().createFile(
@@ -240,7 +251,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     item = Item().load(item['_id'], force=True)
     item = Item().setMetadata(item, {'deidUpload': record['fields']})
     try:
-        redactList = process.get_standard_redactions(item, record['ImageID'])
+        redactList = process.get_standard_redactions(item, record[imageNameField])
     except Exception:
         logger.exception('Failed to import %s' % name)
         Item().remove(item)
@@ -362,14 +373,18 @@ def ingestData(ctx, user=None):  # noqa
         report.append({'record': record, 'status': status, 'path': imagePath})
     # imageFiles are images that have no manifest record
     unfiledFolder = None
+    unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
+    if unfiledFolderId:
+        unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
     unfiledItems = []
     unfiledJobId = None
+    # If we have no valid manifests but we have an unfiled folder, be willing
+    # to import to the unfiled area.
+    if manifest == {} and imageFiles and unfiledImages is None:
+        unfiledImages = {}
     if unfiledImages is not None:
         logger.info(f'{unfiledImages}')
-        unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
-        if unfiledFolderId:
-            unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
-        else:
+        if not unfiledFolder:
             logger.info('Unfiled folder not specified.')
     for image in imageFiles:
         if unfiledFolder is None:

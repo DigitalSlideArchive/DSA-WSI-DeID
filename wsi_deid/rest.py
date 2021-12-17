@@ -697,6 +697,7 @@ class WSIDeIDResource(Resource):
     )
     @access.user
     def refileItem(self, item, imageId, tokenId):
+        folderNameField = config.getConfig('folder_name_field', 'TokenID')
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         if imageId != item['name'].split('.', 1)[0] and Item().findOne({
@@ -704,7 +705,7 @@ class WSIDeIDResource(Resource):
             raise RestException('An image with that name already exists.')
         uploadInfo = item.get('wsi_uploadInfo')
         if uploadInfo and imageId in uploadInfo:
-            tokenId = uploadInfo[imageId].get('TokenID', tokenId)
+            tokenId = uploadInfo[imageId].get(folderNameField, tokenId)
         if not tokenId:
             tokenId = imageId.split('_', 1)[0]
         item = process.refile_image(item, user, tokenId, imageId, uploadInfo)

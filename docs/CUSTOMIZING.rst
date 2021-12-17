@@ -90,6 +90,15 @@ Customizing Import and Export Reports
 
 If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``. By default, this is set to a subset of the fields in the default import schema.
 
+Primary Folder and Image Fields
++++++++++++++++++++++++++++++++
+
+By default, images are filed in a folder based on the ``TokenID`` value and named based on the ``ImageID`` value from the import excel file.  Further, ``ImageID`` is required to be the ``TokenID`` combined with the ``Proc_Seq`` and ``Slide_ID`` fields.  These can be changed.
+
+If the ``validate_image_id_field`` setting is set to ``False``, there is no requirement outside of the schema file on the ``ImageID`` field.
+
+Instead of using ``TokenID`` and ``ImageID``, these fields can be specified using the ``folder_name_field`` and ``image_name_field`` fields respectively.
+
 Import Schema Modification
 --------------------------
 
@@ -108,3 +117,34 @@ If you would like to use Optical Character Recognition (OCR) to match images in 
 * Ensure your schema contains a column for target text, and that the column is specified in ``girder.local.conf``. The property to set is ``import_text_association_column``.
 
 The target text column should contain label text of WSIs in the import directory. During the ingest process, all images in your specified import directory will be ingested into the ``Unfiled`` folder in the ``WSI DeID`` collection. Then, those images will be associated with data found on the upload file. Progress can be tracked as a girder job. If no match can be determined, images will remain in the ``Unfiled`` folder. Images with a match will be transferred to the ``AvailableToProcess`` folder.
+
+An Example Allow All Inputs
++++++++++++++++++++++++++++
+
+You can use a schema and config file to allow all files to be imported.  If there is an excel file with some minimum standards, files will be added to the ``AvailableToProcess`` folder.  If not, they will still be added to the ``Unfiled`` folder.
+
+For example, using the sample files in the ``devops/wsi_deid`` folder, ``girder.local.example.allowall.conf`` is a configuration that changes the default folder and image column names, doesn't enforce naming constraints, and has some other UI options changed from the default.  The ``importManifestSchema.example.allowall.json`` file uses a very lax schema to not require an input file name.  The columns that are present have fairly minimal requirements.
+
+A ``docker-compose.local.yml`` could then be specified such as::
+
+    ---
+    version: '3'
+    services:
+      girder:
+        # Use the latest published or locally built docker image
+        image: dsarchive/wsi_deid
+        volumes:
+          - c:\NCI_WSI:/import
+          - c:\DeID_WSI:/export
+          - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+          - ./girder.local.example.allowall.conf:/conf/girder.local.conf
+
+Now, running::
+
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
+
+will start the system with these permissive import options.  If you modify the schema in ``importManifestSchema.example.allowall.json`` or the config file in ``girder.local.example.allowall.conf``, you can restart the system via::
+    
+    docker-compose -f docker-compose.yml -f docker-compose.local.yml restart
+
+to run the system with the modified schema and configuration.

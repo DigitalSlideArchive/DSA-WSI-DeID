@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "WSI_DeID SEER DeID Upload File schema to allow any records",
+  "description": "The schema to validate the DeID Upload CSV file for the SEER WSI_DeID workflow.",
+  "default": {},
+  "required": [
+    "PatientID",
+    "SampleID"
+  ],
+  "properties": {
+    "PatientID": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]",
+      "description": "The patient ID has to start with a letter or number."
+    },
+    "SampleID": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9]",
+      "description": "The sample ID has to start with a letter or number."
+    },
+    "Registry": {
+      "type": "string"
+    },
+    "Tumor_Rec_Number": {
+      "type": "string"
+    },
+    "Histology_Code": {
+      "type": "string"
+    },
+    "Behavior_Code": {
+      "type": "string"
+    },
+    "First_Name": {
+      "type": "string"
+    },
+    "Last_Name": {
+      "type": "string"
+    },
+    "Date_of_Birth_mmddyyyy": {
+      "pattern": "^[0-9]{8}$"
+    },
+    "LabelText": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}
