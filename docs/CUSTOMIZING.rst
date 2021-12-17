@@ -118,8 +118,8 @@ If you would like to use Optical Character Recognition (OCR) to match images in 
 
 The target text column should contain label text of WSIs in the import directory. During the ingest process, all images in your specified import directory will be ingested into the ``Unfiled`` folder in the ``WSI DeID`` collection. Then, those images will be associated with data found on the upload file. Progress can be tracked as a girder job. If no match can be determined, images will remain in the ``Unfiled`` folder. Images with a match will be transferred to the ``AvailableToProcess`` folder.
 
-An Example Allow All Inputs
-+++++++++++++++++++++++++++
+An Example to Allow All Import Files
+++++++++++++++++++++++++++++++++++++
 
 You can use a schema and config file to allow all files to be imported.  If there is an excel file with some minimum standards, files will be added to the ``AvailableToProcess`` folder.  If not, they will still be added to the ``Unfiled`` folder.
 
