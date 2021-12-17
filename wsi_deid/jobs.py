@@ -96,9 +96,10 @@ def find_best_match(matches):
 
 
 def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
+    folderNameField = config.getConfig('folder_name_field', 'TokenID')
     user = User().load(userId, force=True)
     for imageId, possibleMatches in imageIdsToItems.items():
-        tokenId = uploadInfo[imageId]['TokenID']
+        tokenId = uploadInfo[imageId][folderNameField]
         bestMatch = find_best_match(possibleMatches)
         if not bestMatch:
             # continue for now, might be worth updating the item metadata
