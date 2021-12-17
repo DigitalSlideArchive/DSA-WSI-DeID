@@ -34,9 +34,14 @@ CVE-2019-5737
 CVE-2018-12123
 CVE-2018-7159
 
+# perl: We don't use perl
+CVE-2020-16156
+
 # python3.6: We are using Python 3.9
 CVE-2021-23336
 CVE-2021-3426
+CVE-2021-3733
+CVE-2021-3737
 
 # vim : we don't run vim, it is only available for debug
 CVE-2021-3778
