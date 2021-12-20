@@ -171,12 +171,13 @@ def readExcelFiles(filelist, ctx): # noqa
                     # and InputFile name are not required, and we still want this row in the
                     # manifest to run OCR and try to match the row to an image in the future
                     manifest['unfiled'] = manifest.get('unfiled', {})
-                    unlistedEntry = manifest['unfiled'].get(row.ImageID, None)
+                    unlistedEntry = manifest['unfiled'].get(
+                        getattr(row, imageNameField, None), None)
                     if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
-                        manifest['unfiled'][row.ImageID] = {
+                        manifest['unfiled'][getattr(row, imageNameField, None)] = {
                             'timestamp': timestamp,
-                            folderNameField: row.TokenID,
-                            imageNameField: row.ImageID,
+                            folderNameField: getattr(row, folderNameField, None),
+                            imageNameField: getattr(row, imageNameField, None),
                             'excel': filepath,
                             'fields': rowAsDict,
                             'errors': errors,
@@ -186,8 +187,8 @@ def readExcelFiles(filelist, ctx): # noqa
             elif name not in manifest or (timestamp > manifest[name]['timestamp'] and not errors):
                 manifest[name] = {
                     'timestamp': timestamp,
-                    imageNameField: row.ImageID,
-                    folderNameField: row.TokenID,
+                    imageNameField: getattr(row, imageNameField, None),
+                    folderNameField: getattr(row, folderNameField, None),
                     'name': name,
                     'excel': filepath,
                     'fields': rowAsDict,
