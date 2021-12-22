@@ -167,9 +167,10 @@ def readExcelFiles(filelist, ctx): # noqa
             count += 1
             if not name:
                 if not errors:
-                    # If name is none and there are no errors, then we know that ScannedFileName
-                    # and InputFile name are not required, and we still want this row in the
-                    # manifest to run OCR and try to match the row to an image in the future
+                    # If name is none and there are no errors, then we know
+                    # that ScannedFileName and InputFile name are not required,
+                    # and we still want this row in the manifest to run OCR and
+                    # try to match the row to an image in the future
                     manifest['unfiled'] = manifest.get('unfiled', {})
                     unlistedEntry = manifest['unfiled'].get(
                         getattr(row, imageNameField, None), None)
@@ -250,7 +251,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     file = File().save(file)
     # Reload the item as it will have changed
     item = Item().load(item['_id'], force=True)
-    item = Item().setMetadata(item, {'deidUpload': record['fields']})
+    if isinstance(record['fields'], dict):
+        item = Item().setMetadata(item, {'deidUpload': record['fields']})
     try:
         redactList = process.get_standard_redactions(item, record[imageNameField])
     except Exception:

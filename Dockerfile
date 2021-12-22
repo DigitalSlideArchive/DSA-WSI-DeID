@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
-    apt-get install --no-install-recommends --yes \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
     software-properties-common \
     gpg-agent \
     fonts-dejavu \
@@ -24,7 +24,7 @@ RUN apt-get update && \
     libxrender-dev \
     libgl1-mesa-dev \
     && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \
     chmod +x /usr/bin/tini
