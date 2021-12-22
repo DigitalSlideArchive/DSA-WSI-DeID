@@ -468,6 +468,8 @@ def get_deid_field_dict(item):
     :returns: a dictionary of key-vlaue pairs.
     """
     deid = item.get('meta', {}).get('deidUpload', {})
+    if not isinstance(deid, dict):
+        deid = {}
     result = {}
     for k, v in deid.items():
         result['CustomField.%s' % k] = str(v).replace('|', ' ')
