@@ -99,6 +99,8 @@ If the ``validate_image_id_field`` setting is set to ``False``, there is no requ
 
 Instead of using ``TokenID`` and ``ImageID``, these fields can be specified using the ``folder_name_field`` and ``image_name_field`` fields respectively.
 
+The values in the ``image_name_field`` need to be unique, or only the first row with a specified value will be used.
+
 Import Schema Modification
 --------------------------
 
