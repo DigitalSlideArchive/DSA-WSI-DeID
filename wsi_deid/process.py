@@ -524,7 +524,7 @@ def geojson_to_polygons(geojson):
     return polys
 
 
-def polygons_to_svg(polygons, width, height, cropAllowed=True):
+def polygons_to_svg(polygons, width, height, cropAllowed=True, offsetx=0, offsety=0):
     """
     Convert a list of polygons to an svg record.
 
@@ -533,25 +533,25 @@ def polygons_to_svg(polygons, width, height, cropAllowed=True):
     :param height: height of the image.
     :param cropAllowed: if True, the final width and height may be smaller than
         that specified if the polygons don't cover the right or bottom edge.
+    :param offsetx: if set, deduct this value from all polygon coordinates.
+    :param offsety: if set, deduct this value from all polygon coordinates.
     """
     if cropAllowed:
-        try:
-            width = min(width, int(math.ceil(max(
-                pt[0] for poly in polygons for loop in poly for pt in loop))))
-            height = min(height, int(math.ceil(max(
-                pt[1] for poly in polygons for loop in poly for pt in loop))))
-        except Exception:
-            raise
+        width = max(1, min(width, int(math.ceil(max(
+            pt[0] for poly in polygons for loop in poly for pt in loop)))))
+        height = max(1, min(height, int(math.ceil(max(
+            pt[1] for poly in polygons for loop in poly for pt in loop)))))
     svg = [f'<svg viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">']
     for poly in polygons:
         svg.append('<path fill-rule="evenodd" fill="black" d="')
         for loop in poly:
             svg.append('M ')
-            svg.append(' '.join([f'{pt[0]},{pt[1]}' for pt in loop]))
+            svg.append(' L '.join([f'{pt[0]},{pt[1]}' for pt in loop]))
             svg.append(' z')
         svg.append('"/>')
     svg.append('</svg>')
-    return ''.join(svg)
+    svg = ''.join(svg)
+    return svg
 
 
 def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImage):
@@ -693,6 +693,30 @@ def read_ts_as_vips(ts):
     return img
 
 
+def redact_wsi_geojson(geojson, width, height, origImage):
+    """
+    Given an original image and a geojson record, produce a redacted image.
+
+    :param geojson: geojson to redact.
+    :param width: the width of the original image.
+    :param height: the height of the original image.
+    :param origImage: a vips image.
+    :returns: redactedImage: a vips image.
+    """
+    polys = geojson_to_polygons(geojson)
+    logger.info('Redacting wsi - polygons: %r', polys)
+    polygonSvg = polygons_to_svg(polys, width, height)
+    logger.info('Redacting wsi - svg: %r', polygonSvg)
+    svgImage = pyvips.Image.svgload_buffer(polygonSvg.encode())
+    logger.info('Redacting wsi - compositing')
+    redactedImage = origImage.composite([svgImage], pyvips.BlendMode.OVER)
+    if redactedImage.bands > 3:
+        redactedImage = redactedImage[:3]
+    elif redactedImage.bands == 2:
+        redactedImage = redactedImage[:1]
+    return redactedImage
+
+
 def redact_format_aperio_philips_redact_wsi(tileSource, ifds, geojson, tempdir):
     """
     Given a geojson list of polygons, remove them from the wsi.
@@ -705,17 +729,9 @@ def redact_format_aperio_philips_redact_wsi(tileSource, ifds, geojson, tempdir):
     logger.info('Redacting wsi %s', tileSource._getLargeImagePath())
     width = ifds[0]['tags'][tifftools.Tag.ImageWidth.value]['data'][0]
     height = ifds[0]['tags'][tifftools.Tag.ImageHeight.value]['data'][0]
-    polygons = polygons_to_svg(geojson_to_polygons(geojson), width, height)
-    logger.info('Redacting wsi - svg: %r', polygons)
-    svgImage = pyvips.Image.svgload_buffer(polygons.encode())
     logger.info('Redacting wsi - loading source')
     origImage = read_ts_as_vips(tileSource)
-    logger.info('Redacting wsi - compositing')
-    redactedImage = origImage.composite([svgImage], pyvips.BlendMode.OVER)
-    if redactedImage.bands > 3:
-        redactedImage = redactedImage[:3]
-    elif redactedImage.bands == 2:
-        redactedImage = redactedImage[:1]
+    redactedImage = redact_wsi_geojson(geojson, width, height, origImage)
     logger.info('Redacting wsi - saving')
     tileWidth = ifds[0]['tags'][tifftools.Tag.TileWidth.value]['data'][0]
     tileHeight = ifds[0]['tags'][tifftools.Tag.TileHeight.value]['data'][0]
@@ -805,18 +821,9 @@ def redact_format_hamamatsu_redact_wsi(tileSource, ifds, geojson, tempdir):
     logger.info('Redacting wsi %s', tileSource._getLargeImagePath())
     width = ifds[0]['tags'][tifftools.Tag.ImageWidth.value]['data'][0]
     height = ifds[0]['tags'][tifftools.Tag.ImageHeight.value]['data'][0]
-    polygons = polygons_to_svg(geojson_to_polygons(geojson), width, height)
-    logger.info('Redacting wsi - svg: %r', polygons)
-    svgImage = pyvips.Image.svgload_buffer(polygons.encode())
     logger.info('Redacting wsi - loading source')
-    # origImage = read_ts_as_vips(tileSource)
     origImage = pyvips.Image.tiffload(tileSource._getLargeImagePath(), page=0)
-    logger.info('Redacting wsi - compositing')
-    redactedImage = origImage.composite([svgImage], pyvips.BlendMode.OVER)
-    if redactedImage.bands > 3:
-        redactedImage = redactedImage[:3]
-    elif redactedImage.bands == 2:
-        redactedImage = redactedImage[:1]
+    redactedImage = redact_wsi_geojson(geojson, width, height, origImage)
     if tifftools.Tag.NDPI_JpegQuality.value in ifds[0]['tags']:
         quality = int(ifds[0]['tags'][tifftools.Tag.NDPI_JpegQuality.value]['data'][0])
     else:

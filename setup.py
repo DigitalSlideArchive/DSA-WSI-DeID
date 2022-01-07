@@ -49,6 +49,7 @@ setup(
         'pandas',
         'paramiko',
         'python-magic',
+        'pyvips!=2.1.16',
         'xlrd',
     ],
     license='Apache Software License 2.0',
