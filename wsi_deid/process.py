@@ -536,6 +536,9 @@ def polygons_to_svg(polygons, width, height, cropAllowed=True, offsetx=0, offset
     :param offsetx: if set, deduct this value from all polygon coordinates.
     :param offsety: if set, deduct this value from all polygon coordinates.
     """
+    if offsetx or offsety:
+        polygons = [[[[pt[0] - offsetx, pt[1] - offsety]
+                      for poly in polygons for loop in poly for pt in loop]]]
     if cropAllowed:
         width = max(1, min(width, int(math.ceil(max(
             pt[0] for poly in polygons for loop in poly for pt in loop)))))
@@ -705,9 +708,19 @@ def redact_wsi_geojson(geojson, width, height, origImage):
     """
     polys = geojson_to_polygons(geojson)
     logger.info('Redacting wsi - polygons: %r', polys)
-    polygonSvg = polygons_to_svg(polys, width, height)
-    logger.info('Redacting wsi - svg: %r', polygonSvg)
-    svgImage = pyvips.Image.svgload_buffer(polygonSvg.encode())
+    svgImage = None
+    chunk = 16384
+    for yoffset in range(0, height, chunk):
+        for xoffset in range(0, width, chunk):
+            polygonSvg = polygons_to_svg(
+                polys, min(width - xoffset, chunk), min(height - yoffset, chunk),
+                cropAllowed=True, offsetx=xoffset, offsety=yoffset)
+            logger.info('Redacting wsi - svg: %r', polygonSvg)
+            chunkImage = pyvips.Image.svgload_buffer(polygonSvg.encode())
+            if not svgImage:
+                svgImage = chunkImage
+            else:
+                svgImage = svgImage.insert(chunkImage, xoffset, yoffset, expand=True)
     logger.info('Redacting wsi - compositing')
     redactedImage = origImage.composite([svgImage], pyvips.BlendMode.OVER)
     if redactedImage.bands > 3:
@@ -736,11 +749,13 @@ def redact_format_aperio_philips_redact_wsi(tileSource, ifds, geojson, tempdir):
     tileWidth = ifds[0]['tags'][tifftools.Tag.TileWidth.value]['data'][0]
     tileHeight = ifds[0]['tags'][tifftools.Tag.TileHeight.value]['data'][0]
     compression = ifds[0]['tags'][tifftools.Tag.Compression.value]['data'][0]
+    quality = 95
     if compression == tifftools.constants.Compression.JPEG.value:
-        quality = tifftools.constants.EstimateJpegQuality(
-            ifds[0]['tags'][tifftools.Tag.JPEGTables.value]['data'])
-    else:
-        quality = 95
+        try:
+            quality = tifftools.constants.EstimateJpegQuality(
+                ifds[0]['tags'][tifftools.Tag.JPEGTables.value]['data'])
+        except KeyError:
+            pass
     wsiPath = os.path.join(tempdir, '_wsi.tiff')
     redactedImage.tiffsave(
         wsiPath, tile=True, tile_width=tileWidth, tile_height=tileHeight,
