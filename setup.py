@@ -45,6 +45,7 @@ setup(
         'girder-homepage',
         'histomicsui',
         'large_image[tiff,openslide,memcached,openjpeg,converter]',
+        'opencv-python<4.5.5',
         'openpyxl',
         'pandas',
         'paramiko',
