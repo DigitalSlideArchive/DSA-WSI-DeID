@@ -1423,7 +1423,7 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
         'redactList': redactList,
     }
     if uploadInfo and imageId in uploadInfo:
-        itemMetadata['deidUpload'] = uploadInfo[imageId]['fields'],
+        itemMetadata['deidUpload'] = uploadInfo[imageId]['fields']
     item = Item().setMetadata(item, itemMetadata)
     if 'wsi_uploadInfo' in item:
         del item['wsi_uploadInfo']
