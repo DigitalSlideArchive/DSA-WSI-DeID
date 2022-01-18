@@ -65,6 +65,9 @@ RUN python3.9 -m pip install --no-cache-dir \
     # Use prebuilt wheels whenever possible \
     --find-links https://girder.github.io/large_image_wheels
 
+# Download ocr model
+RUN python3.9 -c 'import easyocr;OCRReader = easyocr.Reader(["en"], verbose=False)'
+
 # Build the girder web client
 RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM_CONFIG_LOGLEVEL=warn NPM_CONFIG_PROGRESS=false NPM_CONFIG_PREFER_OFFLINE=true \
     girder build && \
