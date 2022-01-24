@@ -24,7 +24,7 @@ from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 
 from . import config
-from .constants import PluginSettings
+from .constants import PluginSettings, TokenOnlyPrefix
 
 OCRLock = threading.Lock()
 OCRReader = None
@@ -1410,6 +1410,16 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
         used.
     :returns: the modified girder item.
     """
+    # if imageId starts with folder key, auto assign a number
+    if imageId.startswith(TokenOnlyPrefix):
+        baseImageId = imageId[len(TokenOnlyPrefix):]
+        used = {
+            int(entry['name'][len(baseImageId) + 1:].split('.')[0]) for entry in
+            Item().find({'name': {'$regex': '^' + re.escape(baseImageId) + r'_[0-9]+\..*'}})}
+        nextValue = 1
+        while nextValue in used:
+            nextValue += 1
+        imageId = baseImageId + '_' + str(nextValue)
     ingestFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     ingestFolder = Folder().load(ingestFolderId, force=True, exc=True)
     parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})

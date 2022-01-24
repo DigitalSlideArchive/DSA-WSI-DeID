@@ -27,7 +27,7 @@ from girder_jobs.models.job import Job
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
-from .constants import PluginSettings
+from .constants import PluginSettings, TokenOnlyPrefix
 
 ProjectFolders = {
     'ingest': PluginSettings.HUI_INGEST_FOLDER,
@@ -680,9 +680,14 @@ class WSIDeIDResource(Resource):
     def getRefileList(self, item):
         imageIds = []
         for imageId in item.get('wsi_uploadInfo', {}):
-            if not Item().findOne({
+            if not imageId.startswith(TokenOnlyPrefix) and not Item().findOne({
                     'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
                 imageIds.append(imageId)
+        for imageId in item.get('wsi_uploadInfo', {}):
+            if imageId.startswith(TokenOnlyPrefix):
+                baseImageId = imageId[len(TokenOnlyPrefix):]
+                if baseImageId not in imageIds:
+                    imageIds.append(baseImageId)
         return sorted(imageIds)
 
     @autoDescribeRoute(
@@ -700,10 +705,14 @@ class WSIDeIDResource(Resource):
         folderNameField = config.getConfig('folder_name_field', 'TokenID')
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
-        if imageId != item['name'].split('.', 1)[0] and Item().findOne({
+        if imageId and imageId != item['name'].split('.', 1)[0] and Item().findOne({
                 'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
             raise RestException('An image with that name already exists.')
+        if not imageId:
+            imageId = TokenOnlyPrefix + tokenId
         uploadInfo = item.get('wsi_uploadInfo')
+        if uploadInfo and TokenOnlyPrefix + imageId in uploadInfo:
+            imageId = TokenOnlyPrefix + imageId
         if uploadInfo and imageId in uploadInfo:
             tokenId = uploadInfo[imageId].get(folderNameField, tokenId)
         if not tokenId:

@@ -21,7 +21,7 @@ from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, process
-from .constants import ExportResult, PluginSettings, SftpMode
+from .constants import ExportResult, PluginSettings, SftpMode, TokenOnlyPrefix
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
@@ -39,6 +39,7 @@ def readExcelData(filepath):
     """
     folderNameField = config.getConfig('folder_name_field', 'TokenID')
     imageNameField = config.getConfig('image_name_field', 'ImageID')
+    validateImageIDField = config.getConfig('validate_image_id_field', True)
     potential_header = 0
     reader = pd.read_csv
     mimetype = magic.from_file(filepath, mime=True)
@@ -49,6 +50,10 @@ def readExcelData(filepath):
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
         if folderNameField in df.columns and imageNameField in df.columns:
+            return df, potential_header
+        # only one of the fields is required if we aren't validating them
+        # together
+        if not validateImageIDField and folderNameField in df.columns:
             return df, potential_header
         potential_header += 1
         df = reader(filepath, header=potential_header, dtype=str)
@@ -172,10 +177,12 @@ def readExcelFiles(filelist, ctx): # noqa
                     # and we still want this row in the manifest to run OCR and
                     # try to match the row to an image in the future
                     manifest['unfiled'] = manifest.get('unfiled', {})
-                    unlistedEntry = manifest['unfiled'].get(
-                        getattr(row, imageNameField, None), None)
+                    imageName = getattr(row, imageNameField, None)
+                    if not imageName and getattr(row, folderNameField, None):
+                        imageName = TokenOnlyPrefix + getattr(row, folderNameField, None)
+                    unlistedEntry = manifest['unfiled'].get(imageName, None)
                     if unlistedEntry is None or unlistedEntry['timestamp'] < timestamp:
-                        manifest['unfiled'][getattr(row, imageNameField, None)] = {
+                        manifest['unfiled'][imageName] = {
                             'timestamp': timestamp,
                             folderNameField: getattr(row, folderNameField, None),
                             imageNameField: getattr(row, imageNameField, None),

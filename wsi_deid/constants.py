@@ -36,4 +36,8 @@ class ExportResult(Enum):
     EXPORT_FAILED = 'failed'
 
 
+# Prefix used to indicate a partial entry only contains folder (also called
+# token) information and not name (ImageID) information.
+TokenOnlyPrefix = '_folder_'
+
 SettingDefault.defaults[PluginSettings.WSI_DEID_SFTP_MODE] = SftpMode.LOCAL_EXPORT_ONLY

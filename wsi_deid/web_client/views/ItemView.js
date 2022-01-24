@@ -366,10 +366,10 @@ wrap(ItemView, 'render', function (render) {
             imageId = this.$el.find('.g-refile-imageid').val();
             tokenId = this.$el.find('.g-refile-tokenid').val();
         }
-        if (!imageId) {
+        if (!imageId && !tokenId) {
             events.trigger('g:alert', {
                 icon: 'cancel',
-                text: 'An ImageID must be specified',
+                text: 'An ImageID or TokenID must be specified',
                 type: 'danger',
                 timeout: 5000
             });
