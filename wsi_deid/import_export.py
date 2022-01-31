@@ -57,7 +57,10 @@ def readExcelData(filepath):
             return df, potential_header
         potential_header += 1
         df = reader(filepath, header=potential_header, dtype=str)
-    raise ValueError(f'Excel file {filepath} lacks a header row')
+    err = (f'Was expecting columns named {folderNameField} and {imageNameField}.'
+           if validateImageIDField else
+           f'Was expecting a column named {folderNameField}.')
+    raise ValueError(f'Excel file {filepath} lacks a header row.  ' + err)
 
 
 def validateDataRow(validator, row, rowNumber, df):
