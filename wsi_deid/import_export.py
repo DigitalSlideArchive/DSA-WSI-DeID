@@ -157,8 +157,10 @@ def readExcelFiles(filelist, ctx): # noqa
         totalErrors = []
         for row_num, row in enumerate(df.itertuples()):
             rowAsDict = dict(row._asdict())
-            # Make sure we don't have any NaNs.  They don't serialize
-            rowAsDict = {k: v if pd.notnull(v) else None for k, v in rowAsDict.items()}
+            # Make sure we don't have any NaNs.  They don't serialize.  Also
+            # remove None values.
+            rowAsDict = {k: v for k, v in rowAsDict.items()
+                         if pd.notnull(v) and v is not None}
             rowAsDict.pop('Index')
             if all(not val for val in rowAsDict.values()):
                 continue
