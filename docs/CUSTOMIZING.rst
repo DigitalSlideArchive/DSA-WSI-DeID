@@ -66,7 +66,7 @@ Normally, when a metadata field is redacted, its value becomes blank. In ``girde
 Bulk Redation and Review of Metadata
 ++++++++++++++++++++++++++++++++++++
 
-When viewing a folder of images, you can optionally see all of the metadata that could be redacted, and, in the appropriate folders, perform bulk actions for modifying the metadata, and redacting or approving multiple items.  To do this, adjust the metadata as on an individual item's page, then check the items to process and pick the appropriate ``Redact Checked`` or ``Approve Checked`` button.  This can be disbabled ``girder.local.conf``, by setting ``show_metadata_in_lists`` to False.
+When viewing a folder of images, you can optionally see all of the metadata that could be redacted, and, in the appropriate folders, perform bulk actions for modifying the metadata, and redacting or approving multiple items.  To do this, adjust the metadata as on an individual item's page, then check the items to process and pick the appropriate ``Redact Checked`` or ``Approve Checked`` button.  This can be disabled ``girder.local.conf``, by setting ``show_metadata_in_lists`` to False.
 
 Note that some image redaction options are not available in the folder list redaction page.
 
