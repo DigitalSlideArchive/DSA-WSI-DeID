@@ -16,6 +16,9 @@ services:
       # Uncomment to use a custom import schema. This can be a relative path
       # or an absolute path.
       # - ../../wsi_deid/schema/importManifestSchema.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+      # Alternately, you could use the allow all schema:
+      # - ./girder.local.example.allowall.conf:/conf/girder.local.conf
+      # - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
     # Use a specific quantity of memory; this is necessary on some Windows/OSX
     # deployments.  Uncomment if needed.
     # deploy:
