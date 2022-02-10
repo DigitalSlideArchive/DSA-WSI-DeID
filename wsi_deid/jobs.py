@@ -6,6 +6,7 @@ from girder.models.user import User
 from girder_jobs.models.job import Job, JobStatus
 
 from . import config
+from .constants import TokenOnlyPrefix
 from .process import get_image_text, refile_image
 
 
@@ -82,16 +83,16 @@ def start_ocr_batch_job(job):
         )
 
 
-def find_best_match(matches):
+def find_best_match(matches, multipleAllowed):
     minimumMatchCount = 1
-    currentMatches = matches.copy()
-    while len(currentMatches) > 1:
+    currentMatches = [match for match in matches if match.get('itemId')]
+    while len(currentMatches) > 1 and not multipleAllowed:
         minimumMatchCount += 1
         currentMatches = [
             match for match in currentMatches if match['matchedWordCount'] >= minimumMatchCount
         ]
-    if len(currentMatches) == 1:
-        return currentMatches[0].get('itemId', None)
+    if len(currentMatches):
+        return [match.get('itemId') for match in currentMatches]
     return None
 
 
@@ -100,22 +101,24 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
     user = User().load(userId, force=True)
     for imageId, possibleMatches in imageIdsToItems.items():
         tokenId = uploadInfo[imageId][folderNameField]
-        bestMatch = find_best_match(possibleMatches)
+        multipleAllowed = imageId.startswith(TokenOnlyPrefix)
+        displayName = tokenId if imageId.startswith(TokenOnlyPrefix) else imageId
+        bestMatch = find_best_match(possibleMatches, multipleAllowed)
         if not bestMatch:
-            # continue for now, might be worth updating the item metadata
             if len(possibleMatches) == 0:
-                message = f'No items could be matched via OCR with ImageID {imageId}.\n'
+                message = f'No items could be matched via OCR with ImageID {displayName}.\n'
             else:
-                message = f'More than one item matched via OCR with ImageID {imageId}.\n'
+                message = f'More than one item matched via OCR with ImageID {displayName}.\n'
             Job().updateJob(job, log=message)
             continue
-        item = Item().load(bestMatch, force=True)
-        oldName = item['name']
-        item = refile_image(item, user, tokenId, imageId, uploadInfo)
-        Job().updateJob(
-            job,
-            log=f'Moved item {oldName} to folder {tokenId} as {item["name"]}\n',
-        )
+        for match in bestMatch:
+            item = Item().load(match, force=True)
+            oldName = item['name']
+            item = refile_image(item, user, tokenId, imageId, uploadInfo)
+            Job().updateJob(
+                job,
+                log=f'Moved item {oldName} to folder {tokenId} as {item["name"]}\n',
+            )
 
 
 def associate_unfiled_images(job):
