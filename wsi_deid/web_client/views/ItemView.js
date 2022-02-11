@@ -516,6 +516,9 @@ wrap(ItemView, 'render', function (render) {
         let keyname = clickedButton.attr('keyname');
         const map = auxImageMaps[keyname];
         const imageElem = this.$el.find(`.g-widget-metadata-container.auximage .wsi-deid-auximage-container .g-widget-auximage[auximage=${keyname}] .g-widget-auximage-image img`);
+        // ensure map is the expected size
+        map.node().width(imageElem.width()).height(imageElem.height());
+        map.size({ width: imageElem.width(), height: imageElem.height() });
         const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
         let redactList = getRedactList(this.model);
         if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
