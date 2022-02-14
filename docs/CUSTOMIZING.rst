@@ -120,6 +120,8 @@ If you would like to use Optical Character Recognition (OCR) to match images in 
 
 The target text column should contain label text of WSIs in the import directory. During the ingest process, all images in your specified import directory will be ingested into the ``Unfiled`` folder in the ``WSI DeID`` collection. Then, those images will be associated with data found on the upload file. Progress can be tracked as a girder job. If no match can be determined, images will remain in the ``Unfiled`` folder. Images with a match will be transferred to the ``AvailableToProcess`` folder.
 
+If ``InputFileName`` is added to the list of export fields in the ``upload_metadata_for_export_report`` settings, then the original file name will be included in the export report.
+
 An Example to Allow All Import Files
 ++++++++++++++++++++++++++++++++++++
 
@@ -146,7 +148,7 @@ Now, running::
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 will start the system with these permissive import options.  If you modify the schema in ``importManifestSchema.example.allowall.json`` or the config file in ``girder.local.example.allowall.conf``, you can restart the system via::
-    
+
     docker-compose -f docker-compose.yml -f docker-compose.local.yml restart
 
 to run the system with the modified schema and configuration.
