@@ -244,6 +244,8 @@ The ``SFTP MODE`` setting has three choices:
 
 **Remote transfer only:** Files are not exported locally. They are only transferred to a remote location via SFTP
 
+The export process creates a separate folder for each subject in the export directory and/or on the remote server.  If you are using SFTP, the account needs to have privileges to create directories at the destination path for the transfer to be successful.
+
 
 Windows Server 2019
 ===================
