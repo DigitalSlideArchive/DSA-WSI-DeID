@@ -1411,6 +1411,7 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     :returns: the modified girder item.
     """
     # if imageId starts with folder key, auto assign a number
+    originalImageId = imageId
     if imageId.startswith(TokenOnlyPrefix):
         baseImageId = imageId[len(TokenOnlyPrefix):]
         used = {
@@ -1433,8 +1434,8 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     itemMetadata = {
         'redactList': redactList,
     }
-    if uploadInfo and imageId in uploadInfo:
-        itemMetadata['deidUpload'] = uploadInfo[imageId]['fields']
+    if uploadInfo and originalImageId in uploadInfo:
+        itemMetadata['deidUpload'] = uploadInfo[originalImageId]['fields']
     else:
         itemMetadata['deidUpload'] = {}
     itemMetadata['deidUpload']['InputFileName'] = originalName
