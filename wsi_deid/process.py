@@ -1411,6 +1411,7 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     :returns: the modified girder item.
     """
     # if imageId starts with folder key, auto assign a number
+    originalImageId = imageId
     if imageId.startswith(TokenOnlyPrefix):
         baseImageId = imageId[len(TokenOnlyPrefix):]
         used = {
@@ -1426,14 +1427,18 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     if not parentFolder:
         parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
     newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+    originalName = item['name']
     item['name'] = newImageName
     item = Item().move(item, parentFolder)
     redactList = get_standard_redactions(item, imageId)
     itemMetadata = {
         'redactList': redactList,
     }
-    if uploadInfo and imageId in uploadInfo:
-        itemMetadata['deidUpload'] = uploadInfo[imageId]['fields']
+    if uploadInfo and originalImageId in uploadInfo:
+        itemMetadata['deidUpload'] = uploadInfo[originalImageId]['fields']
+    else:
+        itemMetadata['deidUpload'] = {}
+    itemMetadata['deidUpload']['InputFileName'] = originalName
     item = Item().setMetadata(item, itemMetadata)
     if 'wsi_uploadInfo' in item:
         del item['wsi_uploadInfo']
