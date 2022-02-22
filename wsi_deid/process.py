@@ -581,6 +581,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_aperio_philips_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     aperioValues = aperio_value_list(item, redactList, title)
     imageDescription = '|'.join(aperioValues)
     # We expect aperio to have the full resolution image in directory 0, the
@@ -937,6 +938,7 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage, macroI
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_hamamatsu_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     sourceLensTag = tifftools.Tag.NDPI_SOURCELENS.value
     for key in redactList['images']:
         if key == 'macro' and macroImage:
@@ -1116,6 +1118,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_aperio_philips_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     # redact images from xmldict
     images = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
     for key, pkey in [('macro', 'MACROIMAGE'), ('label', 'LABELIMAGE')]:
