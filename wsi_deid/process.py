@@ -345,6 +345,7 @@ def redact_item(item, tempdir):
             label_geojson is not None):
         try:
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
+            ImageItem().removeThumbnailFiles(item)
         except Exception:
             pass
     if label_geojson is not None and labelImage is not None:
@@ -361,6 +362,7 @@ def redact_item(item, tempdir):
     if redact_square or macro_geojson:
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
+            ImageItem().removeThumbnailFiles(item)
         except Exception:
             pass
     if macroImage is not None:
@@ -1132,7 +1134,9 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     # redact images from ifds
     ifds = [ifd for ifd in ifds
             if ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
-                'data', '').split()[0].lower() not in redactList['images']]
+                'data', '').split()[0].lower() not in redactList['images'] or (
+                ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
+                    'data', '').split()[0].lower() == 'macro' and macroImage)]
 
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
@@ -1229,6 +1233,7 @@ def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
             break
     if not macroImage or macroifd is None:
         return
+    logger.info('Replacing Philips macro')
     imagePath = os.path.join(tempdir, 'macro.tiff')
     image = io.BytesIO()
     macroImage.save(image, 'TIFF')

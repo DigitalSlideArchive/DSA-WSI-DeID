@@ -25,13 +25,13 @@
             if info.byId[item.id]
               a.g-item-list-link(g-item-cid=item.cid, href=`#item/${item.id}`)
                 .large_image_thumbnail
-                  img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/thumbnail?width=160&height=100")
+                  img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/thumbnail?width=160&height=100&_=" + item.get("updated"))
           for key in info.image_names
             td
               if info.byId[item.id] && info.byId[item.id].images.indexOf(key) >= 0
                 a.g-item-list-link(g-item-cid=item.cid, href=`#item/${item.id}`)
                   .large_image_thumbnail
-                    img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/images/" + key + "?width=160&height=100")
+                    img.waiting(deferred-src=apiRoot + "/item/" + item.id + "/tiles/images/" + key + "?width=160&height=100&_=" + item.get("updated"))
 
           td
             a.g-item-list-link.g-right-border(g-item-cid=item.cid, href=`#item/${item.id}`)
