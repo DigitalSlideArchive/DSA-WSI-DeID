@@ -345,6 +345,7 @@ def redact_item(item, tempdir):
             label_geojson is not None):
         try:
             labelImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('label')[0]))
+            ImageItem().removeThumbnailFiles(item)
         except Exception:
             pass
     if label_geojson is not None and labelImage is not None:
@@ -361,6 +362,7 @@ def redact_item(item, tempdir):
     if redact_square or macro_geojson:
         try:
             macroImage = PIL.Image.open(io.BytesIO(tileSource.getAssociatedImage('macro')[0]))
+            ImageItem().removeThumbnailFiles(item)
         except Exception:
             pass
     if macroImage is not None:
@@ -581,6 +583,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_aperio_philips_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     aperioValues = aperio_value_list(item, redactList, title)
     imageDescription = '|'.join(aperioValues)
     # We expect aperio to have the full resolution image in directory 0, the
@@ -937,6 +940,7 @@ def redact_format_hamamatsu(item, tempdir, redactList, title, labelImage, macroI
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_hamamatsu_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     sourceLensTag = tifftools.Tag.NDPI_SOURCELENS.value
     for key in redactList['images']:
         if key == 'macro' and macroImage:
@@ -1116,6 +1120,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
         ifds = redact_format_aperio_philips_redact_wsi(
             tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
     # redact images from xmldict
     images = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
     for key, pkey in [('macro', 'MACROIMAGE'), ('label', 'LABELIMAGE')]:
@@ -1129,7 +1134,9 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     # redact images from ifds
     ifds = [ifd for ifd in ifds
             if ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
-                'data', '').split()[0].lower() not in redactList['images']]
+                'data', '').split()[0].lower() not in redactList['images'] or (
+                ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
+                    'data', '').split()[0].lower() == 'macro' and macroImage)]
 
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
@@ -1226,6 +1233,7 @@ def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
             break
     if not macroImage or macroifd is None:
         return
+    logger.info('Replacing Philips macro')
     imagePath = os.path.join(tempdir, 'macro.tiff')
     image = io.BytesIO()
     macroImage.save(image, 'TIFF')

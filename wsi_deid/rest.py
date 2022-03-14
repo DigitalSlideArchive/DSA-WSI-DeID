@@ -199,6 +199,14 @@ def process_item(item, user=None):
         item['meta'].pop(history_key, None)
     item['meta']['redacted'][-1]['previousExports'] = allPreviousExports
     item['updated'] = datetime.datetime.utcnow()
+    try:
+        redactList = item['meta'].get('redactList') or {}
+        if redactList.get('area', {}).get('_wsi', {}).get('geojson') or any(
+                redactList['images'][key].get('geojson') for key in redactList.get('images', {})):
+            ImageItem().removeThumbnailFiles(item)
+
+    except Exception:
+        ImageItem().removeThumbnailFiles(item)
     item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
     return item
 
