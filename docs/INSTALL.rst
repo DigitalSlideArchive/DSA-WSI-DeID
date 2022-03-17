@@ -261,6 +261,8 @@ An example configuration file is provided, see `docker-compose.example-ws2019.lo
 Example Installation on WS 2019
 -------------------------------
 
+Note: it is better to install Docker Desktop using official instructions from Docker or Microsoft.  If you have trouble we those, these scripts may work.  They have only been tested an a specific verison of Windows Server 2019 and may not work on anything else.
+
 As an example of installing the software on a fresh install of Windows Server 2019 (tested on version 1809, OS Build 17763.737), the following powershell commands were used.
 
 Install Docker::

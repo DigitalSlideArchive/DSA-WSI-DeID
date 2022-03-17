@@ -1,0 +1,59 @@
+---
+version: '3'
+services:
+  girder:
+    # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to
+    # to use a fixed version
+    image: dsarchive/wsi_deid:stable
+    volumes:
+      # Create a local file (in this example, at C:\cifs.credentials) which
+      # contains at least two lines:
+      #   username=<cifs user name>
+      #   password=<cifs password>
+      # It might also need
+      #   domain=<windows domain>
+      # NOTE: this file *must* have linux style line endings (LF), not Windows
+      # style (CR/LF).  If more convenient, you could install dos2unix as part
+      # of the apt-get install step, and then pass the credentials file though
+      # that (dos2unix -n /cifs.credentials /opt/credentials) and then use the
+      # converted file for the credentials.
+      # You don't *need* to create a credentials file; the settings can be
+      # passed on the mount command line (below) as
+      # -o username=<user>,password=<password> instead of
+      # -o credenitals=/cifs.credentials, but this exposes the username and
+      # password to a greater degree.  You can mount multiple shares by having
+      # multiple credential files and multiple mount directories and mount
+      # commands.
+      - C:\cifs.credentials:/cifs.credenitals
+      # Instead of using the standard import and export mounts, you could
+      # comment out these lines and add just after the mount command something
+      # like
+      #   ln -s /data/import /import &&
+      #   ln -s /data/export /export &&
+      - c:\NCI_WSI:/import
+      - c:\DeID_WSI:/export
+    # Using a cifs mount requires more privileges than the default.  This
+    # doesn't have to use full privileged mode (see
+    # https://github.com/moby/moby/issues/22197)
+    privileged: True
+    # We need to override the default command to mount the shared directory.
+    # This installs teh cifs libraries, creates a /data directory to place the
+    # mount, mounts the cifs/smb share, and then starts Girder normally.
+    command: bash -c "
+      apt-get update &&
+      apt-get install -y cifs-utils &&
+      mkdir /data &&
+      mount -f cifs //smb.server.uri/share_name /data -o credentials=/cifs.credentials,iocharset=utf8 &&
+      python3.9 /conf/provision.py &&
+      girder serve
+      "
+    # Use a specific quantity of memory; this is necessary on some Windows/OSX
+    # deployments.  Uncomment if needed.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 4g
+  # Uncomment this to specify an explicit database directory
+  # mongodb:
+  #   volumes:
+  #     - c:\WSI_Database:/data/db
