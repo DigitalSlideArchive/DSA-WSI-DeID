@@ -901,7 +901,7 @@ def redact_format_hamamatsu_redact_wsi(tileSource, ifds, geojson, tempdir):
                     tifftools.Tag.SampleFormat,
                     tifftools.Tag.XResolution, tifftools.Tag.YResolution,
                     } | {
-                    tag for tag in tifftools.Tag if tag.name.startswith('NDPI')}:
+                    tagn for tagn in tifftools.Tag if tagn.name.startswith('NDPI')}:
                 if tag.value in ifd['tags']:
                     newifd['tags'][tag.value] = ifd['tags'][tag.value]
             for numtag in {65433, 65443}:
