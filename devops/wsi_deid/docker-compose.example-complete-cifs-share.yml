@@ -1,0 +1,79 @@
+---
+# Note - this example should be run as the only docker-compose file, not as a
+# modification from the default docker-compose.yml file.
+version: '3'
+services:
+  girder:
+    # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to
+    # to use a fixed version
+    image: dsarchive/wsi_deid:latest
+    # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)
+    # so that local file assetstores and logs are owned by yourself.
+    # user: ${CURRENT_UID}
+    restart: unless-stopped
+    # Set DSA_PORT to expose the interface on another port (default 8080).
+    ports:
+      - "${DSA_PORT:-8080}:8080"
+    environment:
+      - GIRDER_CONFIG=/conf/girder.local.conf
+    volumes:
+      # Create a local file (in this example, at C:\cifs.credentials) which
+      # contains at least two lines:
+      #   username=<cifs user name>
+      #   password=<cifs password>
+      # It might also need
+      #   domain=<windows domain>
+      # NOTE: this file *must* have linux style line endings (LF), not Windows
+      # style (CR/LF).  If more convenient, you could install dos2unix as part
+      # of the apt-get install step, and then pass the credentials file though
+      # that (dos2unix -n /cifs.credentials /opt/credentials) and then use the
+      # converted file for the credentials.
+      - C:\cifs.credentials:/cifs.credentials
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+    # We need this to allow mounts smb/cifs mounts
+    privileged: True
+    depends_on:
+      - mongodb
+      - memcached
+    # //smb.server.uri/share_name is the name of the windows samba share.
+    # In the share, this creates a directory called wsideid and then has
+    # subdirectories called import, export, assetstore, logs, and db (db is
+    # created via the mongo contaienr).  These are then linked to appropriate
+    # locations inside the docker.
+    command: bash -c "
+      apt-get update &&
+      apt-get install -y cifs-utils &&
+      mkdir -p /data &&
+      mount -t cifs //smb.server.uri/share_name /data -o credentials=/cifs.credentials,iocharset=utf8 &&
+      mkdir -p /data/wsideid/import &&
+      mkdir -p /data/wsideid/export &&
+      mkdir -p /data/wsideid/assetstore &&
+      mkdir -p /data/wsideid/logs &&
+      ln -sf /data/wsideid/import /. &&
+      ln -sf /data/wsideid/export /. &&
+      ln -sf /data/wsideid/assetstore /. &&
+      ln -sf /data/wsideid/logs /. &&
+      python3.9 /conf/provision.py &&
+      girder serve
+      "
+  mongodb:
+    image: "mongo:latest"
+    restart: unless-stopped
+    volumes:
+      - C:\cifs.credentials:/cifs.credentials
+    # We need this to allow mounts smb/cifs mounts
+    privileged: True
+    command: bash -c "
+      apt-get update &&
+      apt-get install -y cifs-utils &&
+      mount -t cifs //smb.server.uri/share_name /data -o credentials=/cifs.credentials,iocharset=utf8 &&
+      mkdir -p /data/wsideid/db &&
+      mongod --nojournal --noauth --bind_ip_all --dbpath /data/wsideid/db
+      "
+  memcached:
+    image: memcached
+    command: -m 4096
+    restart: unless-stopped
