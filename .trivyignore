@@ -59,3 +59,6 @@ CVE-2022-0351
 CVE-2022-0359
 CVE-2022-0361
 CVE-2022-0368
+
+# Python mailcap not used with our code
+CVE-2015-20107
