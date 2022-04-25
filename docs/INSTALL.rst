@@ -43,7 +43,7 @@ As an example, to run the system on a virtualized Windows server in a cloud serv
 Import and Export Paths
 -----------------------
 
-If you want to import and export data from your local filesystem into the Pilot, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains the following content (note that Windows Server 2019 may require changes to this file, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019)::
+If you want to import and export data from your local filesystem into the system, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains the following content (note that Windows Server 2019 may require changes to this file, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019)::
 
     ---
     version: '3'
@@ -56,7 +56,7 @@ If you want to import and export data from your local filesystem into the Pilot,
           - c:\NCI_WSI:/import
           - c:\DeID_WSI:/export
 
-where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the Pilot system, i.e. ``c:\wsi_deid\import:/import`` specifies that the local filesystem directory ``c:\wsi_deid\import`` is mounted into the Pilot as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
+where the first part of the last two lines are paths on the local system that should be mounted into the ``import`` and ``export`` paths of the program, i.e. ``c:\wsi_deid\import:/import`` specifies that the local filesystem directory ``c:\wsi_deid\import`` is mounted into the program as the ``/import`` path.  To use these defined import and export paths, instead of typing ``docker-compose up -d``, type::
 
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
