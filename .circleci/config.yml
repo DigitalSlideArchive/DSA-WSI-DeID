@@ -57,7 +57,7 @@ jobs:
           working_directory: ./devops/wsi_deid
       - run:
           name: Run docker-compose up
-          command: bash -c 'docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d'
+          command: bash -c 'docker-compose -f docker-compose.pilot.yml -f docker-compose.local.yml up -d'
           working_directory: ./devops/wsi_deid
       - run:
           name: Wait for girder to respond and be configured

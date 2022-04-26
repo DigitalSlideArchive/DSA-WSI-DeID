@@ -152,3 +152,8 @@ will start the system with these permissive import options.  If you modify the s
     docker-compose -f docker-compose.yml -f docker-compose.local.yml restart
 
 to run the system with the modified schema and configuration.
+
+Original Pilot Settings
+-----------------------
+
+To have the same settings as the original pilot, use the ``docker-compose.pilot.yml`` file instead of ``docker-compose.yml``.

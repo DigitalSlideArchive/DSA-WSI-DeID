@@ -2,8 +2,7 @@
 version: '3'
 services:
   girder:
-    # For the original pilot project, set this to dsarchive/wsi_deid:2.2.1
-    image: dsarchive/wsi_deid:latest
+    image: dsarchive/wsi_deid:2.2.1
     # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)
     # so that local file assetstores and logs are owned by yourself.
     # user: ${CURRENT_UID}
@@ -27,8 +26,9 @@ services:
       # docker-compose.local.yml file.  See the example.
       # - <some local path>:/import
       # - <some local path>:/export
-      # Copy a specific schema to the location where the program expects it
-      - ./importManifestSchema.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+      # Original pilot settings
+      - ./girder.local.pilot.conf:/conf/girder.local.conf
+      - ./importManifestSchema.pilot.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
     depends_on:
       - mongodb
       - memcached
