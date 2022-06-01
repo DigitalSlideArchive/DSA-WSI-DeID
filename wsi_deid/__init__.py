@@ -1,3 +1,5 @@
+import os
+
 import girder
 import psutil
 from girder import plugin
@@ -90,7 +92,7 @@ class GirderPlugin(plugin.GirderPlugin):
                 ('import', Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)),
                 ('export', Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)),
                 ('assetstore', assetstorePath)):
-            if path is not None:
+            if path is not None and os.path.exists(path):
                 space = psutil.disk_usage(path).free
                 girder.logprint.info('Available disk space for %s: %3.1f GB' % (
                     pathkey, space / 1024**3))
