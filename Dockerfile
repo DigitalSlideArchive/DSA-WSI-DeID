@@ -39,7 +39,8 @@ RUN add-apt-repository ppa:deadsnakes/ppa && \
     rm get-pip.py && \
     rm /usr/bin/python3 && \
     ln -s /usr/bin/python3.9 /usr/bin/python3 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    rm -r ~/.cache
 
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
     apt-get update && \
@@ -74,6 +75,7 @@ RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM
     # Get rid of unnecessary files to keep the docker image smaller \
     find /usr/local/lib/python3.9 -name node_modules -exec rm -rf {} \+ && \
     find /usr/local/lib/python3.9 -name package-lock.json -exec rm -f {} \+ && \
+    npm cache clear --force && \
     rm -rf /tmp/npm*
 
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
