@@ -521,7 +521,7 @@ class WSIDeIDResource(Resource):
     def getSettings(self):
         return config.getConfig()
 
-    @access.user
+    @access.public
     @autoDescribeRoute(
         Description('Get total subtree folder and item counts of a resource by ID.')
         .param('id', 'The ID of the resource.', paramType='path')
