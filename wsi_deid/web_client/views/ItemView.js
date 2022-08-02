@@ -652,6 +652,7 @@ wrap(ItemView, 'render', function (render) {
                 url: `wsi_deid/project_folder/${this.model.get('folderId')}`,
                 error: null
             }).done((resp) => {
+                this.$el.toggleClass('wsi-deid-entry', !!resp);
                 if (resp) {
                     restRequest({
                         url: `wsi_deid/settings`,
