@@ -75,21 +75,21 @@
                           span.wsi-deid-replace-value(keyname=keyname, category="metadata")
                             label(for=inputId) New value:
                               input.wsi-deid-replace-value-input(type="text", id=inputId, value=(redactList.metadata[keyname] || {}).value || "")
-                          if info.wsi_deid_settings.require_redact_category !== false
-                            span.g-hui-redact-label Redact
-                              select.g-hui-redact(keyname=keyname, category="metadata", title="Redact this metadata")
-                                option(value="none") Keep (do not redact)
-                                for cat in PHIPIITypes
-                                  if cat.types
-                                    optgroup(label=cat.text)
-                                      for phitype in cat.types
-                                        option(value=phitype.key, category=cat.category, selected=(redactReason === phitype.key))
-                                          = phitype.text
-                                  else
-                                    option(value=cat.key, category=cat.category, selected=(redactReason === cat.key))
-                                      = cat.text
-                          else
-                            a.g-hui-redact(class=redactRecord && redactRecord.reason ? " undo" : "", keyname=keyname, category="metadata", title="Toggle redacting this metadata") Redact
+                        if info.wsi_deid_settings.require_redact_category !== false
+                          span.g-hui-redact-label Redact
+                            select.g-hui-redact(keyname=keyname, category="metadata", title="Redact this metadata")
+                              option(value="none") Keep (do not redact)
+                              for cat in PHIPIITypes
+                                if cat.types
+                                  optgroup(label=cat.text)
+                                    for phitype in cat.types
+                                      option(value=phitype.key, category=cat.category, selected=(redactReason === phitype.key))
+                                        = phitype.text
+                                else
+                                  option(value=cat.key, category=cat.category, selected=(redactReason === cat.key))
+                                    = cat.text
+                        else
+                          a.g-hui-redact(class=redactRecord && redactRecord.reason ? " undo" : "", keyname=keyname, category="metadata", title="Toggle redacting this metadata") Redact
 
             if showAllVisible
               for keylist in info._redactable
