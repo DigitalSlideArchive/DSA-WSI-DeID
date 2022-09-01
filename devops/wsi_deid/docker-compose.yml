@@ -28,7 +28,7 @@ services:
       # - <some local path>:/import
       # - <some local path>:/export
       # Copy a specific schema to the location where the program expects it
-      - ./importManifestSchema.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+      - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
     depends_on:
       - mongodb
       - memcached
