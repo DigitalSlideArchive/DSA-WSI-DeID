@@ -23,6 +23,8 @@ services:
       # Location of girder.local.conf and provision.py; add to use local
       # versions
       # - .:/conf
+      # Alternately, use the allowall configuration:
+      - ./girder.local.example.allowall.conf:/conf/girder.local.conf
       # Add for import and export location.  This can also be done with a
       # docker-compose.local.yml file.  See the example.
       # - <some local path>:/import
