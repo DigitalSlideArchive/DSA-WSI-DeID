@@ -4,7 +4,7 @@ services:
   girder:
     # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to
     # to use a fixed version
-    image: dsarchive/wsi_deid:stable
+    # image: dsarchive/wsi_deid:stable
     volumes:
       - c:\NCI_WSI:/import
       - c:\DeID_WSI:/export

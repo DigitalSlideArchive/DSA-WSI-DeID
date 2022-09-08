@@ -2,7 +2,7 @@
 version: '3'
 services:
   girder:
-    # For the original pilot project, set this to dsarchive/wsi_deid:2.2.1
+    # For the original pilot project, set this to dsarchive/wsi_deid:v2.2.1
     image: dsarchive/wsi_deid:latest
     # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)
     # so that local file assetstores and logs are owned by yourself.
@@ -23,14 +23,12 @@ services:
       # Location of girder.local.conf and provision.py; add to use local
       # versions
       # - .:/conf
-      # Alternately, use the allowall configuration:
-      - ./girder.local.example.allowall.conf:/conf/girder.local.conf
       # Add for import and export location.  This can also be done with a
       # docker-compose.local.yml file.  See the example.
       # - <some local path>:/import
       # - <some local path>:/export
       # Copy a specific schema to the location where the program expects it
-      - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+      # - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
     depends_on:
       - mongodb
       - memcached

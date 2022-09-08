@@ -13,7 +13,7 @@ from girder_large_image.constants import PluginSettings as liSettings
 def provision():
     import wsi_deid
     from wsi_deid.constants import PluginSettings
-
+    print('Provisioning')
     # If there is are no users, create an admin user
     if User().findOne() is None:
         User().createUser('admin', 'password', 'Admin', 'Admin', 'admin@nowhere.nil')
@@ -51,11 +51,13 @@ WSI DeID Version: %s
     }
     configDict = girder.utility.config.getConfig().get('wsi_deid', {})
     matchTextFields = configDict.get('import_text_association_columns', [])
+    print('matchTextFields', matchTextFields)
     if matchTextFields:
         # if this setting is not an empty list, then we will provision the Unfiled folder,
         # since it is likely we will need to support a schema with no file names
         folders[PluginSettings.WSI_DEID_UNFILED_FOLDER] = ('Unfiled', True)
     for settingKey, (folderName, public) in folders.items():
+        print('Ensuring folder %s exists' % folderName)
         folder = None
         folderId = Setting().get(settingKey)
         if folderId:

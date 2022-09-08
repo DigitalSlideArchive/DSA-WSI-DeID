@@ -27,6 +27,8 @@ XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.she
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
 SFTP_HISTORY_KEY = 'wsi_deidExportedSftp'
 
+SCHEMA_FILE_PATH = os.path.join(os.path.dirname(__file__), 'schema', 'importManifestSchema.json')
+
 
 def readExcelData(filepath):
     """
@@ -104,8 +106,7 @@ def getSchemaValidator():
 
     :returns: a validator.
     """
-    return jsonschema.Draft6Validator(json.load(open(os.path.join(
-        os.path.dirname(__file__), 'schema', 'importManifestSchema.json'))))
+    return jsonschema.Draft6Validator(json.load(open(SCHEMA_FILE_PATH)))
 
 
 def readExcelFiles(filelist, ctx): # noqa
