@@ -6,19 +6,15 @@
   "description": "The schema to validate the DeID Upload CSV file for the SEER WSI_DeID workflow.",
   "default": {},
   "required": [
-    "PatientID",
-    "SampleID"
+    "TokenID"
   ],
   "properties": {
-    "PatientID": {
+    "TokenID": {
       "type": "string",
-      "pattern": "^[a-zA-Z0-9]",
       "description": "The patient ID has to start with a letter or number."
     },
-    "SampleID": {
-      "type": "string",
-      "pattern": "^[a-zA-Z0-9]",
-      "description": "The sample ID has to start with a letter or number."
+    "SurgPathNum": {
+      "type": "string"
     },
     "Registry": {
       "type": "string"
@@ -40,9 +36,6 @@
     },
     "Date_of_Birth_mmddyyyy": {
       "pattern": "^[0-9]{8}$"
-    },
-    "LabelText": {
-      "type": "string"
     }
   },
   "additionalProperties": true
