@@ -1,6 +1,8 @@
 # flake8: noqa 501
 # Disable flake8 line-length check (E501)
 
+import os
+
 import pytest
 
 from wsi_deid.import_export import getSchemaValidator, readExcelData, validateDataRow
@@ -61,6 +63,10 @@ csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
     ]),
 ))
 def test_schema(tmp_path, csv, errorlist):
+    import wsi_deid.import_export
+
+    wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(
+        os.path.dirname(wsi_deid.import_export.SCHEMA_FILE_PATH), 'importManifestSchema.test.json')
     validator = getSchemaValidator()
     dest = tmp_path / 'test.csv'
     open(dest, 'wt').write(csv)

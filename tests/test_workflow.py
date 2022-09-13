@@ -12,9 +12,12 @@ from .utilities import provisionServer  # noqa
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 def test_workflow(server, provisionServer, user):  # noqa
+    import wsi_deid.import_export
     from wsi_deid import rest
     from wsi_deid.constants import PluginSettings
 
+    wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(
+        os.path.dirname(wsi_deid.import_export.SCHEMA_FILE_PATH), 'importManifestSchema.test.json')
     importPath, exportPath = provisionServer
     importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     importFolder = Folder().load(importFolderId, force=True, exc=True)
@@ -39,9 +42,12 @@ def test_workflow(server, provisionServer, user):  # noqa
 @pytest.mark.plugin('large_image')
 def test_workflow_with_options(server, provisionServer, user):  # noqa
     import wsi_deid.config
+    import wsi_deid.import_export
     from wsi_deid import rest
     from wsi_deid.constants import PluginSettings
 
+    wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(
+        os.path.dirname(wsi_deid.import_export.SCHEMA_FILE_PATH), 'importManifestSchema.test.json')
     config = girder.utility.config.getConfig()
     config[wsi_deid.config.CONFIG_SECTION] = {
         'redact_macro_square': True,
