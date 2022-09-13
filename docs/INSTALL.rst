@@ -169,7 +169,7 @@ The system database also uses a Docker directory by default.  This tends to be r
 
 Once the system is up and running, you can check the available memory in kilobytes via the command ::
 
-    docker exec wsi_deid_girder_1 bash -c "grep MemTotal /proc/meminfo | awk '{print $2}'
+    docker exec wsi_deid_girder_1 bash -c "grep MemTotal /proc/meminfo | awk '{print $2}'"
 
 If the printed value is less than 3000000, you should add the appropriate lines to the ``docker-compose.local.yml`` file to specify the available memory.
 
