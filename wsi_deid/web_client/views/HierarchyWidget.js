@@ -222,6 +222,15 @@ function addControls(key, settings) {
                 action: 'list/process',
                 check: () => settings.show_metadata_in_lists
             }
+        ],
+        unfiled: [
+            {
+                key: 'import',
+                text: 'Import',
+                class: 'btn-info',
+                action: 'ingest',
+                check: () => settings.show_import_button !== false
+            }
         ]
     };
     if (!controls[key]) {
