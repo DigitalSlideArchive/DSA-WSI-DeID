@@ -85,6 +85,11 @@ Import and Export Controls
 
 By default, new data can be imported into the ``AvailableToProcess`` folder and exported from the ``Approved`` folder via specific controls.  Imports require that a manifest spreadsheet file is next to the image files in the import directory.  Images can also be moved or imported into the ``AvailableToProcess`` folder using ordinary item controls in Girder.  If the import and export buttons are not going to be used, they can be hidden by setting the ``show_import_button`` and ``show_export_button`` values to False in the configuration.
 
+Reimporting Moved Images
+++++++++++++++++++++++++
+
+By default, if an image has been imported before, it will not be reimported no matter where it is located in the system.  If you are creating folders besides those used in the basic workflow and want to reimport a file that was moved to one of these non-workflow folders, set the ``reimport_if_moved`` configuration value to True.
+
 Customizing Import and Export Reports
 +++++++++++++++++++++++++++++++++++++
 
