@@ -1,7 +1,7 @@
 # bash: Default CMD is not bash
 CVE-2019-18276
 
-# coreutils: Not explicitly using chroot in coreutils 
+# coreutils: Not explicitly using chroot in coreutils
 CVE-2016-2781
 
 # gcc-8-base: Not building for ARM
@@ -69,9 +69,11 @@ CVE-2022-0368
 CVE-2022-0392
 CVE-2022-0408
 CVE-2022-0413
+CVE-2022-0417
 CVE-2022-0443
 CVE-2022-0554
 CVE-2022-0572
+CVE-2022-0629
 CVE-2022-0685
 CVE-2022-0714
 CVE-2022-0729
@@ -102,12 +104,15 @@ CVE-2022-2183
 CVE-2022-2206
 CVE-2022-2304
 CVE-2022-2343
+CVE-2022-2344
 CVE-2022-2345
+CVE-2022-2571
 CVE-2022-2581
 CVE-2022-2845
 CVE-2022-2849
 CVE-2022-2923
 CVE-2022-2946
+CVE-2022-2980
 
 # Python mailcap not used with our code
 CVE-2015-20107
