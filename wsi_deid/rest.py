@@ -298,6 +298,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'list', ':action'), self.itemListAction)
         self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('folder', ':id', 'item_list'), self.folderItemList)
+        self.route('GET', ('folder', ':id', 'refileList'), self.getRefileListFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
@@ -696,6 +697,26 @@ class WSIDeIDResource(Resource):
                 baseImageId = imageId[len(TokenOnlyPrefix):]
                 if baseImageId not in imageIds:
                     imageIds.append(baseImageId)
+        return sorted(imageIds)
+
+    @autoDescribeRoute(
+        Description('Get the list of known and allowed image names for refiling.')
+        .modelParam('id', model=Folder, level=AccessType.READ)
+        .errorResponse()
+    )
+    @access.user
+    def getRefileListFolder(self, folder):
+        imageIds = set()
+        for item in Folder().childItems(folder):
+            for imageId in item.get('wsi_uploadInfo', {}):
+                if not imageId.startswith(TokenOnlyPrefix) and not Item().findOne({
+                        'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
+                    imageIds.add(imageId)
+            for imageId in item.get('wsi_uploadInfo', {}):
+                if imageId.startswith(TokenOnlyPrefix):
+                    baseImageId = imageId[len(TokenOnlyPrefix):]
+                    if baseImageId not in imageIds:
+                        imageIds.add(baseImageId)
         return sorted(imageIds)
 
     @autoDescribeRoute(
