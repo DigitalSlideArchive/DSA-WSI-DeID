@@ -252,6 +252,34 @@ def isProjectFolder(folder):
     return None
 
 
+def getExisting(imagePath, ctx):
+    """
+    Get the file document of an image if it has already been imported.
+
+    :param imagePath: the path in the assetstore to the image.
+    :param ctx: a context manager to report if we had to remove an existing
+        item because the file size changed.
+    :returns: a status if the document exists or None if it doesn't.
+    """
+    reimportIfMoved = config.getConfig('reimport_if_moved', False)
+    existing = File().findOne({'path': imagePath, 'imported': True})
+    if reimportIfMoved and existing:
+        item = Item().load(existing['itemId'], force=True)
+        folder = Folder().load(item['folderId'], force=True)
+        if isProjectFolder(folder) is None:
+            existing = None
+    if existing:
+        stat = os.stat(imagePath)
+        if existing['size'] == stat.st_size:
+            return 'present'
+        item = Item().load(existing['itemId'], force=True)
+        # TODO: move item somewhere; for now, delete it
+        ctx.update(message='Removing existing %s since the size has changed' % imagePath)
+        Item().remove(item)
+        return 'replaced'
+    return None
+
+
 def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     """
     Ingest a single image.
@@ -266,16 +294,9 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     folderNameField = config.getConfig('folder_name_field', 'TokenID')
     imageNameField = config.getConfig('image_name_field', 'ImageID')
     status = 'added'
-    stat = os.stat(imagePath)
-    existing = File().findOne({'path': imagePath, 'imported': True})
-    if existing:
-        if existing['size'] == stat.st_size:
-            return 'present'
-        item = Item().load(existing['itemId'], force=True)
-        # TODO: move item somewhere; for now, delete it
-        ctx.update(message='Removing existing %s since the size has changed' % imagePath)
-        Item().remove(item)
-        status = 'replaced'
+    status = getExisting(imagePath, ctx) or status
+    if status == 'present':
+        return status
     parentFolder = Folder().findOne({
         'name': record[folderNameField], 'parentId': importFolder['_id']})
     if not parentFolder:
@@ -288,6 +309,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
         return 'duplicate'
     item = Item().createItem(name=name, creator=user, folder=parentFolder)
+    stat = os.stat(imagePath)
     file = File().createFile(
         name=name, creator=user, item=item, reuseExisting=False,
         assetstore=assetstore, mimeType=mimeType, size=stat.st_size,
@@ -314,15 +336,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
 
 
 def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems, uploadInfo):
-    stat = os.stat(imagePath)
-    existing = File().findOne({'path': imagePath, 'imported': True})
-    if existing:
-        if existing['size'] == stat.st_size:
-            # file already present
-            return
-        item = Item().load(existing['itemId'], force=True)
-        ctx.update(message='Removing unfiled image %s since the size has changed' % imagePath)
-        Item().remove(item)
+    if getExisting(imagePath, ctx) == 'present':
+        return
     ctx.update(message='Importing %s to the Unfiled folder' % imagePath)
     assetstore = Assetstore().getCurrent()
     _, name = os.path.split(imagePath)
@@ -330,6 +345,7 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems, uplo
     item = Item().createItem(name=name, creator=user, folder=unfiledFolder)
     item['wsi_uploadInfo'] = uploadInfo
     item = Item().save(item)
+    stat = os.stat(imagePath)
     file = File().createFile(
         name=name, creator=user, item=item, reuseExisting=False,
         assetstore=assetstore, mimeType=mimeType, size=stat.st_size, saveFile=False)
