@@ -21,7 +21,7 @@ from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, process
-from .constants import ExportResult, PluginSettings, SftpMode, TokenOnlyPrefix
+from .constants import ExportResult, PluginSettings, ProjectFolders, SftpMode, TokenOnlyPrefix
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
@@ -231,6 +231,25 @@ def readExcelFiles(filelist, ctx): # noqa
         })
         logger.info('Read %s; parsed %d valid rows' % (filepath, count))
     return manifest, report
+
+
+def isProjectFolder(folder):
+    """
+    Check if the specified folder is one of the project folders that stores
+    WSI.  If so, return the key of the parent folder.
+
+    :params folder: A Girder folder document.
+    :returns: A ProjectFolders key or None.
+    """
+    while folder:
+        for key in ProjectFolders:
+            projFolderId = Setting().get(ProjectFolders[key])
+            if str(folder['_id']) == projFolderId:
+                return key
+        if folder['parentCollection'] != 'folder':
+            break
+        folder = Folder().load(folder['parentId'], force=True)
+    return None
 
 
 def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
