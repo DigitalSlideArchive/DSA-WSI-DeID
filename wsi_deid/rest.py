@@ -27,18 +27,7 @@ from girder_jobs.models.job import Job
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
-from .constants import PluginSettings, TokenOnlyPrefix
-
-ProjectFolders = {
-    'ingest': PluginSettings.HUI_INGEST_FOLDER,
-    'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
-    'processed': PluginSettings.HUI_PROCESSED_FOLDER,
-    'rejected': PluginSettings.HUI_REJECTED_FOLDER,
-    'original': PluginSettings.HUI_ORIGINAL_FOLDER,
-    'finished': PluginSettings.HUI_FINISHED_FOLDER,
-    'unfiled': PluginSettings.WSI_DEID_UNFILED_FOLDER,
-}
-
+from .constants import PluginSettings, ProjectFolders, TokenOnlyPrefix
 
 IngestLock = threading.Lock()
 ExportLock = threading.Lock()
@@ -59,7 +48,7 @@ def create_folder_hierarchy(item, user, folder):
     """
     # Mirror the folder structure in the destination.  Remove empty folders in
     # the original location.
-    projFolderIds = [Setting().get(ProjectFolders[key]) for key in ProjectFolders]
+    projFolderIds = [Setting().get(val) for key, val in ProjectFolders.items()]
     origPath = []
     origFolders = []
     itemFolder = Folder().load(item['folderId'], force=True)
@@ -316,15 +305,7 @@ class WSIDeIDResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
-        while folder:
-            for key in ProjectFolders:
-                projFolderId = Setting().get(ProjectFolders[key])
-                if str(folder['_id']) == projFolderId:
-                    return key
-            if folder['parentCollection'] != 'folder':
-                break
-            folder = Folder().load(folder['parentId'], force=True)
-        return None
+        return import_export.isProjectFolder(folder)
 
     def _actionForItem(self, item, user, action):
         """
