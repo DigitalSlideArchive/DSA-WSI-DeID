@@ -291,28 +291,28 @@ class WSIDeIDResource(Resource):
     def __init__(self):
         super().__init__()
         self.resourceName = 'wsi_deid'
-        self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
-        self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
-        self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
-        self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
-        self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
-        self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
-        self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
-        self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
         # self.route('PUT', ('action', 'finishlist'), self.finishItemList)
-        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
+        self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'list', ':action'), self.itemListAction)
-        self.route('GET', ('settings',), self.getSettings)
-        self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('folder', ':id', 'item_list'), self.folderItemList)
+        self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
+        self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
+        self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
+        self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
+        self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
+        self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
+        self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
+        self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('GET', ('schema',), self.getSchema)
+        self.route('GET', ('settings',), self.getSettings)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
         .modelParam('id', model=Folder, level=AccessType.READ)
         .errorResponse()
-        .errorResponse('Write access was denied on the folder.', 403)
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
@@ -697,6 +697,14 @@ class WSIDeIDResource(Resource):
                 if baseImageId not in imageIds:
                     imageIds.append(baseImageId)
         return sorted(imageIds)
+
+    @autoDescribeRoute(
+        Description('Get the current import schema')
+        .errorResponse()
+    )
+    @access.admin
+    def getSchema(self):
+        return import_export.getSchema()
 
     @autoDescribeRoute(
         Description('Perform an action on an item.')

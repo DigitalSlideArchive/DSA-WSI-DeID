@@ -100,13 +100,28 @@ def validateDataRow(validator, row, rowNumber, df):
     return errors
 
 
+def getSchema():
+    """
+    Return a jsonschema.
+
+    :returns: an object that can be passed to the jsonschema validator.
+    """
+    # TODO: When we have a schema folder, if it exists and any items are in it
+    # that contain a single file that parses as valid json, then we need to
+    # load those files and combine them into a single schema in lieu of using
+    # this default SCHEMA_FILE_PATH
+    logger.info('Using %s (length %d) for schema' % (
+        SCHEMA_FILE_PATH, os.path.getsize(SCHEMA_FILE_PATH)))
+    return json.load(open(SCHEMA_FILE_PATH))
+
+
 def getSchemaValidator():
     """
     Return a jsonschema validator.
 
     :returns: a validator.
     """
-    return jsonschema.Draft6Validator(json.load(open(SCHEMA_FILE_PATH)))
+    return jsonschema.Draft6Validator(getSchema())
 
 
 def readExcelFiles(filelist, ctx): # noqa
