@@ -129,7 +129,8 @@ wrap(ItemListWidget, 'bindOnChanged', function (bindOnChanged) {
 wrap(ItemListWidget, 'render', function (render) {
     function updateChecked() {
         const anyChecked = this.checked.some((cid) => this._wsi_deid_item_list.byId[this.collection.get(cid).id]);
-        this.parentView.$el.find('.wsi_deid-redactlist-button,.wsi_deid-finishlist-button').toggleClass('disabled', !anyChecked);
+        this.parentView.$el.find('.wsi_deid-redactlist-button,.wsi_deid-finishlist-button,.wsi_deid-refile-button').toggleClass('disabled', !anyChecked);
+        $('.wsi_deid-bulk-refile').toggleClass('no-disp', !anyChecked);
     }
 
     this.stopListening(this, 'g:checkboxesChanged', updateChecked);
@@ -171,6 +172,37 @@ wrap(ItemListWidget, 'render', function (render) {
         return result;
     };
 
+    const generateStringFromPattern = (pattern) => {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const randomLetter = () => letters.charAt(Math.floor(Math.random() * letters.length));
+        const randomNumber = () => Math.floor(Math.random() * 10);
+        const result = pattern.split('');
+        result.forEach((char, index) => {
+            let newChar = char;
+            if (char === '#') {
+                newChar = randomNumber();
+            } else if (char === '@') {
+                newChar = randomLetter();
+            }
+            result[index] = newChar;
+        });
+        return result.join('');
+    };
+
+    const refileCheckedItems = () => {
+        const togetherSelect = $('.g-refile-select-togetherness');
+        // const newOrExistingSelect = $('.g-refile-select-new-or-existing');
+        const fileTogether = togetherSelect.find(':selected').val() === 'together';
+        const tokenPattern = this._wsi_deid_settings['new_token_pattern'];
+        if (fileTogether) {
+            console.log('filing together...');
+            const newToken = generateStringFromPattern(tokenPattern);
+            console.log(newToken);
+        } else {
+            console.log('filing separately...');
+        }
+    };
+
     /* Largely taken from girder/web_client/src/views/widgets/ItemListWidget.js
      */
     this.checked = [];
@@ -191,6 +223,7 @@ wrap(ItemListWidget, 'render', function (render) {
         apiRoot: getApiRoot(),
         info: this._wsi_deid_item_list,
         hasRedactionControls: (this._folderKey === 'ingest' || this._folderKey === 'quarantine'),
+        hasRefileControls: this._folderKey === 'unfiled',
         systemRedactedReason: systemRedactedReason,
         PHIPIITypes: PHIPIITypes,
         showAllVisible: false
@@ -221,6 +254,10 @@ wrap(ItemListWidget, 'render', function (render) {
         event.stopPropagation();
         return false;
     };
+    this.events['change .g-refile-select-new-or-existing'] = (event) => {
+        console.log(event);
+    };
+    this.events['click .g-refile-button'] = refileCheckedItems;
     this.delegateEvents();
     this.listenTo(this, 'g:checkboxesChanged', updateChecked);
     return this;
