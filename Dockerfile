@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 LABEL maintainer="Kitware, Inc. <kitware@kitware.com>"
 
 # See logs faster; don't write pyc or pyo files
@@ -6,15 +6,13 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
+    # DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
     software-properties-common \
-    gpg-agent \
+    # gpg-agent \
     fonts-dejavu \
     libmagic-dev \
     git \
-    # libldap2-dev \
-    # libsasl2-dev \
     curl \
     ca-certificates \
     vim \

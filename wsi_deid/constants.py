@@ -36,6 +36,18 @@ class ExportResult(Enum):
     EXPORT_FAILED = 'failed'
 
 
+# This is a list of where WSI may be stored, so excludes the reports folder
+ProjectFolders = {
+    'ingest': PluginSettings.HUI_INGEST_FOLDER,
+    'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
+    'processed': PluginSettings.HUI_PROCESSED_FOLDER,
+    'rejected': PluginSettings.HUI_REJECTED_FOLDER,
+    'original': PluginSettings.HUI_ORIGINAL_FOLDER,
+    'finished': PluginSettings.HUI_FINISHED_FOLDER,
+    'unfiled': PluginSettings.WSI_DEID_UNFILED_FOLDER,
+}
+
+
 # Prefix used to indicate a partial entry only contains folder (also called
 # token) information and not name (ImageID) information.
 TokenOnlyPrefix = '_folder_'

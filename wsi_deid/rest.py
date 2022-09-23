@@ -27,18 +27,7 @@ from girder_jobs.models.job import Job
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, import_export, process
-from .constants import PluginSettings, TokenOnlyPrefix
-
-ProjectFolders = {
-    'ingest': PluginSettings.HUI_INGEST_FOLDER,
-    'quarantine': PluginSettings.HUI_QUARANTINE_FOLDER,
-    'processed': PluginSettings.HUI_PROCESSED_FOLDER,
-    'rejected': PluginSettings.HUI_REJECTED_FOLDER,
-    'original': PluginSettings.HUI_ORIGINAL_FOLDER,
-    'finished': PluginSettings.HUI_FINISHED_FOLDER,
-    'unfiled': PluginSettings.WSI_DEID_UNFILED_FOLDER,
-}
-
+from .constants import PluginSettings, ProjectFolders, TokenOnlyPrefix
 
 IngestLock = threading.Lock()
 ExportLock = threading.Lock()
@@ -59,7 +48,7 @@ def create_folder_hierarchy(item, user, folder):
     """
     # Mirror the folder structure in the destination.  Remove empty folders in
     # the original location.
-    projFolderIds = [Setting().get(ProjectFolders[key]) for key in ProjectFolders]
+    projFolderIds = [Setting().get(val) for key, val in ProjectFolders.items()]
     origPath = []
     origFolders = []
     itemFolder = Folder().load(item['folderId'], force=True)
@@ -291,40 +280,33 @@ class WSIDeIDResource(Resource):
     def __init__(self):
         super().__init__()
         self.resourceName = 'wsi_deid'
-        self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
-        self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
-        self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
-        self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
-        self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
-        self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
-        self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
-        self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
         # self.route('PUT', ('action', 'finishlist'), self.finishItemList)
-        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
+        self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'list', ':action'), self.itemListAction)
-        self.route('GET', ('settings',), self.getSettings)
-        self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('PUT', ('action', 'ocrall'), self.ocrReadyToProcess)
         self.route('GET', ('folder', ':id', 'item_list'), self.folderItemList)
+        self.route('GET', ('folder', ':id', 'refileList'), self.getRefileListFolder)
+        self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
+        self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
+        self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
+        self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
+        self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
+        self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
+        self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
+        self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
+        self.route('GET', ('schema',), self.getSchema)
+        self.route('GET', ('settings',), self.getSettings)
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
         .modelParam('id', model=Folder, level=AccessType.READ)
         .errorResponse()
-        .errorResponse('Write access was denied on the folder.', 403)
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
-        while folder:
-            for key in ProjectFolders:
-                projFolderId = Setting().get(ProjectFolders[key])
-                if str(folder['_id']) == projFolderId:
-                    return key
-            if folder['parentCollection'] != 'folder':
-                break
-            folder = Folder().load(folder['parentId'], force=True)
-        return None
+        return import_export.isProjectFolder(folder)
 
     def _actionForItem(self, item, user, action):
         """
@@ -697,6 +679,34 @@ class WSIDeIDResource(Resource):
                 if baseImageId not in imageIds:
                     imageIds.append(baseImageId)
         return sorted(imageIds)
+
+    @autoDescribeRoute(
+        Description('Get the list of known and allowed image names for refiling.')
+        .modelParam('id', model=Folder, level=AccessType.READ)
+        .errorResponse()
+    )
+    @access.user
+    def getRefileListFolder(self, folder):
+        imageIds = set()
+        for item in Folder().childItems(folder):
+            for imageId in item.get('wsi_uploadInfo', {}):
+                if not imageId.startswith(TokenOnlyPrefix) and not Item().findOne({
+                        'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
+                    imageIds.add(imageId)
+            for imageId in item.get('wsi_uploadInfo', {}):
+                if imageId.startswith(TokenOnlyPrefix):
+                    baseImageId = imageId[len(TokenOnlyPrefix):]
+                    if baseImageId not in imageIds:
+                        imageIds.add(baseImageId)
+        return sorted(imageIds)
+
+    @autoDescribeRoute(
+        Description('Get the current import schema')
+        .errorResponse()
+    )
+    @access.admin
+    def getSchema(self):
+        return import_export.getSchema()
 
     @autoDescribeRoute(
         Description('Perform an action on an item.')
