@@ -97,3 +97,20 @@
                   - var keyname = 'internal;' + keylist.join(';')
                   if info.byId[item.id]._metadict[keyname] !== undefined
                     = info.byId[item.id]._metadict[keyname]
+  if hasRefileControls === true
+    .wsi_deid-bulk-refile.no-disp
+      .g-widget-metadata-header.workflow
+        i.icon-right-circled
+        | WSI DeID Workflow
+      .g-widget-metadata-container.workflow
+        span.g-refile-controls
+          | File
+          select.g-refile-select-togetherness
+            option(value='together') together
+            option(value='separately') separately
+          | as
+          select.g-refile-select-new-or-existing
+            option(value='new_token') new token(s)
+            //- option(value='existing_token') existing token(s)
+
+          button.g-refile-button.btn.btn-success(action=button, title="Refile selected images") Refile
