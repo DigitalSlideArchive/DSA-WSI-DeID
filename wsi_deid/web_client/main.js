@@ -11,6 +11,7 @@ import './views/GlobalNavView';
 import './views/HierarchyWidget';
 import './views/ItemList';
 import './views/ItemView';
+import './views/ItemViewSpreadsheet';
 
 import ConfigView from './views/ConfigView';
 
