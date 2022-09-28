@@ -48,6 +48,7 @@ WSI DeID Version: %s
         PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', True),
         PluginSettings.HUI_FINISHED_FOLDER: ('Approved', True),
         PluginSettings.HUI_REPORTS_FOLDER: ('Reports', True),
+        PluginSettings.WSI_DEID_SCHEMA_FOLDER: ('Schema', True),
     }
     configDict = girder.utility.config.getConfig().get('wsi_deid', {})
     matchTextFields = configDict.get('import_text_association_columns', [])
