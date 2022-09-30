@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import _ from 'underscore';
 
+import events from '@girder/core/events';
 import { getApiRoot, restRequest } from '@girder/core/rest';
 import { wrap } from '@girder/core/utilities/PluginUtils';
 import { formatSize } from '@girder/core/misc';
@@ -108,9 +109,19 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
                 if (settings.show_metadata_in_lists === false) {
                     return;
                 }
-                if (this.collection.length) {
-                    this.fetchItemList();
+                if (this._folderKey === 'unfiled') {
+                    restRequest({
+                        url: `wsi_deid/folder/${folder.id}/refileList`
+                    }).done((refileList) => {
+                        this._refileList = refileList;
+                        if (this.collection.length) {
+                            this.fetchItemList();
+                        }
+                    })
                 }
+                // if (this.collection.length) {
+                    // this.fetchItemList();
+                // }
             });
         }
     });
@@ -194,13 +205,60 @@ wrap(ItemListWidget, 'render', function (render) {
         // const newOrExistingSelect = $('.g-refile-select-new-or-existing');
         const fileTogether = togetherSelect.find(':selected').val() === 'together';
         const tokenPattern = this._wsi_deid_settings['new_token_pattern'];
-        if (fileTogether) {
-            console.log('filing together...');
-            const newToken = generateStringFromPattern(tokenPattern);
-            console.log(newToken);
-        } else {
-            console.log('filing separately...');
+        const checkedImages = this.checked.map((cid) => this._wsi_deid_item_list.byId[this.collection.get(cid).id]);
+        const checkedItemIds = checkedImages.map((image) => image.item._id);
+        const existingTokens = JSON.parse(JSON.stringify(this._refileList));
+        if (!checkedItemIds.length) {
+            return;
         }
+        $('body').append(
+            '<div class="g-hui-loading-overlay"><div>' +
+            '<i class="icon-spin4 animate-spin"><i>' +
+            '</div></div>'
+        );
+        const imageRefileData = {};
+        if (fileTogether) {
+            let newToken;
+            do {
+                newToken = generateStringFromPattern(tokenPattern);
+            } while (existingTokens.includes(newToken))
+            _.forEach(checkedItemIds, (id) => {
+                imageRefileData[id] = {
+                    tokenId: newToken,
+                    imageId: ''
+                }
+            });
+        } else {
+            _.forEach(checkedItemIds, (id) => {
+                let newToken;
+                do {
+                    newToken = generateStringFromPattern(tokenPattern);
+                } while (existingTokens.includes(newToken))
+                existingTokens.push(newToken);
+                imageRefileData[id] = {
+                    tokenId: newToken,
+                    imageId: ''
+                };
+            });
+        }
+        console.log('about to make request');
+        restRequest({
+            method: 'PUT',
+            url: 'wsi_deid/action/bulkRefile',
+            data: JSON.stringify(imageRefileData),
+            contentType: 'application/json'
+        }).done((resp) => {
+            console.log('back from request');
+            $('.g-hui-loading-overlay').remove();
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: 'Successfully refiled image(s)',
+                type: 'success',
+                timeout: 5000
+            });
+            this.parentView.parentModel.increment('nItems', -1 * Object.keys(imageRefileData).length);
+            this.parentView.setCurrentModel(this.parentView.parentModel, { setRout: false });
+        });
     };
 
     /* Largely taken from girder/web_client/src/views/widgets/ItemListWidget.js
