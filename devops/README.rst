@@ -20,4 +20,7 @@ To start the program::
 
 Note that this does not add any sample files.  By default, it creates an ``admin`` user with a password of ``password``.  The ``WSI DeID`` collection is created with a set of standard workflow folders.
 
+Deveoplers
+----------
 
+See the ``docker-compose.developer.yml`` for a way to use the docker instance and change soruce code locally.  

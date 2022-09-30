@@ -1,0 +1,23 @@
+# This can be used to set up a developer environment.  The local code will be
+# mounted into the container.  Copy this file to docker-composer.override.yml,
+# add appropriate volumes to mount your import and export, and then after doing
+# docker-compose up, run
+#     docker-compose exec girder \
+#        bash -c "girder build --dev --watch-plugin wsi_deid"
+# If you add or remove client files, you'll need to completely rebuild the
+# girder client:
+#     docker-compose exec girder bash -c "girder build --dev"
+# If you alter existing python files, Girder will restart.  If the plugin fails
+# to load (for instance, you have a syntax error in a python file), you may
+# need to restart girder to recover from it.  This can be done via a
+# `docker-compose down` and `docker-compose up`, or via the system/restart
+# enndpoint.
+---
+version: '3'
+services:
+  girder:
+    image: dsarchive/wsi_deid:latest
+    command: bash -c "python3.9 /conf/provision.py; pip install --user -e /wsi_deid; girder build --dev; girder serve --dev"
+    volumes:
+      - ../..:/wsi_deid
+      - .:/conf

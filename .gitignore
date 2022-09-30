@@ -53,3 +53,4 @@ node_modules/
 
 # Ignore a local docker-compose yaml file
 docker-compose.local.yml
+docker-compose.override.yml

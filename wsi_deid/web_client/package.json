@@ -19,6 +19,10 @@
     "scripts": {
         "lint": "eslint . && pug-lint . && stylint"
     },
+    "dependencies": {
+        "canvas-datagrid": "^0.4.5",
+        "xlsx": "^0.18.5"
+    },
     "devDependencies": {
         "@girder/eslint-config": "*",
         "@girder/pug-lint-config": "*",
