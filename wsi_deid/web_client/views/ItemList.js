@@ -142,6 +142,7 @@ wrap(ItemListWidget, 'render', function (render) {
         const anyChecked = this.checked.some((cid) => this._wsi_deid_item_list.byId[this.collection.get(cid).id]);
         this.parentView.$el.find('.wsi_deid-redactlist-button,.wsi_deid-finishlist-button,.wsi_deid-refile-button').toggleClass('disabled', !anyChecked);
         $('.wsi_deid-bulk-refile').toggleClass('no-disp', !anyChecked);
+        updateRefileControls();
     }
 
     this.stopListening(this, 'g:checkboxesChanged', updateChecked);
@@ -202,8 +203,9 @@ wrap(ItemListWidget, 'render', function (render) {
 
     const refileCheckedItems = () => {
         const togetherSelect = $('.g-refile-select-togetherness');
-        // const newOrExistingSelect = $('.g-refile-select-new-or-existing');
+        const newOrExistingSelect = $('.g-refile-select-new-or-existing');
         const fileTogether = togetherSelect.find(':selected').val() === 'together';
+        const useExistingToken = newOrExistingSelect.find(':selected').val() === 'existing';
         const tokenPattern = this._wsi_deid_settings['new_token_pattern'];
         const checkedImages = this.checked.map((cid) => this._wsi_deid_item_list.byId[this.collection.get(cid).id]);
         const checkedItemIds = checkedImages.map((image) => image.item._id);
@@ -219,9 +221,14 @@ wrap(ItemListWidget, 'render', function (render) {
         const imageRefileData = {};
         if (fileTogether) {
             let newToken;
-            do {
-                newToken = generateStringFromPattern(tokenPattern);
-            } while (existingTokens.includes(newToken))
+            if (useExistingToken) {
+                const existingTokenSelect = $('.g-refile-select-existing');
+                newToken = existingTokenSelect.find(':selected').val();
+            } else {
+                do {
+                    newToken = generateStringFromPattern(tokenPattern);
+                } while (existingTokens.includes(newToken))
+            }
             _.forEach(checkedItemIds, (id) => {
                 imageRefileData[id] = {
                     tokenId: newToken,
@@ -241,14 +248,12 @@ wrap(ItemListWidget, 'render', function (render) {
                 };
             });
         }
-        console.log('about to make request');
         restRequest({
             method: 'PUT',
             url: 'wsi_deid/action/bulkRefile',
             data: JSON.stringify(imageRefileData),
             contentType: 'application/json'
         }).done((resp) => {
-            console.log('back from request');
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
@@ -260,6 +265,28 @@ wrap(ItemListWidget, 'render', function (render) {
             this.parentView.setCurrentModel(this.parentView.parentModel, { setRout: false });
         });
     };
+
+    const updateRefileControls = () => {
+        const together = $('.g-refile-select-togetherness').find(':selected').val() === 'together';
+        const existing = $('.g-refile-select-new-or-existing').find(':selected').val() === 'existing';
+        const existingOption = $('.g-refile-options-existing');
+        const tokenSelect = $('.g-refile-select-existing');
+        if (existing) {
+            if (together) {
+                tokenSelect.removeClass('no-disp');
+            } else {
+                tokenSelect.addClass('no-disp');
+                $('.g-refile-select-new-or-existing').val('new_token');
+            }
+        } else {
+            tokenSelect.addClass('no-disp');
+        }
+        if (together && this._refileList.length) {
+            existingOption.prop('disabled', false);
+        } else {
+            existingOption.prop('disabled', true);
+        }
+    }
 
     /* Largely taken from girder/web_client/src/views/widgets/ItemListWidget.js
      */
@@ -282,6 +309,7 @@ wrap(ItemListWidget, 'render', function (render) {
         info: this._wsi_deid_item_list,
         hasRedactionControls: (this._folderKey === 'ingest' || this._folderKey === 'quarantine'),
         hasRefileControls: this._folderKey === 'unfiled',
+        refileList: this._refileList,
         systemRedactedReason: systemRedactedReason,
         PHIPIITypes: PHIPIITypes,
         showAllVisible: false
@@ -312,9 +340,8 @@ wrap(ItemListWidget, 'render', function (render) {
         event.stopPropagation();
         return false;
     };
-    this.events['change .g-refile-select-new-or-existing'] = (event) => {
-        console.log(event);
-    };
+    this.events['change .g-refile-select-togetherness'] = updateRefileControls;
+    this.events['change .g-refile-select-new-or-existing'] = updateRefileControls;
     this.events['click .g-refile-button'] = refileCheckedItems;
     this.delegateEvents();
     this.listenTo(this, 'g:checkboxesChanged', updateChecked);
