@@ -747,7 +747,6 @@ class WSIDeIDResource(Resource):
     )
     @access.user
     def refileItems(self, imageRefileData):
-        print(f'\n\n\n{imageRefileData}\n\n\n')
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         folderNameField = config.getConfig('folder_name_field', 'TokenID')
@@ -757,7 +756,6 @@ class WSIDeIDResource(Resource):
             uploadInfo = item.get('wsi_uploadInfo')
             tokenId = imageRefileData[itemId]['tokenId']
             imageId = imageRefileData[itemId]['imageId']
-            print(itemId, item, tokenId, imageId)
             if imageId and imageId != item['name'].split('.', 1)[0] and Item().findOne({
                     'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
                 raise RestException('An image with that name already exists.')

@@ -13,7 +13,7 @@
           | under
           select.g-refile-select-new-or-existing
             option(value='new_token') new token(s)
-            option(value='existing', class="g-refile-options-existing", disabled=true) existing token
+            option.g-refile-options-existing(value='existing', disabled=true) existing token
           select.g-refile-select-existing.no-disp
             each opt in refileList
               option(value=opt) #{opt}

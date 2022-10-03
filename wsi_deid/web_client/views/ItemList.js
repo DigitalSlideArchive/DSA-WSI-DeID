@@ -117,11 +117,8 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
                         if (this.collection.length) {
                             this.fetchItemList();
                         }
-                    })
+                    });
                 }
-                // if (this.collection.length) {
-                    // this.fetchItemList();
-                // }
             });
         }
     });
@@ -227,20 +224,20 @@ wrap(ItemListWidget, 'render', function (render) {
             } else {
                 do {
                     newToken = generateStringFromPattern(tokenPattern);
-                } while (existingTokens.includes(newToken))
+                } while (existingTokens.includes(newToken));
             }
             _.forEach(checkedItemIds, (id) => {
                 imageRefileData[id] = {
                     tokenId: newToken,
                     imageId: ''
-                }
+                };
             });
         } else {
             _.forEach(checkedItemIds, (id) => {
                 let newToken;
                 do {
                     newToken = generateStringFromPattern(tokenPattern);
-                } while (existingTokens.includes(newToken))
+                } while (existingTokens.includes(newToken));
                 existingTokens.push(newToken);
                 imageRefileData[id] = {
                     tokenId: newToken,
@@ -286,7 +283,7 @@ wrap(ItemListWidget, 'render', function (render) {
         } else {
             existingOption.prop('disabled', true);
         }
-    }
+    };
 
     /* Largely taken from girder/web_client/src/views/widgets/ItemListWidget.js
      */
