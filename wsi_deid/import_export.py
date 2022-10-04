@@ -262,11 +262,17 @@ def getExisting(imagePath, ctx):
     :returns: a status if the document exists or None if it doesn't.
     """
     reimportIfMoved = config.getConfig('reimport_if_moved', False)
-    existing = File().findOne({'path': imagePath, 'imported': True})
+    existingList = list(File().find({'path': imagePath, 'imported': True}))
+    existing = existingList[0] if existingList else None
     if reimportIfMoved and existing:
-        item = Item().load(existing['itemId'], force=True)
-        folder = Folder().load(item['folderId'], force=True)
-        if isProjectFolder(folder) is None:
+        moved = True
+        for existing in existingList:
+            item = Item().load(existing['itemId'], force=True)
+            folder = Folder().load(item['folderId'], force=True)
+            if isProjectFolder(folder) is not None:
+                moved = False
+                break
+        if moved:
             existing = None
     if existing:
         stat = os.stat(imagePath)
@@ -356,7 +362,7 @@ def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems, uplo
     unfiledItems.append(item['_id'])
 
 
-def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
+def startOcrJobForUnfiled(itemIds, imageInfoDict, user, reportInfo):
     jobStart = datetime.datetime.now().strftime('%Y%m%d %H%M%S')
     unfiledJob = Job().createLocalJob(
         module='wsi_deid.jobs',
@@ -365,7 +371,7 @@ def startOcrJobForUnfiled(itemIds, imageInfoDict, user):
         type='wsi_deid.associate_unfiled',
         user=user,
         asynchronous=True,
-        args=(itemIds, imageInfoDict)
+        args=(itemIds, imageInfoDict, reportInfo)
     )
     Job().scheduleJob(unfiledJob)
     return unfiledJob['_id']
@@ -460,7 +466,9 @@ def ingestData(ctx, user=None):  # noqa
             ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems, unfiledImages)
             report.append({'status': 'unfiled', 'path': image})
     if len(unfiledItems):
-        unfiledJobId = startOcrJobForUnfiled(unfiledItems, unfiledImages, user)
+        unfiledJobId = startOcrJobForUnfiled(
+            unfiledItems, unfiledImages, user,
+            {'files': report, 'excel': excelReport, 'importPath': importPath})
     # kick off a batch job to run OCR on new items
     startOcrDuringImport = Setting().get(PluginSettings.WSI_DEID_OCR_ON_IMPORT)
     batchJob = None
@@ -473,7 +481,7 @@ def ingestData(ctx, user=None):  # noqa
             type='wsi_deid.batch_ocr',
             user=user,
             asynchronous=True,
-            args=(newItems,),
+            args=(newItems),
         )
         Job().scheduleJob(job=batchJob)
     file = importReport(ctx, report, excelReport, user, importPath)
@@ -485,7 +493,7 @@ def ingestData(ctx, user=None):  # noqa
     return summary
 
 
-def importReport(ctx, report, excelReport, user, importPath):
+def importReport(ctx, report, excelReport, user, importPath, reason=None):
     """
     Create an import report.
 
@@ -513,6 +521,7 @@ def importReport(ctx, report, excelReport, user, importPath):
         'failed': 'Failed to import',
         'duplicate': 'Duplicate ImageID',
         'unfiled': 'Unfiled Image',
+        'ocrmatch': 'Filed based on OCR',
     }
     statusExplanation = {
         'failed': 'Image file is not an accepted WSI format',
@@ -566,15 +575,16 @@ def importReport(ctx, report, excelReport, user, importPath):
         dataList.insert(0, {
             reasonKey: 'Nothing to import.  Import folder is empty.'})
     else:
-        dataList.insert(0, {
-            reasonKey: 'Import process completed' if not anyErrors
-                       else 'Import process completed with errors'})
+        reasonBase = {'OCR': 'OCR after import completed'}.get(reason, 'Import process completed')
+        dataList.insert(0, {reasonKey: reasonBase + ('' if not anyErrors else ' with errors')})
     for row in dataList:
         if not row.get(reasonKey) and row.get(statusKey):
             row[reasonKey] = row[statusKey]
     df = pd.DataFrame(dataList, columns=[
         'ExcelFilePath', 'WSIFilePath', statusKey, *reportFields, reasonKey])
-    reportName = 'DeID Import Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    reasonStr = '' if not reason else ' %s' % reason
+    reportName = 'DeID Import Job %s%s.xlsx' % (
+        datetime.datetime.now().strftime('%Y%m%d %H%M%S'), reasonStr)
     reportFolder = 'Import Job Reports'
     with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
         path = os.path.join(tempdir, reportName)
