@@ -3,6 +3,7 @@ import concurrent.futures
 from girder import logger
 from girder.models.item import Item
 from girder.models.user import User
+from girder.utility.progress import noProgress
 from girder_jobs.models.job import Job, JobStatus
 
 from . import config
@@ -96,7 +97,7 @@ def find_best_match(matches, multipleAllowed):
     return None
 
 
-def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
+def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, reportInfo):
     folderNameField = config.getConfig('folder_name_field', 'TokenID')
     user = User().load(userId, force=True)
     for imageId, possibleMatches in imageIdsToItems.items():
@@ -115,10 +116,39 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job):
             item = Item().load(match, force=True)
             oldName = item['name']
             item = refile_image(item, user, tokenId, imageId, uploadInfo)
+            if uploadInfo.get(imageId, {}).get('fields', None):
+                addToReport(reportInfo, item, {
+                    'record': uploadInfo[imageId], 'status': 'ocrmatch'})
+            else:
+                addToReport(reportInfo, item, {'status': 'ocrmatch'})
             Job().updateJob(
                 job,
                 log=f'Moved item {oldName} to folder {tokenId} as {item["name"]}\n',
             )
+
+
+def addToReport(reportInfo, item, data):
+    """
+    Add additional data to a line in a report about a specific item.
+
+    :param reportInfo: a dictionary where 'files' is a list of records that
+        might be updated.
+    :param item: the item that should be updated in the report.
+    :param data: a dictionary of information used to update a line in the
+        report.
+    """
+    try:
+        file = next(Item().childFiles(item, limit=1))
+    except Exception:
+        return
+    report = None
+    for entry in reportInfo['files']:
+        if entry['path'] == file['path']:
+            report = entry
+            break
+    if not report:
+        return
+    report.update(data)
 
 
 def associate_unfiled_images(job):
@@ -129,21 +159,22 @@ def associate_unfiled_images(job):
 
     :param job: a girder job
     """
+    from .import_export import importReport
+
     Job().updateJob(
         job,
         log='Starting job to associate unfiled images with upload data.\n',
         status=JobStatus.RUNNING
     )
     job_args = job.get('args', None)
-    if job_args is None or len(job_args) != 2:
+    if job_args is None or len(job_args) != 3:
         Job().updateJob(
             job,
             log='Expected a list of girder items and upload information as arguments.\n',
             status=JobStatus.ERROR
         )
         return
-    itemIds = job_args[0]
-    uploadInfo = job_args[1]
+    itemIds, uploadInfo, reportInfo = job_args
     try:
         rowToImageMatches = {}
         for key in list(uploadInfo):
@@ -163,6 +194,10 @@ def associate_unfiled_images(job):
             # And, without concurrent futures, the code resumes here
             item = Item().load(itemId, force=True)
             imageToRowMatches = []
+            addToReport(reportInfo, item, {'label': ' '.join(
+                [word for conf, word in sorted([
+                    (-entry['average_confidence'], word)
+                    for word, entry in label_text.items() if len(word) > 1])])})
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]
             if len(label_text) > 0:
@@ -186,8 +221,11 @@ def associate_unfiled_images(job):
             else:
                 message = f'Unable to find a match for {item["name"]}.\n'
             Job().updateJob(job, message)
-        match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job)
+        match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job, reportInfo)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
+        user = User().load(job['userId'], force=True)
+        importReport(noProgress, reportInfo['files'], reportInfo['excel'],
+                     user, reportInfo['importPath'], 'OCR')
     except Exception as e:
         logger.exception('Job failed')
         Job().updateJob(
