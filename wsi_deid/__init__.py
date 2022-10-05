@@ -32,6 +32,7 @@ except DistributionNotFound:
     PluginSettings.HUI_REPORTS_FOLDER,
     PluginSettings.WSI_DEID_UNFILED_FOLDER,
     PluginSettings.WSI_DEID_SCHEMA_FOLDER,
+    PluginSettings.WSI_DEID_DISABLED_SCHEMA_FOLDER,
 })
 def validateSettingsFolder(doc):
     if not doc.get('value', None):

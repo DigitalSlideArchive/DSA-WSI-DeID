@@ -22,6 +22,7 @@ class PluginSettings(object):
     WSI_DEID_OCR_ON_IMPORT = 'wsi_deid.ocr_on_import'
     WSI_DEID_UNFILED_FOLDER = 'wsi_deid.unfiled_folder'
     WSI_DEID_SCHEMA_FOLDER = 'wsi_deid.schema_folder'
+    WSI_DEID_DISABLED_SCHEMA_FOLDER = 'wsi_deid.schema_folder.disabled'
 
 
 class SftpMode(Enum):
