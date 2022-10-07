@@ -275,7 +275,7 @@ Unfiled images can be refiled using the controls at the bottom of the item page.
 
 Refiling images can also be performed at the folder level. Selecting any number of images in the ``Unfiled`` directory will cause bulk refile controls to appear.
 
-.. image:: screenshots/bulk_refile_options.png
+.. image:: screenshots/bulk_refile_toolbar_controls.png
    :alt: bulk refile options
 
 Selected images can be refiled together (to a single subdirectory in ``AvailableToProcess``) or separately (to many subdirectories of ``AvailableToProcess``). If filing together, there is an additional option to use an existing TokenID. Available TokenIDs are determined during the import process. If filing as new tokens, the new token is generated randomly.
