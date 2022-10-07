@@ -11,10 +11,10 @@ import { formatCount } from '@girder/core/misc';
 import { goToNextUnprocessedFolder } from '../utils';
 import '../stylesheets/HierarchyWidget.styl';
 
-const refileControls = function(refileList) {
+const refileControls = function (refileList) {
     let existingTokenOptions = '';
     _.forEach(refileList, (token) => {
-        existingTokenOptions += `<option value="${token}">${token}</option>`
+        existingTokenOptions += `<option value="${token}">${token}</option>`;
     });
     return `<span class="g-bulk-refile-controls no-disp">
         File selected images
@@ -31,7 +31,7 @@ const refileControls = function(refileList) {
             ${existingTokenOptions}
         </select>
         <button class="g-refile-button btn btn-success" action="button" title="Refile selected images">Refile</button>
-    </span>`
+    </span>`;
 };
 
 function performAction(action) {
@@ -276,7 +276,7 @@ function addControls(key, settings) {
 wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
 
-    this.updateRefileControls = function(anyChecked) {
+    this.updateRefileControls = function (anyChecked) {
         const refileControls = $('.g-bulk-refile-controls');
         refileControls.toggleClass('no-disp', !anyChecked);
         const together = $('.g-refile-select-togetherness').find(':selected').val() === 'together';
@@ -300,7 +300,7 @@ wrap(HierarchyWidget, 'render', function (render) {
         }
     };
 
-    this.generateStringFromPattern = function() {
+    this.generateStringFromPattern = function () {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const randomLetter = () => letters.charAt(Math.floor(Math.random() * letters.length));
         const randomNumber = () => Math.floor(Math.random() * 10);
@@ -317,7 +317,7 @@ wrap(HierarchyWidget, 'render', function (render) {
         return result.join('');
     };
 
-    this.refileCheckedItems = function() {
+    this.refileCheckedItems = function () {
         const togetherSelect = $('.g-refile-select-togetherness');
         const newOrExistingSelect = $('.g-refile-select-new-or-existing');
         const fileTogether = togetherSelect.find(':selected').val() === 'together';
