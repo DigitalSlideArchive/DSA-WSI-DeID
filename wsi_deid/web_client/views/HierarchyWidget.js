@@ -304,7 +304,7 @@ wrap(HierarchyWidget, 'render', function (render) {
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         const randomLetter = () => letters.charAt(Math.floor(Math.random() * letters.length));
         const randomNumber = () => Math.floor(Math.random() * 10);
-        const result = (this._newTokenPattern || '0###X@####').split('');
+        const result = (this._newTokenPattern || '####@@####').split('');
         result.forEach((char, index) => {
             let newChar = char;
             if (char === '#') {
