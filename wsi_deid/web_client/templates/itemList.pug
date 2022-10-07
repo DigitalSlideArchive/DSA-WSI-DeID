@@ -1,23 +1,4 @@
 .wsi_deid_bulk_wrapper
-  if hasRefileControls === true
-    .wsi_deid-bulk-refile.no-disp
-      .g-widget-metadata-header.workflow
-        i.icon-right-circled
-        | WSI DeID Workflow
-      .g-widget-metadata-container.workflow
-        span.g-refile-controls
-          | File selected images
-          select.g-refile-select-togetherness
-            option(value='together') together
-            option(value='separately') separately
-          | under
-          select.g-refile-select-new-or-existing
-            option(value='new_token') new token(s)
-            option.g-refile-options-existing(value='existing', disabled=true) existing token
-          select.g-refile-select-existing.no-disp
-            each opt in refileList
-              option(value=opt) #{opt}
-          button.g-refile-button.btn.btn-success(action=button, title="Refile selected images") Refile
   table.wsi_deid_bulk_table
     thead
       tr
