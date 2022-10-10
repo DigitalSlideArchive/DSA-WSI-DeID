@@ -130,6 +130,7 @@ wrap(ItemListWidget, 'render', function (render) {
     function updateChecked() {
         const anyChecked = this.checked.some((cid) => this._wsi_deid_item_list.byId[this.collection.get(cid).id]);
         this.parentView.$el.find('.wsi_deid-redactlist-button,.wsi_deid-finishlist-button').toggleClass('disabled', !anyChecked);
+        this.parentView.updateRefileControls(anyChecked);
     }
 
     this.stopListening(this, 'g:checkboxesChanged', updateChecked);

@@ -127,6 +127,15 @@ The target text column should contain label text of WSIs in the import directory
 
 If ``InputFileName`` is added to the list of export fields in the ``upload_metadata_for_export_report`` settings, then the original file name will be included in the export report.
 
+Creating New TokenIDs for Refiling Images
++++++++++++++++++++++++++++++++++++++++++
+
+When using the bulk refile controls to move images from the ``Unfiled`` directory to ``AvailableToProcess``, the system can automatically generates new TokenIDs. The new TokenIDs are alphanumeric, and their pattern can be specified by setting the ``new_token_pattern`` property.
+
+The pattern should be a string comprised of alphanumeric characters, "#", and "@". When generating a new TokenID, instances of "#" will be replaced with a random digit 0-9 and instances of "@" will be replaced with a letter A-Z.
+
+For example, if the specified pattern is ``0123#@@1###``, a randomly generated TokenID might look like ``01238EJ1449``.
+
 An Example to Allow All Import Files
 ++++++++++++++++++++++++++++++++++++
 

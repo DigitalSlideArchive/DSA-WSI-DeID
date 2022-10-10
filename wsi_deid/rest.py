@@ -290,6 +290,7 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('folder', ':id', 'refileList'), self.getRefileListFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
+        self.route('PUT', ('action', 'bulkRefile'), self.refileItems)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
         self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
@@ -689,11 +690,11 @@ class WSIDeIDResource(Resource):
     def getRefileListFolder(self, folder):
         imageIds = set()
         for item in Folder().childItems(folder):
-            for imageId in item.get('wsi_uploadInfo', {}):
+            for imageId in item.get('wsi_uploadInfo', {}) or []:
                 if not imageId.startswith(TokenOnlyPrefix) and not Item().findOne({
                         'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
                     imageIds.add(imageId)
-            for imageId in item.get('wsi_uploadInfo', {}):
+            for imageId in item.get('wsi_uploadInfo', {}) or []:
                 if imageId.startswith(TokenOnlyPrefix):
                     baseImageId = imageId[len(TokenOnlyPrefix):]
                     if baseImageId not in imageIds:
@@ -737,3 +738,36 @@ class WSIDeIDResource(Resource):
             tokenId = imageId.split('_', 1)[0]
         item = process.refile_image(item, user, tokenId, imageId, uploadInfo)
         return item
+
+    @autoDescribeRoute(
+        Description('Refile multiple images at once.')
+        .jsonParam('imageRefileData', 'Data used to refile images', paramType='body')
+        .errorResponse()
+        .errorResponse('Write access was denied for an item.', 403)
+    )
+    @access.user
+    def refileItems(self, imageRefileData):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        folderNameField = config.getConfig('folder_name_field', 'TokenID')
+        processedImageIds = []
+        for itemId in imageRefileData:
+            item = Item().load(itemId, user=user)
+            uploadInfo = item.get('wsi_uploadInfo')
+            tokenId = imageRefileData[itemId]['tokenId']
+            imageId = imageRefileData[itemId]['imageId']
+            if imageId and imageId != item['name'].split('.', 1)[0] and Item().findOne({
+                    'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
+                raise RestException('An image with that name already exists.')
+            if not imageId:
+                imageId = TokenOnlyPrefix + tokenId
+            uploadInfo = item.get('wsi_uploadInfo')
+            if uploadInfo and TokenOnlyPrefix + imageId in uploadInfo:
+                imageId = TokenOnlyPrefix + imageId
+            if uploadInfo and imageId in uploadInfo:
+                tokenId = uploadInfo[imageId].get(folderNameField, tokenId)
+            if not tokenId:
+                tokenId = imageId.split('_', 1)[0]
+            item = process.refile_image(item, user, tokenId, imageId, uploadInfo)
+            processedImageIds += [imageId]
+        return processedImageIds

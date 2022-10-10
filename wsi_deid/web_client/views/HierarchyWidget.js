@@ -11,6 +11,29 @@ import { formatCount } from '@girder/core/misc';
 import { goToNextUnprocessedFolder } from '../utils';
 import '../stylesheets/HierarchyWidget.styl';
 
+const refileControls = function (refileList) {
+    let existingTokenOptions = '';
+    _.forEach(refileList, (token) => {
+        existingTokenOptions += `<option value="${token}">${token}</option>`;
+    });
+    return `<span class="g-bulk-refile-controls no-disp">
+        File selected images
+        <select class="g-refile-select-togetherness">
+            <option value="together">together</option>
+            <option value="separately">separately</option>
+        </select>
+        under
+        <select class="g-refile-select-new-or-existing">
+            <option value="new_token">new token(s)</option>
+            <option class="g-refile-options-existing" value="existing" disabled="true">existing token(s)</option>
+        </select>
+        <select class="g-refile-select-existing no-disp">
+            ${existingTokenOptions}
+        </select>
+        <button class="g-refile-button btn btn-success" action="button" title="Refile selected images">Refile</button>
+    </span>`;
+};
+
 function performAction(action) {
     const actions = {
         ingest: { done: 'Import completed.', fail: 'Failed to import.' },
@@ -244,11 +267,118 @@ function addControls(key, settings) {
             this.events[`click .wsi_deid-${control.key}-button`] = () => { performAction.call(this, control.action); };
         }
     }
+    if (key === 'unfiled') {
+        btns.prepend(refileControls(this._refileList));
+    }
     this.delegateEvents();
 }
 
 wrap(HierarchyWidget, 'render', function (render) {
     render.call(this);
+
+    this.updateRefileControls = function (anyChecked) {
+        const refileControls = $('.g-bulk-refile-controls');
+        refileControls.toggleClass('no-disp', !anyChecked);
+        const together = $('.g-refile-select-togetherness').find(':selected').val() === 'together';
+        const existing = $('.g-refile-select-new-or-existing').find(':selected').val() === 'existing';
+        const existingOption = $('.g-refile-options-existing');
+        const tokenSelect = $('.g-refile-select-existing');
+        if (existing) {
+            if (together) {
+                tokenSelect.removeClass('no-disp');
+            } else {
+                tokenSelect.addClass('no-disp');
+                $('.g-refile-select-new-or-existing').val('new_token');
+            }
+        } else {
+            tokenSelect.addClass('no-disp');
+        }
+        if (together && this._refileList.length) {
+            existingOption.prop('disabled', false);
+        } else {
+            existingOption.prop('disabled', true);
+        }
+    };
+
+    this.generateStringFromPattern = function () {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const randomLetter = () => letters.charAt(Math.floor(Math.random() * letters.length));
+        const randomNumber = () => Math.floor(Math.random() * 10);
+        const result = (this._newTokenPattern || '####@@####').split('');
+        result.forEach((char, index) => {
+            let newChar = char;
+            if (char === '#') {
+                newChar = randomNumber();
+            } else if (char === '@') {
+                newChar = randomLetter();
+            }
+            result[index] = newChar;
+        });
+        return result.join('');
+    };
+
+    this.refileCheckedItems = function () {
+        const togetherSelect = $('.g-refile-select-togetherness');
+        const newOrExistingSelect = $('.g-refile-select-new-or-existing');
+        const fileTogether = togetherSelect.find(':selected').val() === 'together';
+        const useExistingToken = newOrExistingSelect.find(':selected').val() === 'existing';
+        const tokenPattern = this._newTokenPattern;
+        const checkedItemIds = JSON.parse(this._getCheckedResourceParam())['item'];
+        const existingTokens = JSON.parse(JSON.stringify(this._refileList));
+        if (!checkedItemIds.length) {
+            return;
+        }
+        $('body').append(
+            '<div class="g-hui-loading-overlay"><div>' +
+            '<i class="icon-spin4 animate-spin"><i>' +
+            '</div></div>'
+        );
+        const imageRefileData = {};
+        if (fileTogether) {
+            let newToken;
+            if (useExistingToken) {
+                const existingTokenSelect = $('.g-refile-select-existing');
+                newToken = existingTokenSelect.find(':selected').val();
+            } else {
+                do {
+                    newToken = this.generateStringFromPattern(tokenPattern);
+                } while (existingTokens.includes(newToken));
+            }
+            _.forEach(checkedItemIds, (id) => {
+                imageRefileData[id] = {
+                    tokenId: newToken,
+                    imageId: ''
+                };
+            });
+        } else {
+            _.forEach(checkedItemIds, (id) => {
+                let newToken;
+                do {
+                    newToken = this.generateStringFromPattern(tokenPattern);
+                } while (existingTokens.includes(newToken));
+                existingTokens.push(newToken);
+                imageRefileData[id] = {
+                    tokenId: newToken,
+                    imageId: ''
+                };
+            });
+        }
+        restRequest({
+            method: 'PUT',
+            url: 'wsi_deid/action/bulkRefile',
+            data: JSON.stringify(imageRefileData),
+            contentType: 'application/json'
+        }).done((resp) => {
+            $('.g-hui-loading-overlay').remove();
+            events.trigger('g:alert', {
+                icon: 'ok',
+                text: 'Successfully refiled image(s)',
+                type: 'success',
+                timeout: 5000
+            });
+            this.setCurrentModel(this.parentModel, { setRoute: false });
+        });
+    };
 
     if (this.parentModel.resourceName === 'folder' && getCurrentUser()) {
         restRequest({
@@ -260,11 +390,24 @@ wrap(HierarchyWidget, 'render', function (render) {
                     url: `wsi_deid/settings`,
                     error: null
                 }).done((settings) => {
-                    addControls.call(this, resp, settings);
+                    if (resp === 'unfiled') {
+                        restRequest({
+                            url: `wsi_deid/folder/${this.parentModel.id}/refileList`
+                        }).done((refileList) => {
+                            this._refileList = refileList;
+                            this._newTokenPattern = settings.new_token_pattern;
+                            addControls.call(this, resp, settings);
+                        });
+                    } else {
+                        addControls.call(this, resp, settings);
+                    }
                 });
             }
         });
     }
+    this.events['change .g-refile-select-togetherness'] = this.updateRefileControls;
+    this.events['change .g-refile-select-new-or-existing'] = this.updateRefileControls;
+    this.events['click .g-refile-button'] = this.refileCheckedItems;
     return this;
 });
 
