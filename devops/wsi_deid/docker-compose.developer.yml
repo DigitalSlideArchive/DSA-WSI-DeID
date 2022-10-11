@@ -17,7 +17,7 @@ version: '3'
 services:
   girder:
     image: dsarchive/wsi_deid:latest
-    command: bash -c "python3.9 /conf/provision.py; pip install --user -e /wsi_deid; girder build --dev; girder serve --dev"
+    command: bash -c "pip install --user -e /wsi_deid; python3.9 /conf/provision.py; girder build --dev; girder serve --dev"
     volumes:
       - ../..:/wsi_deid
       - .:/conf
