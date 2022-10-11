@@ -60,7 +60,8 @@ var ConfigView = View.extend({
             'wsi_deid.remote_password': { name: 'Remote SFTP Password', id: 'g-wsi-deid-remote-password' },
             'wsi_deid.sftp_mode': { name: 'SFTP Mode', id: 'g-wsi-deid-sftp-mode' },
             'wsi_deid.ocr_on_import': { name: 'Find Label Text on Import', id: 'g-wsi-deid-ocr-on-import' },
-            'wsi_deid.unfiled_folder': { name: 'Unfiled', id: 'g-wsi-deid-unfiled-folder' }
+            'wsi_deid.unfiled_folder': { name: 'Unfiled', id: 'g-wsi-deid-unfiled-folder' },
+            'wsi_deid.schema_folder': { name: 'Schema', id: 'g-wsi-deid-schema-folder' }
         };
         this._browserWidgetView = {};
         $.when(

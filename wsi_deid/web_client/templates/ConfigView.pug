@@ -80,6 +80,17 @@ form#g-wsi_deid-form(role="form")
         button.g-open-browser.btn.btn-default(type="button")
           i.icon-folder-open
   .form-group
+    label(for="g-wsi-deid-schema-folder") Schema Folder
+    p.g-hui-description
+      | This is the location where customized schemas are stored.
+    .input-group.input-group-sm
+      input#g-wsi-deid-schema-folder.form-control.input-sm(
+          type="text", value=settings['wsi_deid.schema_folder'] || '',
+          title="A folder to store custom schemas.")
+      .input-group-btn
+        button.g-open-browser.btn.btn-default(type="button")
+          i.icon-folder-open
+  .form-group
     label(for="g-hui-reports-folder") Reports Folder
     p.g-hui-description
       | This is the location where import and export reports are stored.

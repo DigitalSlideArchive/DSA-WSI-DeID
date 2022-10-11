@@ -48,6 +48,7 @@ WSI DeID Version: %s
         PluginSettings.HUI_ORIGINAL_FOLDER: ('Original', True),
         PluginSettings.HUI_FINISHED_FOLDER: ('Approved', True),
         PluginSettings.HUI_REPORTS_FOLDER: ('Reports', True),
+        PluginSettings.WSI_DEID_SCHEMA_FOLDER: ('Schema', True),
     }
     configDict = girder.utility.config.getConfig().get('wsi_deid', {})
     matchTextFields = configDict.get('import_text_association_columns', [])
@@ -63,9 +64,19 @@ WSI DeID Version: %s
         if folderId:
             folder = Folder().load(folderId, force=True)
         if not folder:
-            folder = Folder().createFolder(
-                wsi_deidCollection, folderName, parentType='collection',
-                public=public, creator=adminUser, reuseExisting=True)
+            if settingKey == 'wsi_deid.schema_folder':
+                folder = Folder().createFolder(
+                    wsi_deidCollection, folderName, parentType='collection',
+                    public=public, creator=adminUser, reuseExisting=True)
+                Folder().createFolder(
+                    folder, 'Disabled', parentType='folder',
+                    public=public, creator=adminUser, reuseExisting=True
+                )
+            else:
+                folder = Folder().createFolder(
+                    wsi_deidCollection, folderName, parentType='collection',
+                    public=public, creator=adminUser, reuseExisting=True)
+
             Setting().set(settingKey, str(folder['_id']))
         elif folder['name'] != folderName or folder['public'] != public:
             folder['name'] = folderName
