@@ -15,7 +15,7 @@ import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
 import {
     formats, getRedactList, putRedactList, goToNextUnprocessedItem,
-    PHIPIITypes, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
+    PHIPIITypes, QAQCRejectionReasons, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
     matchFieldPattern, flagRedactionOnItem, systemRedactedReason
 } from '../utils';
 
@@ -593,7 +593,8 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.g-annotation-list-container').remove();
         /* Show workflow buttons */
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
-            project_folder: folderType
+            project_folder: folderType,
+            rejection_reasons: QAQCRejectionReasons
         }));
         if (folderType === 'unfiled') {
             restRequest({

@@ -1,7 +1,7 @@
 -
   var folderButtonList = {
-    ingest: ['process', 'reject', 'quarantine', 'ocr'],
-    quarantine: ['process', 'reject', 'unquarantine'],
+    ingest: ['process', 'quarantine', 'ocr', 'reject'],
+    quarantine: ['process', 'unquarantine', 'reject'],
     processed: ['quarantine', 'finish'],
     rejected: ['quarantine'],
     original: ['quarantine'],
@@ -29,7 +29,7 @@
       select.g-refile-select
         option(value='__none__') Manually specify
       span(title="Refile with this TokenID (folder) name")
-        | TokenID
+        | TokenIg-workflow-buttonD
         input.g-refile-tokenid
       span(title="Refile with this ImageID (item) name")
         | ImageID
@@ -37,3 +37,15 @@
       button.g-refile-button.btn(class='btn-'+buttons.refile.color, action=button, title=buttons.refile.title) #{buttons.refile.name}
   for button in buttonList
     button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title) #{buttons[button].name}
+  if buttonList.includes('reject')
+    select.wsi-deid-reject-reason(title="Select a reson for rejecting this image")
+      option(value="none" selected=true) Keep (do not reject)
+      for cat in rejection_reasons
+        if cat.types
+          optgroup(label=cat.text)
+            for reason in cat.types
+              option(value=reason.key, category=cat.category)
+                = reason.text
+        else
+          option(value=cat.key, cateogry=cat.category)
+            = cat.text
