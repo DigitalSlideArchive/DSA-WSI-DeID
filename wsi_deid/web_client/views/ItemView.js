@@ -410,6 +410,14 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
+    const rejectionReasonChanged = (event) => {
+        const newValue = event.target.value;
+        const otherSelect = this.$el.find('.wsi-deid-reject-reason').not(event.target).first();
+        if (otherSelect.value !== newValue) {
+            otherSelect.val(newValue);
+        }
+    }
+
     const getWSIAnnotationLayer = () => {
         const map = this.imageViewerSelect.currentViewer.viewer;
         return map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
@@ -610,10 +618,18 @@ wrap(ItemView, 'render', function (render) {
                 }
             });
         }
+        const reasonselect = this.$el.find('.wsi-deid-reject-reason');
         /* Place a copy of any reject buttons in the item header */
         this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
+        const headerRejectButton = this.$el.find('.g-item-image-viewer-select .g-workflow-button[action="reject"]');
+        if (headerRejectButton) {
+            const reasonSelectCopy = this.$el.find('.wsi-deid-reject-reason').clone();
+            reasonSelectCopy.css('float', 'right');
+            headerRejectButton.before(reasonSelectCopy);
+        }
         this.events['click .g-workflow-button'] = workflowButton;
         this.events['click .g-refile-button'] = refileButton;
+        this.events['change .wsi-deid-reject-reason'] = rejectionReasonChanged;
         /* Place an area redaction control in the item header */
         if (hasRedactionControls) {
             const redactArea = ItemViewRedactAreaTemplate({});
