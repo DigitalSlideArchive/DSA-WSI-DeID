@@ -244,7 +244,6 @@ function flagRedactionOnItem(itemModel, event) {
 export {
     formats,
     PHIPIITypes,
-    QAQCRejectionReasons,
     systemRedactedReason,
 
     flagRedactionOnItem,
