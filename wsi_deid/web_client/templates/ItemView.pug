@@ -37,7 +37,7 @@
       button.g-refile-button.btn(class='btn-'+buttons.refile.color, action=button, title=buttons.refile.title) #{buttons.refile.name}
   for button in buttonList
     button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title) #{buttons[button].name}
-  if buttonList.includes('reject')
+  if buttonList.includes('reject') && rejection_reasons.length > 0
     select.wsi-deid-reject-reason(title="Select a reson for rejecting this image")
       option(value="none" selected=true) Keep (do not reject)
       for cat in rejection_reasons

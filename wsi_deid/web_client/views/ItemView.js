@@ -15,7 +15,7 @@ import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
 import {
     formats, getRedactList, putRedactList, goToNextUnprocessedItem,
-    PHIPIITypes, QAQCRejectionReasons, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
+    PHIPIITypes, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
     matchFieldPattern, flagRedactionOnItem, systemRedactedReason
 } from '../utils';
 
@@ -592,9 +592,10 @@ wrap(ItemView, 'render', function (render) {
         /* Don't show the annotation list */
         this.$el.find('.g-annotation-list-container').remove();
         /* Show workflow buttons */
+        const rejectReasons = settings.require_reject_reason ? settings.reject_reasons : [];
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType,
-            rejection_reasons: QAQCRejectionReasons
+            rejection_reasons: rejectReasons
         }));
         if (folderType === 'unfiled') {
             restRequest({
