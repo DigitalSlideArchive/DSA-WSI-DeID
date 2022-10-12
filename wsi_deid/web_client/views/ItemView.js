@@ -410,11 +410,17 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
-    const rejectionReasonChanged = (event) => {
+    const rejectionReasonChanged = (event, settings) => {
         const newValue = event.target.value;
+        console.log(settings);
         const otherSelect = this.$el.find('.wsi-deid-reject-reason').not(event.target).first();
         if (otherSelect.value !== newValue) {
             otherSelect.val(newValue);
+        }
+        if (settings.require_reject_reason) {
+            // disable or enable reject buttons
+            const rejectButtons = this.$el.find('.g-workflow-button[action="reject"]');
+            rejectButtons.prop('disabled', newValue === 'none');
         }
     }
 
@@ -600,10 +606,10 @@ wrap(ItemView, 'render', function (render) {
         /* Don't show the annotation list */
         this.$el.find('.g-annotation-list-container').remove();
         /* Show workflow buttons */
-        const rejectReasons = settings.require_reject_reason ? settings.reject_reasons : [];
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType,
-            rejection_reasons: rejectReasons
+            require_reject_reason: settings.require_reject_reason || false,
+            rejection_reasons: settings.reject_reasons || []
         }));
         if (folderType === 'unfiled') {
             restRequest({
@@ -629,7 +635,7 @@ wrap(ItemView, 'render', function (render) {
         }
         this.events['click .g-workflow-button'] = workflowButton;
         this.events['click .g-refile-button'] = refileButton;
-        this.events['change .wsi-deid-reject-reason'] = rejectionReasonChanged;
+        this.events['change .wsi-deid-reject-reason'] = (event) => rejectionReasonChanged(event, settings);
         /* Place an area redaction control in the item header */
         if (hasRedactionControls) {
             const redactArea = ItemViewRedactAreaTemplate({});
