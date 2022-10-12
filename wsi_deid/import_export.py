@@ -603,7 +603,7 @@ def reportSummary(*args, **kwargs):
     :param **kwargs: if 'file' is specified, this is a Girder file model.  The
         file id is returned as part of the results.
     :returns: a dictionary of status values, each with a numerical tally, and
-        optionally a fileId field.
+        optionally a reportItemId field.
     """
     result = {}
     for report in args:
@@ -611,7 +611,7 @@ def reportSummary(*args, **kwargs):
             result.setdefault(entry['status'], 0)
             result[entry['status']] += 1
     if kwargs.get('file'):
-        result['fileId'] = str(kwargs['file']['_id'])
+        result['reportItemId'] = str(kwargs['file']['itemId'])
     return result
 
 

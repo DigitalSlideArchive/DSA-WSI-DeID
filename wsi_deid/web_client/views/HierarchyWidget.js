@@ -133,9 +133,9 @@ function performAction(action) {
                 text = 'No new items without existing label text metadata.';
             }
         }
-        if (resp.fileId) {
+        if (resp.reportItemId) {
             events.once('g:alert', () => {
-                $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/api/v1/file/${resp.fileId}/download`));
+                $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/#item/${resp.reportItemId}`));
             }, this);
         }
         if (resp['sftp_enabled']) {
