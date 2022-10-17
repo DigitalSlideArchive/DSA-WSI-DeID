@@ -66,7 +66,7 @@ def create_folder_hierarchy(item, user, folder):
     return folder, origFolders
 
 
-def move_item(item, user, settingkey):
+def move_item(item, user, settingkey, options=None):
     """
     Move an item to one of the folders specified by a setting.
 
@@ -93,11 +93,23 @@ def move_item(item, user, settingkey):
             'quarantineUserId': user['_id'],
             'quarantineTime': datetime.datetime.utcnow()
         }
+    rejectInfo = None
+    if settingkey == PluginSettings.HUI_REJECTED_FOLDER and options is not None:
+        rejectReason = options.get('rejectReason', None)
+        if rejectReason:
+            rejectInfo = {
+                'rejectReason': rejectReason
+            }
+        requireRejectReason = config.getConfig('require_reject_reason')
+        if requireRejectReason and rejectInfo is None:
+            raise RestException('A rejection reason is required.')
     # move the item
     item = Item().move(item, folder)
     if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
         # When quarantining, add metadata and don't prune folders
         item = Item().setMetadata(item, {'quarantine': quarantineInfo})
+    if settingkey == PluginSettings.HUI_REJECTED_FOLDER and rejectInfo is not None:
+        item = Item().setMetadata(item, {'reject': rejectInfo})
     else:
         # Prune empty folders
         for origFolder in origFolders[::-1]:
@@ -309,7 +321,7 @@ class WSIDeIDResource(Resource):
     def isProjectFolder(self, folder):
         return import_export.isProjectFolder(folder)
 
-    def _actionForItem(self, item, user, action):
+    def _actionForItem(self, item, user, action, options):
         """
         Given an item, user, an action, return a function and parameters to
         execute that action.
@@ -328,7 +340,7 @@ class WSIDeIDResource(Resource):
                 histomicsui.handlers.restore_quarantine_item, (item, user),
                 'unquarantine', 'unquaranting'),
             'reject': (
-                move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER),
+                move_item, (item, user, PluginSettings.HUI_REJECTED_FOLDER, options),
                 'reject', 'rejecting'),
             'finish': (
                 move_item, (item, user, PluginSettings.HUI_FINISHED_FOLDER),
@@ -349,17 +361,19 @@ class WSIDeIDResource(Resource):
         .param('action', 'Action to perform on the item.  One of process, '
                'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
                enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
+        .jsonParam('options', 'Additional information pertaining to the action.',
+                   required=False, paramType='body')
         .errorResponse()
         .errorResponse('Write access was denied on the item.', 403)
     )
     @access.user
-    def itemAction(self, item, action):
+    def itemAction(self, item, action, options):
         setResponseTimeLimit(86400)
         user = self.getCurrentUser()
         with ItemActionLock:
             ItemActionList.append(item)
         try:
-            actionfunc, actionargs, name, pp = self._actionForItem(item, user, action)
+            actionfunc, actionargs, name, pp = self._actionForItem(item, user, action, options)
         finally:
             with ItemActionLock:
                 ItemActionList.remove(item)
