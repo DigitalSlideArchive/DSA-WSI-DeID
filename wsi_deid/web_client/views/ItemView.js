@@ -316,9 +316,24 @@ wrap(ItemView, 'render', function (render) {
             '<div class="g-hui-loading-overlay"><div>' +
             '<i class="icon-spin4 animate-spin"></i>' +
             '</div></div>');
+        let requestData = {};
+        if (action === 'reject') {
+            const selectedOption = this.$el.find('.wsi-deid-reject-reason :selected').first();
+            if (selectedOption && selectedOption.val() !== 'none') {
+                const rejectData = {
+                    reason: selectedOption.val()
+                };
+                if (selectedOption.attr('category')) {
+                    rejectData['category'] = selectedOption.attr('category');
+                }
+                requestData['rejectReason'] = rejectData;
+            }
+        }
         restRequest({
             method: 'PUT',
             url: 'wsi_deid/item/' + this.model.id + '/action/' + action,
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
             error: null
         }).done((resp) => {
             let alertMessage = actions[action].done;
@@ -412,7 +427,6 @@ wrap(ItemView, 'render', function (render) {
 
     const rejectionReasonChanged = (event, settings) => {
         const newValue = event.target.value;
-        console.log(settings);
         const otherSelect = this.$el.find('.wsi-deid-reject-reason').not(event.target).first();
         if (otherSelect.value !== newValue) {
             otherSelect.val(newValue);
@@ -422,7 +436,7 @@ wrap(ItemView, 'render', function (render) {
             const rejectButtons = this.$el.find('.g-workflow-button[action="reject"]');
             rejectButtons.prop('disabled', newValue === 'none');
         }
-    }
+    };
 
     const getWSIAnnotationLayer = () => {
         const map = this.imageViewerSelect.currentViewer.viewer;
@@ -624,7 +638,6 @@ wrap(ItemView, 'render', function (render) {
                 }
             });
         }
-        const reasonselect = this.$el.find('.wsi-deid-reject-reason');
         /* Place a copy of any reject buttons in the item header */
         this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
         const headerRejectButton = this.$el.find('.g-item-image-viewer-select .g-workflow-button[action="reject"]');
