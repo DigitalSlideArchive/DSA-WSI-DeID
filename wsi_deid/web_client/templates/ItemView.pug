@@ -38,7 +38,7 @@
   for button in buttonList
     - var isDisabled = button === 'reject' && require_reject_reason
     button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title, disabled=isDisabled) #{buttons[button].name}
-  if buttonList.includes('reject') && rejection_reasons.length > 0
+  if buttonList.includes('reject') && rejection_reasons.length > 0 && require_reject_reason
     select.wsi-deid-reject-reason.form-control.input-sm(title="Select a reason for rejecting this image")
       option(value="none", selected=true) Keep (do not reject)
       for cat in rejection_reasons
