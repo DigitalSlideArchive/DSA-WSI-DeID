@@ -996,6 +996,10 @@ def buildExportDataSet(report):
     }
     curtime = datetime.datetime.utcnow()
     exportFields = config.getConfig('upload_metadata_for_export_report')
+    statusReasonFields = []
+    rejectReasonRequired = config.getConfig('require_reject_reason')
+    if rejectReasonRequired:
+        statusReasonFields += ['Rejection_Reason']
     dataList = []
     timeformat = '%m%d%Y: %H%M%S'
     for row in report:
@@ -1008,6 +1012,16 @@ def buildExportDataSet(report):
         data['DSAImageStatus'] = statusDict.get(row['status'], row['status'])
         if data['DSAImageStatus'] == 'Approved':
             data['Date_DEID_Export'] = curtime.strftime(timeformat)
+        if data['DSAImageStatus'] == 'Rejected' and rejectReasonRequired:
+            rejectReasonData = row['item']['meta'].get('reject', {}).get('rejectReason', {})
+            rejectEntry = ''
+            rejectReason = rejectReasonData.get('reason', None)
+            if rejectReason is not None:
+                rejectEntry += rejectReason
+            rejectCategory = rejectReasonData.get('category', None)
+            if rejectCategory is not None:
+                rejectEntry += ' (' + rejectCategory + ')'
+            data['Rejection_Reason'] = rejectEntry
         if data['DSAImageStatus'] != 'AvailableToProcess':
             data['Last_DEID_RunDate'] = row['item'].get(
                 'modified', row['item']['created']).strftime(timeformat)
@@ -1061,7 +1075,7 @@ def buildExportDataSet(report):
         'Last_DEID_RunDate', 'Date_DEID_Export',
         *exportFields,
         'ScannerMake', 'ScannerModel',
-        'DSAImageStatus',
+        'DSAImageStatus', *statusReasonFields,
         'ByteSize_InboundWSI',
         'ByteSize_ExportedWSI',
         'Total_VendorMetadataFields',
