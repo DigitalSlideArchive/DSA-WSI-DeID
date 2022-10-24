@@ -35,33 +35,6 @@ const PHIPIITypes = [{
     text: 'Other PHI/PII'
 }];
 
-const DefaultRejectReasons = [{
-    category: 'Cannot_Redact',
-    text: 'Cannot redact PHI',
-    key: 'Cannot_Redact'
-}, {
-    category: 'Slide_Quality',
-    text: 'Slide Quality',
-    types: [
-        { key: 'Chatter_Tears', 'text': 'Chatter/tears in tissue' },
-        { key: 'Folded_Tissue', 'text': 'Folded tissue' },
-        { key: 'Overstaining', 'text': 'Overstaining' },
-        { key: 'Cover_Slip', 'text': 'Cover slip issues' },
-        { key: 'Debris', 'text': 'Debris or dust' },
-        { key: 'Air_Bubbles', 'text': 'Air bubbles' },
-        { key: 'Pathologist_Markings', 'text': "Pathologist's Markings" },
-        { key: 'Other_Slide_Quality', 'text': 'Other' }
-    ]
-}, {
-    category: 'Image_Quality',
-    text: 'Image Quality',
-    types: [
-        { key: 'Out_Of_Focus', 'text': 'Out of focus' },
-        { key: 'Low_Resolution', 'text': 'Low resolution' },
-        { key: 'Other_Image_Quality', 'text': 'Other' }
-    ]
-}];
-
 
 const systemRedactedReason = 'System Redacted';
 
@@ -271,7 +244,6 @@ function flagRedactionOnItem(itemModel, event) {
 export {
     formats,
     PHIPIITypes,
-    DefaultRejectReasons,
     systemRedactedReason,
 
     flagRedactionOnItem,

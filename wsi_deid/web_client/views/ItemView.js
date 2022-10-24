@@ -15,7 +15,7 @@ import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
 import {
     formats, getRedactList, putRedactList, goToNextUnprocessedItem,
-    PHIPIITypes, DefaultRejectReasons, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
+    PHIPIITypes, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
     matchFieldPattern, flagRedactionOnItem, systemRedactedReason
 } from '../utils';
 
@@ -619,8 +619,7 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
         /* Don't show the annotation list */
         this.$el.find('.g-annotation-list-container').remove();
-        const configuredRejectionReasons = settings.reject_reasons;
-        const rejectionReasons = ((configuredRejectionReasons && configuredRejectionReasons.length > 1) ? configuredRejectionReasons : DefaultRejectReasons);
+        const rejectionReasons = settings.reject_reasons;
         /* Show workflow buttons */
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType,
