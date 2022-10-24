@@ -8,8 +8,7 @@ import ItemListWidget from '@girder/large_image/views/itemList';
 
 import {
     formats, flagRedactionOnItem, getRedactList, getRedactionDisabledPatterns,
-    getHiddenMetadataPatterns, matchFieldPattern, systemRedactedReason,
-    PHIPIITypes
+    getHiddenMetadataPatterns, matchFieldPattern, systemRedactedReason
 } from '../utils';
 
 import '../stylesheets/ItemList.styl';
@@ -89,6 +88,7 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
             info._visible = info._visible.filter((keylist) => info._redactable.indexOf(keylist) < 0);
             info._visible.sort();
             this._wsi_deid_item_list = info;
+            this.phiPiiTypes = info.wsi_deid_settings.phi_pii_types;
             this.render();
         });
     };
@@ -193,7 +193,7 @@ wrap(ItemListWidget, 'render', function (render) {
         info: this._wsi_deid_item_list,
         hasRedactionControls: (this._folderKey === 'ingest' || this._folderKey === 'quarantine'),
         systemRedactedReason: systemRedactedReason,
-        PHIPIITypes: PHIPIITypes,
+        PHIPIITypes: this.phiPiiTypes,
         showAllVisible: false
     }));
     var parent = this.$el;
