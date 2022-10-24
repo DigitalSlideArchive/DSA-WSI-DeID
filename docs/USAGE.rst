@@ -131,10 +131,13 @@ The ``Rejected`` folder  is available at any time.
 
 There are two ways an image needs to be rejected: (a) there is PHI in the zoomable image in the WSI (e.g., someone wrote the patient name on the slide itself), or (b) there is PHI in a metadata field that is shown, but the software does not offer a redaction control for. In either of these cases, the image can be sent to the ``Rejected`` folder by clicking on the ``Reject`` button. Users should contact IMS for any WSI files in the ``Rejected`` folder.
 
-The ``Reject`` button is available near the zoomable WSI image as a convenience to quickly reject a WSI file. See the screenshot below.
+The ``Reject`` button is available near the zoomable WSI image as a convenience to quickly reject a WSI file. If configured, a list of possible reasons for rejection will appear next to the button. Additional configuration can be made to require making a selection before rejecting an image. For additional information, see `CUSTOMIZING.rst <../CUSTOMIZING.rst>`_. See the screenshot below.
 
 .. image:: screenshots/top_reject_button.png
    :alt: top reject button
+
+.. image:: screenshots/top_reject_button_reason_list.png
+   :alt: reject reason select
 
 Step 5 Users Export DeID Files
 ------------------------------

@@ -1,7 +1,7 @@
 -
   var folderButtonList = {
-    ingest: ['process', 'reject', 'quarantine', 'ocr'],
-    quarantine: ['process', 'reject', 'unquarantine'],
+    ingest: ['process', 'quarantine', 'ocr', 'reject'],
+    quarantine: ['process', 'unquarantine', 'reject'],
     processed: ['quarantine', 'finish'],
     rejected: ['quarantine'],
     original: ['quarantine'],
@@ -36,4 +36,17 @@
         input.g-refile-imageid
       button.g-refile-button.btn(class='btn-'+buttons.refile.color, action=button, title=buttons.refile.title) #{buttons.refile.name}
   for button in buttonList
-    button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title) #{buttons[button].name}
+    - var isDisabled = button === 'reject' && require_reject_reason
+    button.g-workflow-button.btn(class='btn-'+buttons[button].color, action=button, title=buttons[button].title, disabled=isDisabled) #{buttons[button].name}
+  if buttonList.includes('reject') && rejection_reasons.length > 0 && require_reject_reason
+    select.wsi-deid-reject-reason.form-control.input-sm(title="Select a reason for rejecting this image")
+      option(value="none", selected=true) Keep (do not reject)
+      for cat in rejection_reasons
+        if cat.types
+          optgroup(label=cat.text)
+            for reason in cat.types
+              option(value=reason.key, category=cat.category)
+                = reason.text
+        else
+          option(value=cat.key, cateogry=cat.category)
+            = cat.text

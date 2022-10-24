@@ -22,6 +22,11 @@ Redaction Categories
 
 By default, when metadata or images are redacted, the user must pick the type of PHI/PII that is present and the reason for the redaction.  If the ``require_redact_category`` is set to ``False``, then, instead of requiring a reason, the user interface will show a ``REDACT`` button that toggles redaction on and off for the metadata or image.  The export file will contain ``No Reason Collected`` in these cases.
 
+Reasons for Rejection
++++++++++++++++++++++
+
+Rejecting images can be configured to require a reason for rejection. This is controlled by the setting ``require_reject_reason``. Reasons for rejection can be configured via the ``reject_reasons`` setting.
+
 Redacting the Label Image
 +++++++++++++++++++++++++
 

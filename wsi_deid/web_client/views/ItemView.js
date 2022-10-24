@@ -316,9 +316,24 @@ wrap(ItemView, 'render', function (render) {
             '<div class="g-hui-loading-overlay"><div>' +
             '<i class="icon-spin4 animate-spin"></i>' +
             '</div></div>');
+        let requestData = {};
+        if (action === 'reject') {
+            const selectedOption = this.$el.find('.wsi-deid-reject-reason :selected').first();
+            if (selectedOption && selectedOption.val() !== 'none') {
+                const rejectData = {
+                    reason: selectedOption.val()
+                };
+                if (selectedOption.attr('category')) {
+                    rejectData['category'] = selectedOption.attr('category');
+                }
+                requestData['rejectReason'] = rejectData;
+            }
+        }
         restRequest({
             method: 'PUT',
             url: 'wsi_deid/item/' + this.model.id + '/action/' + action,
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
             error: null
         }).done((resp) => {
             let alertMessage = actions[action].done;
@@ -408,6 +423,19 @@ wrap(ItemView, 'render', function (render) {
                 timeout: 5000
             });
         });
+    };
+
+    const rejectionReasonChanged = (event, settings) => {
+        const newValue = event.target.value;
+        const otherSelect = this.$el.find('.wsi-deid-reject-reason').not(event.target).first();
+        if (otherSelect.value !== newValue) {
+            otherSelect.val(newValue);
+        }
+        if (settings.require_reject_reason) {
+            // disable or enable reject buttons
+            const rejectButtons = this.$el.find('.g-workflow-button[action="reject"]');
+            rejectButtons.prop('disabled', newValue === 'none');
+        }
     };
 
     const getWSIAnnotationLayer = () => {
@@ -591,9 +619,12 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('.g-widget-metadata-container:first').addClass('collapse');
         /* Don't show the annotation list */
         this.$el.find('.g-annotation-list-container').remove();
+        const rejectionReasons = settings.reject_reasons;
         /* Show workflow buttons */
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
-            project_folder: folderType
+            project_folder: folderType,
+            require_reject_reason: settings.require_reject_reason || false,
+            rejection_reasons: rejectionReasons
         }));
         if (folderType === 'unfiled') {
             restRequest({
@@ -610,8 +641,15 @@ wrap(ItemView, 'render', function (render) {
         }
         /* Place a copy of any reject buttons in the item header */
         this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(this.$el.find('.g-workflow-button[action="reject"]').clone());
+        const headerRejectButton = this.$el.find('.g-item-image-viewer-select .g-workflow-button[action="reject"]');
+        if (headerRejectButton) {
+            const reasonSelectCopy = this.$el.find('.wsi-deid-reject-reason').clone();
+            reasonSelectCopy.css('float', 'right');
+            headerRejectButton.before(reasonSelectCopy);
+        }
         this.events['click .g-workflow-button'] = workflowButton;
         this.events['click .g-refile-button'] = refileButton;
+        this.events['change .wsi-deid-reject-reason'] = (event) => rejectionReasonChanged(event, settings);
         /* Place an area redaction control in the item header */
         if (hasRedactionControls) {
             const redactArea = ItemViewRedactAreaTemplate({});
