@@ -15,7 +15,7 @@ import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
 import '../stylesheets/ItemView.styl';
 import {
     formats, getRedactList, putRedactList, goToNextUnprocessedItem,
-    PHIPIITypes, getHiddenMetadataPatterns, getRedactionDisabledPatterns,
+    getHiddenMetadataPatterns, getRedactionDisabledPatterns,
     matchFieldPattern, flagRedactionOnItem, systemRedactedReason
 } from '../utils';
 
@@ -52,7 +52,8 @@ wrap(ItemView, 'render', function (render) {
             });
             elem.append($('<option value="none">Keep (do not redact)</option>'));
             let matched = false;
-            PHIPIITypes.forEach((cat) => {
+            const phiPiiTypes = settings.phi_pii_types;
+            phiPiiTypes.forEach((cat) => {
                 if (cat.types) {
                     let optgroup = $('<optgroup/>');
                     optgroup.attr({ label: cat.text });

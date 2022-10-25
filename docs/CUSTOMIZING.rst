@@ -22,6 +22,8 @@ Redaction Categories
 
 By default, when metadata or images are redacted, the user must pick the type of PHI/PII that is present and the reason for the redaction.  If the ``require_redact_category`` is set to ``False``, then, instead of requiring a reason, the user interface will show a ``REDACT`` button that toggles redaction on and off for the metadata or image.  The export file will contain ``No Reason Collected`` in these cases.
 
+Redaction categories can be configured by changing the ``phi_pii_types`` settings.
+
 Reasons for Rejection
 +++++++++++++++++++++
 

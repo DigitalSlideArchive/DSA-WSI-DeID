@@ -12,29 +12,6 @@ const formats = {
     none: ''
 };
 
-const PHIPIITypes = [{
-    category: 'Personal_Info',
-    text: 'Personal Information',
-    types: [
-        { key: 'Patient_Name', text: 'Patient Name' },
-        { key: 'Patient_DOB', text: 'Date of Birth ' },
-        { key: 'SSN', text: 'Social Security Number' },
-        { key: 'Other_Personal', text: 'Other Personal' }
-    ]
-}, {
-    category: 'Demographics',
-    key: 'Demographics',
-    text: 'Demographics'
-}, {
-    category: 'Facility_Physician',
-    key: 'Facility_Physician',
-    text: 'Facility/Physician Information'
-}, {
-    category: 'Other_PHIPII',
-    key: 'Other_PHIPII',
-    text: 'Other PHI/PII'
-}];
-
 
 const systemRedactedReason = 'System Redacted';
 
@@ -243,7 +220,6 @@ function flagRedactionOnItem(itemModel, event) {
 
 export {
     formats,
-    PHIPIITypes,
     systemRedactedReason,
 
     flagRedactionOnItem,

@@ -372,6 +372,8 @@ The table below describes the redaction options and definitions of PHI/PII categ
 
 ``*`` For these dates, year is permissible; however, full or partial date including the day and/or month is considered PHI/PII.
 
+See `CUSTOMIZING.rst <CUSTOMIZING.rst>`_ for information on customizing the PHI/PII types that can be selected.
+
 Exporting Data
 ==============
 
