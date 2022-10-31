@@ -6,7 +6,7 @@ from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
 
-from .utilities import provisionServer  # noqa
+from .utilities import provisionDefaultSchemaServer, provisionServer  # noqa
 
 
 @pytest.mark.plugin('wsi_deid')
@@ -72,3 +72,32 @@ def test_workflow_with_options(server, provisionServer, user):  # noqa
     assert len(list(Folder().fileList(finishedFolder))) == 3
     rest.exportData(user, False)
     assert len(os.listdir(exportPath)) == 3
+
+
+@pytest.mark.plugin('wsi_deid')
+@pytest.mark.plugin('large_image')
+def test_workflow_with_default_schema(server, provisionDefaultSchemaServer, user, mocker): # noqa
+    import wsi_deid.import_export
+    from wsi_deid import rest
+    from wsi_deid.constants import PluginSettings
+
+    def mockStartOcrForUnfiled(*args):
+        return None
+
+    mocker.patch('wsi_deid.import_export.startOcrJobForUnfiled', mockStartOcrForUnfiled)
+
+    config = girder.utility.config.getConfig()
+    config[wsi_deid.config.CONFIG_SECTION] = {
+        'import_text_association_columns': [
+            'SurgPathNum',
+            'First_Name',
+            'Last_Name',
+            'Date_of_Birth_mmddyyyy'
+        ]
+    }
+
+    unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
+    unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
+    assert len(list(Folder().fileList(unfiledFolder))) == 0
+    rest.ingestData(user, False)
+    assert len(list(Folder().fileList(unfiledFolder, user, data=False))) == 5
