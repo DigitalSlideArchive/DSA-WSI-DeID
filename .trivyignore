@@ -117,5 +117,6 @@ CVE-2022-2980
 # Python mailcap not used with our code
 CVE-2015-20107
 
-
+# Not using Python forkserver start method
+CVE-2022-42919
 
