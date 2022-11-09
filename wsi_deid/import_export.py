@@ -110,9 +110,22 @@ def getSchema():
     # that contain a single file that parses as valid json, then we need to
     # load those files and combine them into a single schema in lieu of using
     # this default SCHEMA_FILE_PATH
+    schemaFolderId = Setting().get(PluginSettings.WSI_DEID_SCHEMA_FOLDER)
+    mergedSchema = {}
+
+    if schemaFolderId:
+        schemaFolder = Folder().load(schemaFolderId, force=True)
+
+        for filepath, file in Folder().fileList(schemaFolder, data=False):
+
+            mergedSchema.update(json.load(File().open(file)))
+
+
     logger.info('Using %s (length %d) for schema' % (
         SCHEMA_FILE_PATH, os.path.getsize(SCHEMA_FILE_PATH)))
-    return json.load(open(SCHEMA_FILE_PATH))
+
+
+    return mergedSchema
 
 
 def getSchemaValidator():
