@@ -25,6 +25,11 @@ def provisionDefaultSchemaServer(server, admin, fsAssetstore, tmp_path):
     yield _provisionDefaultSchemaServer(tmp_path)
 
 
+@pytest.fixture
+def provisionDefaultSchemaBoundServer(boundServer, admin, fsAssetstore, tmp_path):
+    yield _provisionDefaultSchemaServer(tmp_path)
+
+
 def _provisionServer(tmp_path):
     sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'devops', 'wsi_deid'))
     import provision  # noqa
