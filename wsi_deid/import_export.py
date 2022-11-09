@@ -117,12 +117,22 @@ def getSchema():
         schemaFolder = Folder().load(schemaFolderId, force=True)
 
         for filepath, file in Folder().fileList(schemaFolder, data=False):
+            currentObject=json.load(File().open(file))
+            print(type(currentObject))
+            for key, value in currentObject.items():
+                if key in mergedSchema:
+                    if value != mergedSchema[key]:
+                        if isinstance(mergedSchema[key], list):
+                            mergedSchema[key].append(value)
+                        else:
+                            temp_list = [mergedSchema[key]]
+                            temp_list.append(value)
+                            mergedSchema[key]=temp_list
 
-            mergedSchema.update(json.load(File().open(file)))
-
-
-    logger.info('Using %s (length %d) for schema' % (
-        SCHEMA_FILE_PATH, os.path.getsize(SCHEMA_FILE_PATH)))
+                else:
+                    mergedSchema[key]=value
+    # logger.info('Using %s (length %d) for schema' % (
+    #     SCHEMA_FILE_PATH, os.path.getsize(SCHEMA_FILE_PATH)))
 
 
     return mergedSchema
