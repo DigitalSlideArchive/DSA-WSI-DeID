@@ -73,7 +73,13 @@ WSI DeID Version: %s
                     folder, 'Disabled', parentType='folder',
                     public=public, creator=adminUser, reuseExisting=True
                 )
-                Upload().uploadFromFile(open('wsi_deid/schema/importManifestSchema.json', 'rb'), os.path.getsize('wsi_deid/schema/importManifestSchema.json'), name='importManifestSchema.json', parentType='folder', parent=folder, user=adminUser)
+                Upload().uploadFromFile(
+                    open('wsi_deid/schema/importManifestSchema.json', 'rb'),
+                    os.path.getsize('wsi_deid/schema/importManifestSchema.json'),
+                    name='importManifestSchema.json',
+                    parentType='folder',
+                    parent=folder,
+                    user=adminUser)
             else:
                 folder = Folder().createFolder(
                     wsi_deidCollection, folderName, parentType='collection',
