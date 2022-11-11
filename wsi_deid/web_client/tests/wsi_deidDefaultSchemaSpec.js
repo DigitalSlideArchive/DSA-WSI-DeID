@@ -1,6 +1,6 @@
-/* globals girderTest, describe, it, expect, waitsFor, runs, $ */
+/* globals girder, girderTest, describe, it, expect, waitsFor, runs, $ */
 
-girderTest.importPlugin('homepage', 'jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'wsi_deid')
+girderTest.importPlugin('homepage', 'jobs', 'large_image', 'large_image_annotation', 'slicer_cli_web', 'histomicsui', 'wsi_deid');
 
 girderTest.startApp();
 
@@ -25,7 +25,7 @@ describe('Test WSI DeID plugin with default schema', function () {
     describe('import', function () {
         it('logs in as admin', function () {
             girderTest.login('admin', 'Admin', 'Admin', 'password')();
-            waitsFor(function() {
+            waitsFor(function () {
                 return $('a.g-nav-link[g-target="admin"]').length > 0;
             }, 'admin console link to load');
         });
@@ -37,7 +37,7 @@ describe('Test WSI DeID plugin with default schema', function () {
             waitsFor(function () {
                 return $('.g-collection-create-button:visible').length > 0;
             });
-            runs(function() {
+            runs(function () {
                 $('.g-collection-list-entry .g-collection-link').click();
             });
             girderTest.waitForLoad();
@@ -57,7 +57,7 @@ describe('Test WSI DeID plugin with default schema', function () {
                 $('.wsi_deid-import-button').click();
             });
             waitsFor(function () {
-                return $('.g-item-list-entry').length
+                return $('.g-item-list-entry').length;
             }, 'imported images to load as items');
             girderTest.waitForLoad();
         });
@@ -72,7 +72,7 @@ describe('Test WSI DeID plugin with default schema', function () {
             });
             girderTest.waitForLoad();
             waitsFor(function () {
-                return $('.g-refile-button').length
+                return $('.g-refile-button').length;
             }, 'refile button to appear');
         });
         it('refiles the image', function () {
@@ -107,7 +107,7 @@ describe('Test WSI DeID plugin with default schema', function () {
             waitsFor(function () {
                 return $('.g-collection-create-button:visible').length > 0;
             });
-            runs(function() {
+            runs(function () {
                 $('.g-collection-list-entry .g-collection-link').click();
             });
             girderTest.waitForLoad();
@@ -149,7 +149,7 @@ describe('Test WSI DeID plugin with default schema', function () {
             waitsFor(function () {
                 return $('.g-collection-create-button:visible').length > 0;
             });
-            runs(function() {
+            runs(function () {
                 $('.g-collection-list-entry .g-collection-link').click();
             });
             girderTest.waitForLoad();
@@ -178,6 +178,101 @@ describe('Test WSI DeID plugin with default schema', function () {
             girderTest.waitForLoad();
             runs(function () {
                 expect($('.g-item-list-entry').length).toEqual(2);
+            });
+        });
+    });
+    describe('refile multiple images separately under new TokenIDs', function () {
+        it('goes to the WSI DeID collections page', function () {
+            runs(function () {
+                $('a.g-nav-link[g-target="collections"]').click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.g-collection-create-button:visible').length > 0;
+            });
+            runs(function () {
+                $('.g-collection-list-entry .g-collection-link').click();
+            });
+            girderTest.waitForLoad();
+        });
+        it('goes to the unfiled folder', function () {
+            runs(function () {
+                expect($('.g-folder-list-link').eq(8).text()).toEqual('Unfiled');
+                $('.g-folder-list-link').eq(8).click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.wsi_deid-import-button').length;
+            }, 'import button to appear');
+        });
+        it('selects multiple images for refile', function () {
+            runs(function () {
+                var checkboxes = $('input.g-list-checkbox');
+                checkboxes.eq(0).click();
+                checkboxes.eq(1).click();
+                waitsFor(function () {
+                    return $('.g-refile-button').length;
+                }, 'refile button to appear');
+            });
+        });
+        it('refiles the images separately', function () {
+            runs(function () {
+                var togetherSelect = $('.g-refile-select-togetherness').first();
+                togetherSelect.val('separately');
+                $('.g-refile-button').first().click();
+            });
+            girderTest.waitForLoad();
+            runs(function () {
+                expect($('.g-item-list-entry').length).toEqual(0);
+            });
+        });
+        it('goes to the WSI DeID collections page', function () {
+            runs(function () {
+                $('a.g-nav-link[g-target="collections"]').click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.g-collection-create-button:visible').length > 0;
+            });
+            runs(function () {
+                $('.g-collection-list-entry .g-collection-link').click();
+            });
+            girderTest.waitForLoad();
+        });
+        it('verifies two new folders in AvailableToProcess', function () {
+            runs(function () {
+                expect($('.g-folder-list-link').eq(1).text()).toEqual('AvailableToProcess');
+                $('.g-folder-list-link').eq(1).click();
+            });
+            girderTest.waitForLoad();
+            waitsFor(function () {
+                return $('.wsi_deid-import-button').length;
+            }, 'import button to appear');
+            runs(function () {
+                expect($('.g-folder-list-link').length).toEqual(4);
+            });
+        });
+        it('verifies one image in each of the new folders', function () {
+            var newFolders;
+            runs(function () {
+                newFolders = $('.g-folder-list-link').filter(function () {
+                    return !usedTokenIds.includes($(this).text());
+                });
+                expect(newFolders.length).toEqual(2);
+                var imageCount = new Array(newFolders.length).fill(0);
+                newFolders.each(function (index, folder) {
+                    var folderId = $(folder).attr('href').split('/')[1];
+                    girder.rest.restRequest({
+                        url: 'item?folderId=' + folderId
+                    }).done(function (response) {
+                        imageCount[index] = response.length;
+                    });
+                    waitsFor(function () {
+                        return imageCount.length === imageCount.filter(function (val) {
+                            return val === 1;
+                        }).length;
+                    });
+                });
             });
         });
     });

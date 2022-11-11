@@ -28,5 +28,11 @@ def testDefaultSchemaWebClient(boundServer, db, spec, provisionDefaultSchemaBoun
         return None
 
     mocker.patch('wsi_deid.import_export.startOcrJobForUnfiled', mockStartOcrForUnfiled)
-    specPath = os.path.join(os.path.dirname(__file__), '..', 'wsi_deid', 'web_client', 'tests', spec)
+    specPath = os.path.join(
+        os.path.dirname(__file__),
+        '..', 'wsi_deid',
+        'web_client',
+        'tests',
+        spec
+    )
     runWebClientTest(boundServer, specPath, 15000)
