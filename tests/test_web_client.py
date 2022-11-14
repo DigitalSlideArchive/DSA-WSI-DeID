@@ -3,14 +3,14 @@ import os
 import pytest
 from pytest_girder.web_client import runWebClientTest
 
-from .utilities import provisionBoundServer  # noqa
+from .utilities import provisionBoundServer, resetConfig  # noqa
 
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.parametrize('spec', (
     'wsi_deidSpec.js',
 ))
-def testWebClient(boundServer, db, spec, provisionBoundServer):  # noqa
+def testWebClient(boundServer, db, spec, provisionBoundServer, resetConfig):  # noqa
     import wsi_deid.import_export
 
     wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(

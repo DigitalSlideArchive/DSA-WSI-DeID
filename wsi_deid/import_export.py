@@ -310,7 +310,7 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
     # TODO: (a) use the getTargetAssetstore method from Upload(), (b) ensure
     # that the assetstore is a filesystem assestore.
     assetstore = Assetstore().getCurrent()
-    name = record[imageNameField] + os.path.splitext(record['name'])[1]
+    name = (record[imageNameField] or '') + os.path.splitext(record['name'])[1]
     mimeType = 'image/tiff'
     if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
         return 'duplicate'
