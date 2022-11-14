@@ -7,6 +7,8 @@ import pytest
 
 from wsi_deid.import_export import getSchemaValidator, readExcelData, validateDataRow
 
+from .utilities import resetConfig  # noqa
+
 csv1 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,01,Biopsy,C717-Brain stem,01,0579XY112001_01_01,01-A.svs
 0579XY112001,01,Biopsy,C71.7,02,0579XY112001_01_02,02.svs
@@ -62,7 +64,7 @@ csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
         ['Invalid Slide_ID in E6'],
     ]),
 ))
-def test_schema(tmp_path, csv, errorlist):
+def test_schema(tmp_path, csv, errorlist, resetConfig):
     import wsi_deid.import_export
 
     wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(
