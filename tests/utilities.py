@@ -40,3 +40,14 @@ def _provisionServer(tmp_path):
         path = os.path.join(dataPath, filename)
         shutil.copy(path, importPath / filename)
     return importPath, exportPath
+
+
+@pytest.fixture
+def resetConfig():
+    import girder.utility.config
+
+    import wsi_deid.config
+
+    # Use default wsi_deid config for tests
+    config = girder.utility.config.getConfig()
+    config[wsi_deid.config.CONFIG_SECTION] = {}
