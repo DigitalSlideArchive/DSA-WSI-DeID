@@ -3,7 +3,7 @@ import os
 import pytest
 from pytest_girder.web_client import runWebClientTest
 
-from .utilities import provisionDefaultSchemaBoundServer, provisionBoundServer, resetConfig  # noqa
+from .utilities import provisionBoundServer, provisionDefaultSchemaBoundServer, resetConfig  # noqa
 
 
 @pytest.mark.plugin('wsi_deid')
