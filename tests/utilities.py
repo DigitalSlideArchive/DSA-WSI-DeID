@@ -7,7 +7,7 @@ from girder.models.setting import Setting
 
 from wsi_deid.constants import PluginSettings
 
-from .datastore import datastore, lowres_datastore
+from .datastore import datastore
 
 
 @pytest.fixture
@@ -63,7 +63,6 @@ def resetConfig():
     config[wsi_deid.config.CONFIG_SECTION] = {}
 
 
-@pytest.fixture
 def _provisionDefaultSchemaServer(tmp_path):
     import girder.utility.config  # noqa
 
@@ -98,7 +97,7 @@ def _provisionDefaultSchemaServer(tmp_path):
         'SEER_Mouse_1_17158542.svs',
         'SEER_Mouse_1_17158543.svs'
     }:
-        path = lowres_datastore.fetch(filename)
+        path = datastore.fetch(filename)
         shutil.copy(path, str(importPath / filename))
     dataPath = os.path.join(os.path.dirname(__file__), 'data')
     for filename in {'default_schema_deidUpload.csv'}:
