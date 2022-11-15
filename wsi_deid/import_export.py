@@ -108,38 +108,28 @@ def getSchema():
     :returns: an object that can be passed to the jsonschema validator.
     """
     schemaFolderId = Setting().get(PluginSettings.WSI_DEID_SCHEMA_FOLDER)
-    mergedSchema = {'oneOf': []}
+    mergedSchema = {'$schema': 'http://json-schema.org/draft-07/schema','oneOf': []}
 
     if schemaFolderId:
         schemaFolder = Folder().load(schemaFolderId, force=True)
-        if schemaFolder is None:
-            return json.load(open(SCHEMA_FILE_PATH))
-        else:
+        if schemaFolder:
             max_files = 1000
-            fileList = list(itertools.islice(
-                Folder().fileList(schemaFolder, data=False),
-                max_files))
-            length = len(dict(fileList))
-
-            if length == 0:
-                return json.load(open(SCHEMA_FILE_PATH))
-            elif length == 1:
-                schemaFile = fileList[0][1]
-                print(schemaFile)
-                return json.load(File().open(schemaFile))
-
-            else:
-                for _filepath, file in fileList:
-                    try:
+            for item in Folder().childItems(schemaFolder, limit=max_files):
+                if len(list(Item().childFiles(item, limit=2))) == 1:
+                    if len(list(Item().childFiles(item, limit=2))) == 1:
+                        file = next(Item().childFiles(item, limit=1))
                         if file['size'] < 2e+6:
-                            currentObject = json.load(File().open(file))
-                            mergedSchema['oneOf'].append(currentObject)
-                        else:
-                            pass
-                    except Exception:
-                        pass
-                return mergedSchema
-
+                            try:
+                                currentObject = json.load(File().open(file))
+                                if 'properties' in currentObject:
+                                    mergedSchema['oneOf'].append(currentObject)
+                            except Exception:
+                                pass
+        if not len(mergedSchema['oneOf']):
+            return json.load(open(SCHEMA_FILE_PATH))
+        if len(mergedSchema['oneOf']) == 1:
+            return mergedSchema['oneOf'][0]
+        return mergedSchema
 
 def getSchemaValidator():
     """
@@ -166,7 +156,12 @@ def readExcelFiles(filelist, ctx): # noqa
     manifest = {}
     report = []
     validator = getSchemaValidator()
-    properties = list(validator.schema['properties'])
+    if 'oneOf' in validator.schema:
+        properties = set()
+        for subschema in validator.schema['oneOf']:
+            properties |= set(subschema['properties'])
+    else:
+        properties = set(validator.schema['properties'])
     for filepath in filelist:
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
