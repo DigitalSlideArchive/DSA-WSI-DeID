@@ -5,6 +5,7 @@ from girder.models.assetstore import Assetstore
 from girder.models.collection import Collection
 from girder.models.folder import Folder
 from girder.models.setting import Setting
+from girder.models.upload import Upload
 from girder.models.user import User
 from girder.utility.server import configureServer
 from girder_large_image.constants import PluginSettings as liSettings
@@ -72,6 +73,13 @@ WSI DeID Version: %s
                     folder, 'Disabled', parentType='folder',
                     public=public, creator=adminUser, reuseExisting=True
                 )
+                Upload().uploadFromFile(
+                    open('wsi_deid/schema/importManifestSchema.json', 'rb'),
+                    os.path.getsize('wsi_deid/schema/importManifestSchema.json'),
+                    name='importManifestSchema.json',
+                    parentType='folder',
+                    parent=folder,
+                    user=adminUser)
             else:
                 folder = Folder().createFolder(
                     wsi_deidCollection, folderName, parentType='collection',
