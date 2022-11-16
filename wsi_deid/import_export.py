@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import json
 import os
 import shutil
@@ -108,7 +107,7 @@ def getSchema():
     :returns: an object that can be passed to the jsonschema validator.
     """
     schemaFolderId = Setting().get(PluginSettings.WSI_DEID_SCHEMA_FOLDER)
-    mergedSchema = {'$schema': 'http://json-schema.org/draft-07/schema','oneOf': []}
+    mergedSchema = {'$schema': 'http://json-schema.org/draft-07/schema', 'oneOf': []}
 
     if schemaFolderId:
         schemaFolder = Folder().load(schemaFolderId, force=True)
@@ -130,6 +129,7 @@ def getSchema():
         if len(mergedSchema['oneOf']) == 1:
             return mergedSchema['oneOf'][0]
         return mergedSchema
+
 
 def getSchemaValidator():
     """
