@@ -124,11 +124,11 @@ def getSchema():
                                     mergedSchema['oneOf'].append(currentObject)
                             except Exception:
                                 pass
-        if not len(mergedSchema['oneOf']):
-            return json.load(open(SCHEMA_FILE_PATH))
-        if len(mergedSchema['oneOf']) == 1:
-            return mergedSchema['oneOf'][0]
-        return mergedSchema
+    if not len(mergedSchema['oneOf']):
+        return json.load(open(SCHEMA_FILE_PATH))
+    if len(mergedSchema['oneOf']) == 1:
+        return mergedSchema['oneOf'][0]
+    return mergedSchema
 
 
 def getSchemaValidator():
