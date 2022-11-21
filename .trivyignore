@@ -120,3 +120,5 @@ CVE-2015-20107
 # Not using Python forkserver start method
 CVE-2022-42919
 
+# The kernel is not in the docker, therefore we should have warning about it
+CVE-2022-43945
