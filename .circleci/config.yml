@@ -109,10 +109,10 @@ jobs:
             curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
       - run:
           name: Scan the local image with trivy; fail on high or critical vulnerabilities
-          command: trivy image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 1 --severity HIGH,CRITICAL --no-progress
+          command: trivy --security-checks vuln image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 1 --severity HIGH,CRITICAL --no-progress
       - run:
           name: Scan the local image with trivy; report low and medium vulnerabilities, but don't fail
-          command: trivy image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 0 --severity LOW,MEDIUM,UNKNOWN --no-progress
+          command: trivy --security-checks vuln image --input /tmp/workspace/wsi_deid_girder.tar --exit-code 0 --severity LOW,MEDIUM,UNKNOWN --no-progress
 
 workflows:
   version: 2
