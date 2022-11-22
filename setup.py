@@ -41,7 +41,7 @@ setup(
     ],
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
-        'easyocr!=1.4.1',
+        'easyocr!=1.4.1,<1.6.1',
         'girder-homepage',
         'histomicsui',
         'large_image[tiff,openslide,memcached,openjpeg,converter]',
@@ -51,6 +51,9 @@ setup(
         'paramiko',
         'python-magic',
         'pyvips',
+        # Later versions throw errors.
+        'torch==1.11.0',
+        'torchvision==0.12.0',
         'xlrd',
     ],
     license='Apache Software License 2.0',
