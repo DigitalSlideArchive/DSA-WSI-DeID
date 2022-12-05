@@ -122,3 +122,6 @@ CVE-2022-42919
 
 # The kernel is not in the docker, therefore we should have warning about it
 CVE-2022-43945
+
+# Not using this feature in torch
+CVE-2022-45907
