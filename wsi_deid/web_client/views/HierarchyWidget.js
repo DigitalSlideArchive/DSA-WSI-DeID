@@ -13,7 +13,7 @@ import '../stylesheets/HierarchyWidget.styl';
 
 const refileControls = function (refileList) {
     let existingTokenOptions = '';
-    _.forEach(refileList, (token) => {
+    _.each(refileList, (token) => {
         existingTokenOptions += `<option value="${token}">${token}</option>`;
     });
     return `<span class="g-bulk-refile-controls no-disp">
@@ -344,14 +344,14 @@ wrap(HierarchyWidget, 'render', function (render) {
                     newToken = this.generateStringFromPattern(tokenPattern);
                 } while (existingTokens.includes(newToken));
             }
-            _.forEach(checkedItemIds, (id) => {
+            _.each(checkedItemIds, (id) => {
                 imageRefileData[id] = {
                     tokenId: newToken,
                     imageId: ''
                 };
             });
         } else {
-            _.forEach(checkedItemIds, (id) => {
+            _.each(checkedItemIds, (id) => {
                 let newToken;
                 do {
                     newToken = this.generateStringFromPattern(tokenPattern);
