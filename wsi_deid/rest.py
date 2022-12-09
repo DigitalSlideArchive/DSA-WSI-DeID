@@ -321,7 +321,7 @@ class WSIDeIDResource(Resource):
     def isProjectFolder(self, folder):
         return import_export.isProjectFolder(folder)
 
-    def _actionForItem(self, item, user, action, options):
+    def _actionForItem(self, item, user, action, options=None):
         """
         Given an item, user, an action, return a function and parameters to
         execute that action.
