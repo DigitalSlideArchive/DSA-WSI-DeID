@@ -179,6 +179,26 @@ Similarly, you can check the available diskspace for the assetstore directory vi
 
 If this is not large enough to hold all of the WSI files that will be worked on, specify a different directory for the assetstore.  Note that if you change the assetstore directory and you have any redacted or processed images, you can lose work.  Make sure you export the processed images and delete them from the user interface before switching the assetstore directory.
 
+Additional Girder Plugins
+-------------------------
+
+The WSI DeID software is based on the Girder data management system.  There are a wide variety of plugins available for Girder, some of which can be used in conjuction with the WSI DeID software.  These can be installed by modifying the local docker-compose configuration.  If the plugin has any user-facing interface, remember that the girder web client needs to be built as part of installation process.
+
+For example, to install the Girder LDAP plugin to support LDAP authentication, modify your ``docker-compose.local.yml`` file, changing the starting command::
+
+    ---
+    version: '3'
+    services:
+      girder:
+        command: |
+          bash -c "
+          pip install girder-ldap &&
+          girder build &&
+          python /conf/provision.py &&
+          girder serve"
+
+As a review, this runs a single command when the docker container is started.  First, the girder-ldap plugin is installed.  Second, the girder client is rebuilt to enable the additional user interface.  Next, the default provisioning script is run to ensure that the appropriate resources are available on first start.  Finally, girder is started.
+
 Admin User
 ----------
 
