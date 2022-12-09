@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/.pyenv/bin:/.pyenv/shims:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHON_VERSION="3.9.15"
+    PYTHON_VERSION="3.9.16"
 
 RUN apt-get update && \
     # DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
@@ -21,7 +21,7 @@ RUN apt-get update && \
     curl \
     ca-certificates \
     vim \
-    # needed for easyocr
+    # needed for easyocr \
     libsm6 \
     libxext6 \
     libxrender-dev \
@@ -43,6 +43,9 @@ RUN apt-get update && \
     wget \
     xz-utils \
     zlib1g-dev \
+    # for ldap in we optionally install it \
+    libldap2-dev \
+    libsasl2-dev \
     && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
