@@ -351,7 +351,7 @@ def redact_item(item, tempdir):
     if label_geojson is not None and labelImage is not None:
         labelImage = redact_image_area(labelImage, label_geojson)
     if config.getConfig('add_title_to_label'):
-        labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted)
+        labelImage = add_title_to_image(labelImage, newTitle, previouslyRedacted, item=item)
     macroImage = None
     macro_geojson = redactList.get('images', {}).get('macro', {}).get('geojson')
     redact_square_default = ('macro' not in redactList['images'] and
@@ -1259,7 +1259,8 @@ def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
 
 
 def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
-                       background='#000000', textColor='#ffffff', square=True):
+                       background='#000000', textColor='#ffffff', square=True,
+                       item=None):
     """
     Add a title to an image.  If the image doesn't exist, a new image is made
     the minimum width and appropriate height.  If the image does exist, a bar
@@ -1275,6 +1276,7 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         pillarbox.
     :param textColor: the color of the title text.
     :param square: if True, output a square image.
+    :param item: the original item record.
     :returns: a PIL image.
     """
     mode = 'RGB'
