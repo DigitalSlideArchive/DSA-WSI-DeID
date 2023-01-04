@@ -56,6 +56,7 @@ RUN curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-instal
     pyenv update && \
     pyenv install "$PYTHON_VERSION" && \
     pyenv global $(pyenv versions --bare) && \
+    pip install -U setuptools pip && \
     find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*
 
