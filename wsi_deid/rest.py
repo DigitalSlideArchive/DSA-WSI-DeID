@@ -289,7 +289,7 @@ def exportData(user=None, progress=True):
 
 
 class WSIDeIDResource(Resource):
-    def __init__(self):
+    def __init__(self, apiRoot):
         super().__init__()
         self.resourceName = 'wsi_deid'
         self.route('PUT', ('action', 'export'), self.export)
@@ -311,6 +311,7 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
         self.route('GET', ('schema',), self.getSchema)
         self.route('GET', ('settings',), self.getSettings)
+        self._apiRoot = apiRoot
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -578,12 +579,14 @@ class WSIDeIDResource(Resource):
             'to allow review and redaction.')
         .modelParam('id', model=Folder, level=AccessType.READ)
         .jsonParam('images', 'A list of image ids to include', required=False)
+        .param('recurse', 'Return items recursively under this folder.',
+               dataType='boolean', default=False, required=False)
         .pagingParams(defaultSort='lowerName')
         .errorResponse()
         .errorResponse('Read access was denied on the parent folder.', 403)
     )
     @access.public(scope=TokenScope.DATA_READ)
-    def folderItemList(self, folder, images, limit, offset, sort):
+    def folderItemList(self, folder, images, limit, offset, sort, recurse):
         import concurrent.futures
 
         starttime = time.time()
@@ -591,9 +594,10 @@ class WSIDeIDResource(Resource):
         filters = {'largeImage.fileId': {'$exists': True}}
         if isinstance(images, list):
             filters['_id'] = {'$in': [ObjectId(id) for id in images]}
-        cursor = Folder().childItems(
-            folder=folder, limit=limit, offset=offset, sort=sort,
-            filters=filters)
+        text = '_recurse_:' if recurse else None
+        cursor = self._apiRoot.item._find(
+            folder['_id'], text=text, name=None, limit=limit, offset=offset,
+            sort=sort, filters=filters)
         response = {
             'sort': sort,
             'offset': offset,
