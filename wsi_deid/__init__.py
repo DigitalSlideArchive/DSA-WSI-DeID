@@ -76,7 +76,7 @@ class GirderPlugin(plugin.GirderPlugin):
 
     def load(self, info):
         plugin.getPlugin('histomicsui').load(info)
-        info['apiRoot'].wsi_deid = WSIDeIDResource()
+        info['apiRoot'].wsi_deid = WSIDeIDResource(info['apiRoot'])
         memory = psutil.virtual_memory().total
         girder.logprint.info('Total system memory: %3.1f GB' % (memory / 1024**3))
         if memory < 3.5 * 1024**3:

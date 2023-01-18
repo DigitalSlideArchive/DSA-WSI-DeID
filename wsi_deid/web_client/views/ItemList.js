@@ -31,7 +31,6 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
     this.fetchItemList = () => {
         this._wsi_deid_item_list = undefined;
         const items = this.collection.toArray();
-        // const parent = this.$el;
         const hasAnyLargeImage = _.some(items, (item) => item.has('largeImage'));
         if (!hasAnyLargeImage) {
             return;
@@ -41,7 +40,8 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
             url: `wsi_deid/folder/${folder.id}/item_list`,
             data: {
                 limit: 0,
-                images: JSON.stringify(this.collection.map((i) => i.id))
+                images: JSON.stringify(this.collection.map((i) => i.id)),
+                recurse: !!this._recurse
             },
             error: null
         }).done((info) => {
