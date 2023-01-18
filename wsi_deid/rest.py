@@ -495,15 +495,17 @@ class WSIDeIDResource(Resource):
         folders = []
         exclude = None
         for _ in range(2):
+            # Reverse priority
             for settingKey in (
-                    PluginSettings.HUI_INGEST_FOLDER,
-                    PluginSettings.HUI_QUARANTINE_FOLDER,
-                    PluginSettings.HUI_PROCESSED_FOLDER):
+                PluginSettings.HUI_PROCESSED_FOLDER,
+                PluginSettings.HUI_QUARANTINE_FOLDER,
+                PluginSettings.HUI_INGEST_FOLDER,
+            ):
                 folder = Folder().load(Setting().get(settingKey), user=user, level=AccessType.READ)
                 item = get_first_item(folder, user, exclude, exclude is not None)
                 if item is not None:
                     parent = Folder().load(item['folderId'], user=user, level=AccessType.READ)
-                    folders.append(str(parent['_id']))
+                    folders[0:0] = [str(parent['_id'])]
                     exclude = [parent]
                     break
             if not exclude:
