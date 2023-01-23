@@ -311,7 +311,7 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
         self.route('GET', ('schema',), self.getSchema)
         self.route('GET', ('settings',), self.getSettings)
-        self._apiRoot = apiRoot
+        self._item_find = apiRoot.item._find
 
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
@@ -597,7 +597,7 @@ class WSIDeIDResource(Resource):
         if isinstance(images, list):
             filters['_id'] = {'$in': [ObjectId(id) for id in images]}
         text = '_recurse_:' if recurse else None
-        cursor = self._apiRoot.item._find(
+        cursor = self._item_find(
             folder['_id'], text=text, name=None, limit=limit, offset=offset,
             sort=sort, filters=filters)
         response = {
