@@ -8,24 +8,24 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/.pyenv/bin:/.pyenv/shims:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHON_VERSION="3.9.16"
+    PYTHON_VERSIONS="3.9.16 3.8.16"
 
 RUN apt-get update && \
     # DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
     software-properties-common \
     # gpg-agent \
-    fonts-dejavu \
-    libmagic-dev \
-    git \
-    curl \
     ca-certificates \
+    curl \
+    fonts-dejavu \
+    git \
+    libmagic-dev \
     vim \
     # needed for easyocr \
+    libgl1-mesa-dev \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    libgl1-mesa-dev \
     # for pyenv \
     build-essential \
     libbz2-dev \
@@ -38,27 +38,47 @@ RUN apt-get update && \
     libxml2-dev \
     libxmlsec1-dev \
     llvm \
+    locales \
     make \
     tk-dev \
     wget \
     xz-utils \
     zlib1g-dev \
+    # shrink docker image \
+    rdfind \
+    # for isyntax libraries \
+    gdebi \
+    libegl1-mesa \
+    libgles2-mesa \
+    libjpeg-dev \
+    liblcms2-dev \
+    libtinyxml-dev \
     # for ldap in we optionally install it \
     libldap2-dev \
     libsasl2-dev \
     && \
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8 && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN curl -LJ https://github.com/krallin/tini/releases/download/v0.19.0/tini -o /usr/bin/tini && \
     chmod +x /usr/bin/tini
 
 RUN curl -L https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer | bash && \
-    pyenv update && \
-    pyenv install "$PYTHON_VERSION" && \
-    pyenv global $(pyenv versions --bare) && \
-    pip install -U setuptools pip && \
     find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/*
+
+RUN pyenv update && \
+    pyenv install --list && \
+    echo $PYTHON_VERSIONS | xargs -P `nproc` -n 1 pyenv install && \
+    echo $PYTHON_VERSIONS | xargs -n 1 bash -c 'pyenv global "${0}" && pip install -U setuptools pip' && \
+    pyenv global $(pyenv versions --bare) && \
+    find $PYENV_ROOT/versions -type d '(' -name '__pycache__' -o -name 'test' -o -name 'tests' ')' -exec rm -rfv '{}' + >/dev/null && \
+    find $PYENV_ROOT/versions -type f '(' -name '*.py[co]' -o -name '*.exe' ')' -exec rm -fv '{}' + >/dev/null && \
+    echo $PYTHON_VERSIONS | tr " " "\n" > $PYENV_ROOT/version && \
+    find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
+    rm -rf /tmp/* /var/tmp/* && \
+    # This makes duplicate python library files hardlinks of each other \
+    rdfind -minsize 1048576 -makehardlinks true -makeresultsfile false /.pyenv
 
 RUN pip install --no-cache-dir virtualenv && \
     virtualenv /venv && \
@@ -101,6 +121,10 @@ RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM
     find /venv -name package-lock.json -exec rm -f {} \+ && \
     npm cache clear --force && \
     rm -rf /tmp/npm*
+
+RUN virtualenv /venv3.8 --python 3.8 && \
+    /venv3.8/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
+    /venv/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc
 
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
 
