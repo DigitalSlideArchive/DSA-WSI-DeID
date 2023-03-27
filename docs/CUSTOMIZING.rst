@@ -134,6 +134,11 @@ The target text column should contain label text of WSIs in the import directory
 
 If ``InputFileName`` is added to the list of export fields in the ``upload_metadata_for_export_report`` settings, then the original file name will be included in the export report.
 
+Choosing Custom Metadata To Add to Exported Images
+++++++++++++++++++++++++++++++++++++++++++++++++++
+
+By default, any metadata from the upload excel/csv file except ``InputFileName`` is added to the exported files in the ``ImageDescription`` or ``Software`` metadata tags (depending on format) with a prefix of ``CustomField.`` (e.g., ``CustomField.Proc_Type`` will be added with data from a ``Proc_Type`` column in the ypload file).  This can be configured with the ``upload_metadata_add_to_images`` setting in ``girder.local.conf``.  If present and not None, this setting is a list of columns with will be added to the exported file.
+
 Creating New TokenIDs for Refiling Images
 +++++++++++++++++++++++++++++++++++++++++
 
