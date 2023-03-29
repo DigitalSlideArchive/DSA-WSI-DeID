@@ -415,6 +415,8 @@ def aperio_value_list(item, redactList, title):
             value = redactList['metadata'].get(redactKey, {}).get('value', value)
             if value is not None and '|' not in value:
                 key = fullkey.split('.', 1)[1]
+                if key.startswith('CustomField.'):
+                    continue
                 aperioDict[key] = value
     # From DeID Upload information
     aperioDict.update(get_deid_field_dict(item))
@@ -473,7 +475,11 @@ def get_deid_field_dict(item):
     if not isinstance(deid, dict):
         deid = {}
     result = {}
+    limit = config.getConfig('upload_metadata_add_to_images')
+    limit = set(limit if isinstance(limit, (list, set)) else [limit])
     for k, v in deid.items():
+        if None not in limit and k not in limit:
+            continue
         result['CustomField.%s' % k] = str(v).replace('|', ' ')
     return result
 
