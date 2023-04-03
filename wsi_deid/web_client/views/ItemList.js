@@ -117,9 +117,9 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
     return result;
 });
 
-wrap(ItemListWidget, 'bindOnChanged', function (bindOnChanged) {
+wrap(ItemListWidget, 'changedFunc', function (changedFunc) {
     this._wsi_deid_item_list = undefined;
-    const result = bindOnChanged.apply(this, _.rest(arguments));
+    const result = changedFunc.apply(this, _.rest(arguments));
     if (this._folderKey && this._wsi_deid_settings && this._wsi_deid_settings.show_metadata_in_lists !== false && this.collection.length) {
         this.fetchItemList();
     }
