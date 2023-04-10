@@ -34,6 +34,9 @@ CVE-2019-5737
 CVE-2018-12123
 CVE-2018-7159
 
+# Fuse: (not used in our deployment)
+CVE-2023-0386
+
 # perl: We don't use perl
 CVE-2020-16156
 
