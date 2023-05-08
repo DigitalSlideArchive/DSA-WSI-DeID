@@ -25,11 +25,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Preinstall phantomjs to work around an npm permission issue
-          command: npm install -g phantomjs-prebuilt --unsafe-perm
-      - run:
           name: Install libraries for easyocr
           command: apt-get update && apt-get install -y libsm6 libxext6 libxrender-dev libgl1-mesa-dev
+      - run:
+          name: Preinstall phantomjs to work around an npm permission issue
+          command: |
+            npm config set unsafe-perm true || true
+            npm install --global node-gyp
+            npm install --global phantomjs-prebuilt
       - run:
           name: Run server tests
           no_output_timeout: 15m
