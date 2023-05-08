@@ -31,6 +31,8 @@ wrap(ItemView, 'render', function (render) {
             return formats.aperio;
         } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'hamamatsu') {
             return formats.hamamatsu;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;isyntax"]').length > 0) {
+            return formats.isyntax;
         } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;xml;PIM_DP_"]').length > 0) {
             return formats.philips;
         } else {
@@ -230,6 +232,11 @@ wrap(ItemView, 'render', function (render) {
             elem.find('.g-hui-redact').remove();
             if (matchFieldPattern(keyname, hideFieldPatterns, this.$el)) {
                 elem.closest('tr').css('display', 'none');
+                let hideelem = elem.closest('tr').closest('tbody');
+                while (hideelem.length && !hideelem.find('tr:visible').length) {
+                    hideelem.closest('tr').css('display', 'none');
+                    hideelem = hideelem.closest('tr').closest('tbody');
+                }
                 return;
             }
             if (showControls) {
@@ -652,7 +659,7 @@ wrap(ItemView, 'render', function (render) {
         this.events['click .g-refile-button'] = refileButton;
         this.events['change .wsi-deid-reject-reason'] = (event) => rejectionReasonChanged(event, settings);
         /* Place an area redaction control in the item header */
-        if (hasRedactionControls) {
+        if (hasRedactionControls && getFormat() !== 'isyntax') {
             const redactArea = ItemViewRedactAreaTemplate({});
             this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(redactArea);
             this.events['click .g-item-info-header .g-widget-redact-area-container button'] = redactAreaWSI;

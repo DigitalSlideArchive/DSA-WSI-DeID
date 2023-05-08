@@ -9,6 +9,7 @@ const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
     philips: 'philips',
+    isyntax: 'isyntax',
     none: ''
 };
 

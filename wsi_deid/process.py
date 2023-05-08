@@ -22,6 +22,7 @@ from girder.models.item import Item
 from girder.models.setting import Setting
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
+from lxml import etree as lxmlElementTree
 
 from . import config
 from .constants import PluginSettings, TokenOnlyPrefix
@@ -97,6 +98,8 @@ def determine_format(tileSource):
     if tileSource.name == 'openslide':
         if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
             return metadata['openslide']['openslide.vendor']
+    if 'isyntax' in metadata:
+        return 'isyntax'
     if 'xml' in metadata and any(k.startswith('PIM_DP_') for k in metadata['xml']):
         return 'philips'
     return None
@@ -112,12 +115,15 @@ def get_standard_redactions(item, title):
     """
     tileSource = ImageItem().tileSource(item)
     sourcePath = tileSource._getLargeImagePath()
-    tiffinfo = tifftools.read_tiff(sourcePath)
-    ifds = tiffinfo['ifds']
     func = None
     format = determine_format(tileSource)
     if format is not None:
         func = globals().get('get_standard_redactions_format_' + format)
+    try:
+        tiffinfo = tifftools.read_tiff(sourcePath)
+        ifds = tiffinfo['ifds']
+    except Exception:
+        tiffinfo = None
     if func:
         redactList = func(item, tileSource, tiffinfo, title)
     else:
@@ -125,23 +131,24 @@ def get_standard_redactions(item, title):
             'images': {},
             'metadata': {},
         }
-    for key in {'DateTime'}:
-        tag = tifftools.Tag[key].value
-        if tag in ifds[0]['tags']:
-            value = ifds[0]['tags'][tag]['data']
-            if len(value) >= 10:
-                value = value[:5] + '01:01' + value[10:]
-            else:
-                value = None
-            redactList['metadata']['internal;openslide;tiff.%s' % key] = (
-                generate_system_redaction_list_entry(value)
-            )
-    # Make, Model, Software?
-    for key in {'Copyright', 'HostComputer'}:
-        tag = tifftools.Tag[key].value
-        if tag in ifds[0]['tags']:
-            redactList['metadata']['internal;openslide;tiff.%s' % key] = {
-                'value': None, 'automatic': True}
+    if tiffinfo:
+        for key in {'DateTime'}:
+            tag = tifftools.Tag[key].value
+            if tag in ifds[0]['tags']:
+                value = ifds[0]['tags'][tag]['data']
+                if len(value) >= 10:
+                    value = value[:5] + '01:01' + value[10:]
+                else:
+                    value = None
+                redactList['metadata']['internal;openslide;tiff.%s' % key] = (
+                    generate_system_redaction_list_entry(value)
+                )
+        # Make, Model, Software?
+        for key in {'Copyright', 'HostComputer'}:
+            tag = tifftools.Tag[key].value
+            if tag in ifds[0]['tags']:
+                redactList['metadata']['internal;openslide;tiff.%s' % key] = {
+                    'value': None, 'automatic': True}
     return redactList
 
 
@@ -215,6 +222,31 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
             else:
                 value = value[:4] + '0101' + value[8:]
             redactList['metadata']['internal;xml;%s' % key] = (
+                generate_system_redaction_list_entry(value)
+            )
+    return redactList
+
+
+def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+            'internal;isyntax;scanner_operator_id': generate_system_redaction_list_entry(title),
+            'internal;isyntax;barcode': generate_system_redaction_list_entry(''),
+        },
+    }
+    for key in {'acquisition_datetime', 'date_of_last_calibration'}:
+        if metadata['isyntax'].get(key):
+            value = metadata['isyntax'][key]
+            if isinstance(value, list):
+                value = value[0]
+            value = value.split('.')[0]
+            if len(value) < 8:
+                value = None
+            else:
+                value = value[:4] + '0101' + ('0' * len(value[8:]))
+            redactList['metadata']['internal;isyntax;%s' % key] = (
                 generate_system_redaction_list_entry(value)
             )
     return redactList
@@ -1264,6 +1296,158 @@ def redact_format_philips_replace_macro(macroImage, ifds, tempdir, pdo):
                         attr['text'] = base64.b64encode(jpeg.getvalue()).decode()
 
 
+def imageToBase64(image, quality=85):
+    """
+    Convert a PIL image to a base64 encoded JPEG.
+
+    :param image: a PIL image.
+    :param quality: the jpeg quality, where 100 is best quality.
+    :returns: a base64 string.
+    """
+    jpeg = io.BytesIO()
+    image.save(jpeg, 'jpeg', qaulity=quality)
+    return base64.b64encode(jpeg.getvalue()).decode()
+
+
+def redact_format_isyntax_images(tree, redactList, labelImage, macroImage, quality=90, prune=0):
+    """
+    Redact images from an isyntax file.  This accepts a quality parameter, so
+    that images can be shrunk to fit the available space.
+
+    :param tree: An ElementTree with the xml.  Possibly modified.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
+    :param quality: the jpeg quality, where 100 is best quality.
+    :param prune: if set, try to prune this many images for space.
+    """
+    for key, pkey, img, idx in [
+            ('macro', 'MACROIMAGE', macroImage, 0),
+            ('label', 'LABELIMAGE', labelImage, 1)]:
+        if (key in redactList['images'] and not img) or idx < prune:
+            xentry = tree.find(
+                './Attribute[@Name="PIM_DP_SCANNED_IMAGES"]/Array/DataObject[Attribute="' +
+                pkey + '"]')
+            if xentry is not None:
+                xentry.getparent().remove(xentry)
+                continue
+        if img:
+            img64 = imageToBase64(img, quality)
+            xentry = tree.find(
+                './Attribute[@Name="PIM_DP_SCANNED_IMAGES"]/Array/DataObject[Attribute="' +
+                pkey + '"]/Attribute[@Name="PIM_DP_IMAGE_DATA"]')
+            if xentry is None:
+                images = tree.find('./Attribute[@Name="PIM_DP_SCANNED_IMAGES"]/Array')
+                images.append(lxmlElementTree.fromstring("""
+<DataObject ObjectType="DPScannedImage">
+  <Attribute Name="PIM_DP_IMAGE_TYPE" Group="0x301D" Element="0x1004" PMSVR="IString">%s</Attribute>
+  <Attribute Name="PIM_DP_IMAGE_DATA" Group="0x301D" Element="0x1005" PMSVR="IString"></Attribute>
+</DataObject>
+""" % pkey))
+                xentry = tree.find(
+                    './Attribute[@Name="PIM_DP_SCANNED_IMAGES"]/Array/DataObject[Attribute="' +
+                    pkey + '"]/Attribute[@Name="PIM_DP_IMAGE_DATA"]')
+            if xentry is None:
+                logger.info('Cannot add %s image' % key)
+            else:
+                xentry.text = img64
+
+
+def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroImage):  # noqa
+    """
+    Redact philips isyntax files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    tileSource = ImageItem().tileSource(item)
+    sourcePath = tileSource._getLargeImagePath()
+    header = b'<?xml version="1.0" encoding="UTF-8"?>\n'
+
+    redactList = copy.copy(redactList)
+    title_redaction_list_entry = generate_system_redaction_list_entry(title)
+    redactList['metadata']['internal;isyntax;scanner_operator_id'] = title_redaction_list_entry
+    redactList['metadata']['internal;isyntax;barcode'] = title_redaction_list_entry
+    old = open(sourcePath, 'rb').read(tileSource._xmllen)
+    tree = lxmlElementTree.fromstring(old)
+    for mkey in redactList['metadata']:
+        processed = False
+        if mkey.startswith('internal;isyntax;'):
+            key = mkey.split(';', 2)[-1].upper()
+            for xentry in tree.findall('Attribute'):
+                xkey = str(xentry.get('Name'))
+                if xkey == 'DICOM_' + key or (
+                        xkey.startswith('PI') and xkey.endswith('_' + key)):
+                    if redactList['metadata'][mkey]['value'] is not None:
+                        value = redactList['metadata'][mkey]['value']
+                        if key == 'BARCODE':
+                            value = base64.b64encode(value.encode()).decode()
+                        xentry.text = value
+                    else:
+                        xentry.getparent().remove(xentry)
+                    processed = True
+                    break
+        if not processed:
+            logger.info('Cannot redact %s' % mkey)
+    quality = 90
+    stripping = 0
+    prune = 0
+    while True:
+        stripping = 0
+        redact_format_isyntax_images(
+            tree, redactList, labelImage, macroImage, quality=quality, prune=prune)
+        result = header + lxmlElementTree.tostring(tree, encoding='UTF-8', method='xml')
+        if len(result) > tileSource._xmllen:
+            result = result.replace(b'>\n</', b'></')
+            stripping = 1
+        if len(result) > tileSource._xmllen:
+            result = result.replace(b'>\n<', b'><')
+            stripping = 2
+        if len(result) > tileSource._xmllen and quality <= 80:
+            result = result.replace(b'\n', b'')
+            stripping = 3
+        if len(result) <= tileSource._xmllen:
+            break
+        if quality <= 20:
+            prune += 1
+            quality = 90
+            if prune > 2:
+                break
+            continue
+        quality -= 5
+    if len(result) > tileSource._xmllen:
+        raise Exception('Generated XML is too long (original is %d, new is %d)' % (
+                        tileSource._xmllen, len(result)))
+    logger.info('Old xml was %d bytes; new is %d with quality %d, stripping %d, prune %d',
+                tileSource._xmllen, len(result), quality, stripping, prune)
+    if len(result) < tileSource._xmllen:
+        parts = result.rsplit(b'</', 1)
+        result = parts[0] + (b' ' * (tileSource._xmllen - len(result))) + b'</' + parts[1]
+    ext = os.path.splitext(sourcePath)[1]
+    if not ext:
+        ext = '.isyntax'
+    outputPath = os.path.join(tempdir, 'philips' + ext)
+    with open(outputPath, 'wb') as dest:
+        with open(sourcePath, 'rb') as src:
+            dest.write(result)
+            src.seek(tileSource._xmllen)
+            chunk = 1024 ** 2
+            while True:
+                data = src.read(chunk)
+                if not len(data):
+                    break
+                dest.write(data)
+    return outputPath, 'image/isyntax'
+
+
 def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
                        background='#000000', textColor='#ffffff', square=True,
                        item=None):
@@ -1404,7 +1588,7 @@ def get_image_text(item):
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
-    if image_format in ['aperio', 'philips']:
+    if image_format in ['aperio', 'philips', 'isyntax']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'

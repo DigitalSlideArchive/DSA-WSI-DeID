@@ -22,6 +22,9 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
         if (meta.openslide && meta.openslide['openslide.vendor']) {
             return formats[meta.openslide['openslide.vendor']];
         }
+        if (meta.isyntax) {
+            return formats.isyntax;
+        }
         if (meta.xml && Object.keys(meta.xml).some((key) => key.startsWith('PIM_DP_'))) {
             return formats.philips;
         }

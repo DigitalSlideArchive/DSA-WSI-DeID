@@ -31,6 +31,7 @@ defaultConfig = {
         r'^internal;openslide;hamamatsu\.SourceLens$': NUMERIC_VALUES,
     },
     'no_redact_control_keys_format_philips': {},
+    'no_redact_control_keys_format_isyntax': {},
     'hide_metadata_keys': {
         r'^internal;openslide;openslide\.level\[': NUMERIC_VALUES,
     },
@@ -49,6 +50,11 @@ defaultConfig = {
         ): NUMERIC_VALUES,
     },
     'hide_metadata_keys_format_philips': {},
+    'hide_metadata_keys_format_isyntax': {
+        r'^internal;(xml;|wsi;|xml$|wsi$)': '',
+        r'^internal;isyntax;(is_UFS|is_UFSb|is_UVS|is_philips|isyntax_file_version)$': '',
+        r'^internal;isyntax;(num_images|scanner_rack_priority)$': NUMERIC_VALUES,
+    },
     'upload_metadata_for_export_report': [
         'ImageID', 'Proc_Seq', 'Proc_Type', 'Slide_ID', 'Spec_Site', 'TokenID',
     ],

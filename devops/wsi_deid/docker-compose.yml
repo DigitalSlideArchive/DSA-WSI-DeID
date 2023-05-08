@@ -29,9 +29,18 @@ services:
       # - <some local path>:/export
       # Copy a specific schema to the location where the program expects it
       # - ./importManifestSchema.example.allowall.json:/usr/local/lib/python3.9/dist-packages/wsi_deid/schema/importManifestSchema.json
+      # For iSyntax support, add an appropriate link to a the appropriately
+      # licensed Philips Pathology SDK.  Make sure the left side is the path to
+      # the unzipped local python 3.8 sdk.
+      # - /mnt/localpath/iSyntax/philips-pathologysdk-2.0-L1-ubuntu20_04_py38_research:/isyntax
     depends_on:
       - mongodb
       - memcached
+    # For iSynax support, change the default start command.  If you have
+    # add - .:/conf to your volumes, use:
+    # command: /conf/install_and_start_isyntax.sh
+    # otherwise, use
+    # command: /wsi_deid/devops/wsi_deid/install_and_start_isyntax.sh
   mongodb:
     image: "mongo:latest"
     # Set CURRENT_UID to your user id (e.g., `CURRENT_UID=$(id -u):$(id -g)`)

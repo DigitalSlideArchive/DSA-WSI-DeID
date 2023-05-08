@@ -38,6 +38,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
@@ -45,6 +47,7 @@ setup(
         'girder-homepage',
         'histomicsui',
         'large_image[tiff,openslide,memcached,openjpeg,converter]',
+        'lxml',
         'openpyxl',
         'pandas',
         'paramiko',
