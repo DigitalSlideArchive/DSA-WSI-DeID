@@ -267,6 +267,36 @@ The ``SFTP MODE`` setting has three choices:
 The export process creates a separate folder for each subject in the export directory and/or on the remote server.  If you are using SFTP, the account needs to have privileges to create directories at the destination path for the transfer to be successful.
 
 
+Philips iSyntax Support
+=======================
+
+The system can work with Philips iSyntax and i2Syntax files if teh appropriate Philips SDK is provided.  This SDK needs to be obtained from Philips and must comply with their licensing requirements.  
+
+Prerequisites
+-------------
+
+You must have either the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_commercial or the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_research SDK, unzipped and placed in a location that can be mounted as a volume in the docker-compose configuration.
+
+Installation
+------------
+
+Enable the appropriate volume command in girder container to the ``docker-compose.yml`` file to mount the main directory of the unzipped SDK to the intenal ``isyntax`` directory.
+
+Switch the girder container start command to ``/wsi_deid/devops/wsi_deid/install_and_start_isyntax.sh``.
+
+Use ``docker-compose up`` as with other installations.
+
+Usage
+-----
+
+iSyntax files can be redacted in a similar manner to other file formats.  There are some limitations based on the functionality exposed by the Philips SDK:
+
+* Portions of the WSI image cannot be redacted.
+
+* If there is no label image in the original file, it may not be possible to add a label image.
+
+* If metadata is blank in the original file, it may not currently be possible to add new values to that metadata in the redacted file.
+
 Windows Server 2019
 ===================
 

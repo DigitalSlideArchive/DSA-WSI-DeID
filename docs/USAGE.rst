@@ -406,7 +406,7 @@ Business Rules for WSI DeID
 
 These business rules will be automatically applied at the time of data import to the metadata.
 
-The following rules apply to all file formats:
+The following rules apply to all file formats except iSyntax:
 
 * ``tiff.DateTime`` (if present), set to 01:01:(year and time)
 * ``tiff.Copyright``: removed
@@ -425,13 +425,17 @@ These rules apply only to Hamamatsu files:
 * ``hamamatsu.Created`` (if present): set to (year)/01/01
 * ``hamamatsu.Updated`` (if present): set to (year)/01/01
 
-These rules apply only to Philips files:
+These rules apply only to Philips TIFF files:
 
 * ``PIIM_DP_SCANNER_OPERATOR_ID``: change or add to ImageID
 * ``PIM_DP_UFS_BARCODE``: change or add to ImageID
 * ``DICOM_DATE_OF_LAST_CALIBRATION`` (if present): set to (year)0101
 * ``DICOM_ACQUISITION_DATETIME`` (if present): set to (year)0101 (time)
 
+These rules apply only to Philips iSyntax files:
+
+* ``scanner_operator_id``: change or add to ImageID
+* ``barcode``: change or add to ImageID
 
 Below is a screenshot of image PHI/PII redaction controls for metadata.
 
