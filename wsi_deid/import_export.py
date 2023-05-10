@@ -140,7 +140,7 @@ def getSchemaValidator():
     return jsonschema.Draft6Validator(getSchema())
 
 
-def readExcelFiles(filelist, ctx): # noqa
+def readExcelFiles(filelist, ctx):  # noqa
     """
     Read each excel file, use pandas to parse it.  Collect the results, where,
     if a file is stored twice, the value from the newest excel file wins.

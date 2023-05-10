@@ -91,7 +91,7 @@ var ConfigView = View.extend({
             for (const [key, value] of Object.entries(this.settingsKeys)) {
                 if (key.match(/_folder$/)) {
                     if (this.settings[key]) {
-                        let folder = new FolderModel();
+                        const folder = new FolderModel();
                         folder.set({ _id: this.settings[key] }).once('g:fetched', () => {
                             this._createBrowserWidget(key, value, folder);
                         }).fetch();
@@ -112,7 +112,7 @@ var ConfigView = View.extend({
             submitText: 'Select Destination',
             defaultSelectedResource: folder,
             validate: function (model) {
-                let isValid = $.Deferred();
+                const isValid = $.Deferred();
                 if (!model || model.get('_modelType') !== 'folder') {
                     isValid.reject('Please select a folder.');
                 } else {
@@ -168,7 +168,7 @@ var ConfigView = View.extend({
     },
 
     _openBrowser: function (event) {
-        let id = $(event.currentTarget).closest('.input-group').find('input').attr('id');
+        const id = $(event.currentTarget).closest('.input-group').find('input').attr('id');
         this._browserWidgetView[id].setElement($('#g-dialog-container')).render();
     }
 });

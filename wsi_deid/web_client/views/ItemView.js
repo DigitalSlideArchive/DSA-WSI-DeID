@@ -19,7 +19,7 @@ import {
     matchFieldPattern, flagRedactionOnItem, systemRedactedReason
 } from '../utils';
 
-let auxImageMaps = {};
+const auxImageMaps = {};
 
 wrap(ItemView, 'render', function (render) {
     const flagRedaction = (event) => {
@@ -57,10 +57,10 @@ wrap(ItemView, 'render', function (render) {
             const phiPiiTypes = settings.phi_pii_types;
             phiPiiTypes.forEach((cat) => {
                 if (cat.types) {
-                    let optgroup = $('<optgroup/>');
+                    const optgroup = $('<optgroup/>');
                     optgroup.attr({ label: cat.text });
                     cat.types.forEach((phitype) => {
-                        let opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
+                        const opt = $('<option/>').attr({ value: phitype.key, category: cat.category }).text(phitype.text);
                         if (redactRecord && redactRecord.reason === phitype.key) {
                             opt.attr('selected', 'selected');
                             matched = true;
@@ -69,7 +69,7 @@ wrap(ItemView, 'render', function (render) {
                     });
                     elem.append(optgroup);
                 } else {
-                    let opt = $('<option/>').attr({ value: cat.key, category: cat.category }).text(cat.text);
+                    const opt = $('<option/>').attr({ value: cat.key, category: cat.category }).text(cat.text);
                     if (redactRecord && redactRecord.reason === cat.key) {
                         opt.attr('selected', 'selected');
                         matched = true;
@@ -103,8 +103,8 @@ wrap(ItemView, 'render', function (render) {
             return;
         }
 
-        let inputId = `redact-value-${keyname}`;
-        let inputField = $(`<input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
+        const inputId = `redact-value-${keyname}`;
+        const inputField = $(`<input type="text" id="${inputId}" class="wsi-deid-replace-value-input">`);
 
         if (redactRecord && redactRecord.value) {
             inputField.attr({ value: redactRecord.value });
@@ -120,13 +120,13 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const resizeRedactSquare = (elem) => {
-        let image = elem.find('.g-widget-auximage-image img');
+        const image = elem.find('.g-widget-auximage-image img');
         if (!image.length) {
             return;
         }
-        let minwh = Math.min(image.width(), image.height());
+        const minwh = Math.min(image.width(), image.height());
         if (minwh > 0) {
-            let redactsquare = elem.find('.g-widget-auximage-image-redact-square');
+            const redactsquare = elem.find('.g-widget-auximage-image-redact-square');
             redactsquare.width(minwh);
             redactsquare.height(minwh);
             return;
@@ -135,13 +135,13 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const resizeRedactBackground = (elem) => {
-        let image = elem.find('.g-widget-auximage-image img');
+        const image = elem.find('.g-widget-auximage-image img');
         if (!image.length) {
             return;
         }
-        let minwh = Math.min(image.width(), image.height());
+        const minwh = Math.min(image.width(), image.height());
         if (minwh > 0) {
-            let redact = elem.find('.g-widget-auximage-image');
+            const redact = elem.find('.g-widget-auximage-image');
             redact.width(image.width());
             redact.height(image.height());
             return;
@@ -152,9 +152,9 @@ wrap(ItemView, 'render', function (render) {
     const addAuxImageMaps = (settings, redactList) => {
         this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
             elem = $(elem);
-            let imageElem = elem.find('.g-widget-auximage-image');
+            const imageElem = elem.find('.g-widget-auximage-image');
             elem.wrap($('<div class="wsi-deid-auximage-container"></div>'));
-            let keyname = elem.attr('auximage');
+            const keyname = elem.attr('auximage');
             // return true to 'continue' the loop. use configuration to drive which images to skip map creation
             if (!['label', 'macro'].includes(keyname)) {
                 return true;
@@ -165,9 +165,9 @@ wrap(ItemView, 'render', function (render) {
             if (keyname === 'label' && settings.always_redact_label) {
                 return true;
             }
-            let mapId = `${keyname}-map`;
-            let tilesPath = `item/${this.model.id}/tiles`;
-            let mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
+            const mapId = `${keyname}-map`;
+            const tilesPath = `item/${this.model.id}/tiles`;
+            const mapDiv = $(`<div id="${mapId}" class="wsi-deid-associated-image-map"></div>`);
             mapDiv.attr('keyname', keyname);
             elem.after(mapDiv);
 
@@ -176,10 +176,10 @@ wrap(ItemView, 'render', function (render) {
                 error: null
             }).done((resp) => {
                 try {
-                    let imgH = imageElem.height();
-                    let imgW = imageElem.width();
+                    const imgH = imageElem.height();
+                    const imgW = imageElem.width();
                     $(`#${mapId}`).width(imgW).height(imgH);
-                    let params = window.geo.util.pixelCoordinateParams(
+                    const params = window.geo.util.pixelCoordinateParams(
                         `#${mapId}`, resp.sizeX, resp.sizeY, resp.sizeX, resp.sizeY);
                     const map = window.geo.map(params.map);
                     auxImageMaps[keyname] = map;
@@ -225,7 +225,7 @@ wrap(ItemView, 'render', function (render) {
         // Add redaction controls to metadata
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
-            let keyname = elem.attr('keyname');
+            const keyname = elem.attr('keyname');
             if (!keyname || ['internal;tilesource'].indexOf(keyname) >= 0) {
                 return;
             }
@@ -240,7 +240,7 @@ wrap(ItemView, 'render', function (render) {
                 return;
             }
             if (showControls) {
-                let isRedacted = redactList.metadata[keyname] !== undefined;
+                const isRedacted = redactList.metadata[keyname] !== undefined;
                 let redactButtonAllowed = true;
                 const redactReason = isRedacted ? redactList.metadata[keyname].reason : '';
                 if (isRedacted && redactList.metadata[keyname].value && (redactReason === systemRedactedReason || redactReason === undefined)) {
@@ -258,7 +258,7 @@ wrap(ItemView, 'render', function (render) {
         if (showControls) {
             this.$el.find('.g-widget-metadata-container.auximage .g-widget-auximage').each((idx, elem) => {
                 elem = $(elem);
-                let keyname = elem.attr('auximage');
+                const keyname = elem.attr('auximage');
                 elem.find('.g-hui-redact').remove();
                 resizeRedactBackground(elem);
                 let isRedacted = redactList.images[keyname] !== undefined;
@@ -269,11 +269,11 @@ wrap(ItemView, 'render', function (render) {
                 }
                 let redactSquare = false;
                 if (keyname === 'macro') {
-                    let redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
+                    const redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
                     resizeRedactSquare(elem);
                     if (!settings.redact_macro_square) {
-                        let check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
+                        const check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
                         if ((redactList.images[keyname] || {}).square) {
                             check.find('input[type="checkbox"]').prop('checked', true);
                             redactSquare = true;
@@ -324,7 +324,7 @@ wrap(ItemView, 'render', function (render) {
             '<div class="g-hui-loading-overlay"><div>' +
             '<i class="icon-spin4 animate-spin"></i>' +
             '</div></div>');
-        let requestData = {};
+        const requestData = {};
         if (action === 'reject') {
             const selectedOption = this.$el.find('.wsi-deid-reject-reason :selected').first();
             if (selectedOption && selectedOption.val() !== 'none') {
@@ -332,9 +332,9 @@ wrap(ItemView, 'render', function (render) {
                     reason: selectedOption.val()
                 };
                 if (selectedOption.attr('category')) {
-                    rejectData['category'] = selectedOption.attr('category');
+                    rejectData.category = selectedOption.attr('category');
                 }
-                requestData['rejectReason'] = rejectData;
+                requestData.rejectReason = rejectData;
             }
         }
         restRequest({
@@ -344,7 +344,7 @@ wrap(ItemView, 'render', function (render) {
             data: JSON.stringify(requestData),
             error: null
         }).done((resp) => {
-            let alertMessage = actions[action].done;
+            const alertMessage = actions[action].done;
             if (action === 'ocr') {
                 events.once('g:alert', () => {
                     $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${resp.jobId}`));
@@ -408,7 +408,7 @@ wrap(ItemView, 'render', function (render) {
             data: { imageId: imageId, tokenId: tokenId },
             error: null
         }).done((resp) => {
-            let alertMessage = 'Item refiled.';
+            const alertMessage = 'Item refiled.';
             $('.g-hui-loading-overlay').remove();
             events.trigger('g:alert', {
                 icon: 'ok',
@@ -476,8 +476,8 @@ wrap(ItemView, 'render', function (render) {
      * @param {boolean} showControl True to show the 'redact square' control, false to hide it
      */
     const toggleRedactSquareControlDisplay = (showControl) => {
-        let redactSquareSpan = this.$el.find('.g-hui-redact-square-span');
-        let redactSquareInput = redactSquareSpan.find('.g-hui-redact-square');
+        const redactSquareSpan = this.$el.find('.g-hui-redact-square-span');
+        const redactSquareInput = redactSquareSpan.find('.g-hui-redact-square');
         redactSquareInput.prop('checked', false);
         redactSquareSpan.toggleClass('no-disp', !showControl);
     };
@@ -497,7 +497,7 @@ wrap(ItemView, 'render', function (render) {
         }
         annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
         annLayer.draw();
-        let redactList = getRedactList(this.model);
+        const redactList = getRedactList(this.model);
         redactList.images = redactList.images || {};
         redactList.images[keyname] = redactList.images[keyname] || {};
         redactList.images[keyname].geojson = annLayer.geojson();
@@ -518,7 +518,7 @@ wrap(ItemView, 'render', function (render) {
         }
         annLayer.annotations().forEach((a) => a.style({ fillColor: 'white', fillOpacity: 0.5 }));
         annLayer.draw();
-        let redactList = getRedactList(this.model);
+        const redactList = getRedactList(this.model);
         redactList.area = redactList.area || {};
         redactList.area._wsi = redactList.area._wsi || {};
         redactList.area._wsi.geojson = annLayer.geojson();
@@ -528,7 +528,7 @@ wrap(ItemView, 'render', function (render) {
             if (!redactList.area._wsi.reason) {
                 redactList.area._wsi.reason = 'No_Reason_Collected';
                 delete redactList.area._wsi.category;
-                let reasonSelect = this.$el.find('.g-widget-redact-area-container select.g-hui-redact');
+                const reasonSelect = this.$el.find('.g-widget-redact-area-container select.g-hui-redact');
                 if (reasonSelect.length) {
                     let reasonElem = $(':selected', reasonSelect);
                     if (!reasonElem.length || reasonElem.val() === 'none' || !reasonElem.val()) {
@@ -547,16 +547,16 @@ wrap(ItemView, 'render', function (render) {
 
     const redactAreaAuxImage = (event) => {
         event.stopPropagation();
-        let clickedButton = $(event.currentTarget);
-        let buttonContainer = clickedButton.parent();
-        let keyname = clickedButton.attr('keyname');
+        const clickedButton = $(event.currentTarget);
+        const buttonContainer = clickedButton.parent();
+        const keyname = clickedButton.attr('keyname');
         const map = auxImageMaps[keyname];
         const imageElem = this.$el.find(`.g-widget-metadata-container.auximage .wsi-deid-auximage-container .g-widget-auximage[auximage=${keyname}] .g-widget-auximage-image img`);
         // ensure map is the expected size
         map.node().width(imageElem.width()).height(imageElem.height());
         map.size({ width: imageElem.width(), height: imageElem.height() });
         const annLayer = map.layers().filter((l) => l instanceof window.geo.annotationLayer)[0];
-        let redactList = getRedactList(this.model);
+        const redactList = getRedactList(this.model);
         if (buttonContainer.hasClass('area-set') || buttonContainer.hasClass('area-adding')) {
             clickedButton.removeClass('active');
             buttonContainer.removeClass('area-set').removeClass('area-adding');
@@ -580,7 +580,7 @@ wrap(ItemView, 'render', function (render) {
             toggleRedactSquareControlDisplay(false);
             redactList.images = redactList.images || {};
             if (redactList.images[keyname]) {
-                delete redactList.images[keyname]['square'];
+                delete redactList.images[keyname].square;
             }
         }
         annLayer.options('clickToEdit', true);
@@ -597,7 +597,7 @@ wrap(ItemView, 'render', function (render) {
         event.stopPropagation();
         const annLayer = getWSIAnnotationLayer();
         if (this.$el.find('.g-item-info-header .g-widget-redact-area-container.area-adding,.g-item-info-header .g-widget-redact-area-container.area-set').length) {
-            let redactList = getRedactList(this.model);
+            const redactList = getRedactList(this.model);
             redactList.area = redactList.area || {};
             delete redactList.area._wsi;
             putRedactList(this.model, redactList, 'redactAreaWSI');
@@ -620,7 +620,7 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const adjustControls = (folderType, settings) => {
-        let hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
+        const hasRedactionControls = (folderType === 'ingest' || folderType === 'quarantine');
         addRedactionControls(hasRedactionControls, settings || {});
         /* Start with the metadata section collapsed */
         this.$el.find('.g-widget-metadata-header:first').attr({ 'data-toggle': 'collapse', 'data-target': '.g-widget-metadata-container:first' });
@@ -664,7 +664,7 @@ wrap(ItemView, 'render', function (render) {
             this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(redactArea);
             this.events['click .g-item-info-header .g-widget-redact-area-container button'] = redactAreaWSI;
             if (settings.require_redact_category !== false) {
-                let redactList = (this.model.get('meta') || {}).redactList || {};
+                const redactList = (this.model.get('meta') || {}).redactList || {};
                 addRedactButton(this.$el.find('.g-item-image-viewer-select .g-widget-redact-area-container'), '_wsi', (redactList.area || {})._wsi, 'area', settings, '');
             }
             // add an existing area
@@ -674,7 +674,7 @@ wrap(ItemView, 'render', function (render) {
     };
 
     const addWSIRedactionArea = () => {
-        let redactList = getRedactList(this.model);
+        const redactList = getRedactList(this.model);
         if (!redactList.area || !redactList.area._wsi || !redactList.area._wsi.geojson) {
             return;
         }
@@ -735,9 +735,9 @@ function _setNextPreviousImage(parent) {
 wrap(ItemViewWidget, 'render', function (render) {
     /* Add any internal metadata items that will be added but don't already
      * exist. */
-    let internal = this.metadata.internal || {};
+    const internal = this.metadata.internal || {};
     Object.entries(getRedactList(this.parentView.model).metadata).forEach(([k, v]) => {
-        let parts = k.split(';');
+        const parts = k.split(';');
         if (parts[0] !== 'internal' || !v || v.value === undefined || parts.length !== 3) {
             return;
         }
@@ -745,7 +745,7 @@ wrap(ItemViewWidget, 'render', function (render) {
             internal[parts[1]][parts[2]] = '';
         }
         // sort the results
-        let sorted = {};
+        const sorted = {};
         Object.keys(internal[parts[1]]).sort().forEach((k) => {
             sorted[k] = internal[parts[1]][k];
         });
