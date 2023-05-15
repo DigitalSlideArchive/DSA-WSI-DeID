@@ -6,7 +6,7 @@ from girder.models.user import User
 from girder.utility.progress import noProgress
 from girder_jobs.models.job import Job, JobStatus
 
-from . import config
+from . import config, matching_api
 from .constants import TokenOnlyPrefix
 from .process import get_image_text, refile_image
 
@@ -97,9 +97,10 @@ def find_best_match(matches, multipleAllowed):
     return None
 
 
-def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, reportInfo):
+def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, reportInfo, itemIds):
     folderNameField = config.getConfig('folder_name_field', 'TokenID')
     user = User().load(userId, force=True)
+    remainingImages = set(itemIds)
     for imageId, possibleMatches in imageIdsToItems.items():
         tokenId = uploadInfo[imageId][folderNameField]
         multipleAllowed = imageId.startswith(TokenOnlyPrefix)
@@ -116,6 +117,7 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, report
             item = Item().load(match, force=True)
             oldName = item['name']
             item = refile_image(item, user, tokenId, imageId, uploadInfo)
+            remainingImages.discard(item['_id'])
             if uploadInfo.get(imageId, {}).get('fields', None):
                 addToReport(reportInfo, item, {
                     'record': uploadInfo[imageId], 'status': 'ocrmatch'})
@@ -125,6 +127,36 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, report
                 job,
                 log=f'Moved item {oldName} to folder {tokenId} as {item["name"]}\n',
             )
+    return remainingImages
+
+
+def match_images_via_api(imageIds, userId, job, reportInfo):
+    user = User().load(userId, force=True)
+    remainingImages = set()
+    apisearch = matching_api.APISearch()
+    for imageId in imageIds:
+        item = Item().load(imageId, force=True)
+        if not len(item.get('meta', {}).get('label_ocr', {})):
+            remainingImages.add(imageId)
+            continue
+        result = apisearch.lookupOcrRecord(item['meta']['label_ocr'])
+        if len(result) != 1 or not result[0].get('token_id'):
+            Job().updateJob(
+                job,
+                log=f'Failed to look up item {item["name"]} from API\n',
+            )
+            remainingImages.add(imageId)
+            continue
+        tokenId = result[0]['token_id']
+        info = {'fields': result[0].get('tumors')[0]}
+        oldName = item['name']
+        item = refile_image(item, user, tokenId, TokenOnlyPrefix + tokenId,
+                            {TokenOnlyPrefix + tokenId: info})
+        Job().updateJob(
+            job,
+            log=f'Moved item {oldName} to folder {tokenId} as {item["name"]} based on api lookup\n',
+        )
+    return remainingImages
 
 
 def addToReport(reportInfo, item, data):
@@ -221,7 +253,9 @@ def associate_unfiled_images(job):
             else:
                 message = f'Unable to find a match for {item["name"]}.\n'
             Job().updateJob(job, message)
-        match_images_to_upload_data(rowToImageMatches, uploadInfo, job['userId'], job, reportInfo)
+        unmatchedImageIds = match_images_to_upload_data(
+            rowToImageMatches, uploadInfo, job['userId'], job, reportInfo, itemIds)
+        unmatchedImageIds = match_images_via_api(unmatchedImageIds, job['userId'], job, reportInfo)
         Job().updateJob(job, log='Finished batch job.\n', status=JobStatus.SUCCESS)
         user = User().load(job['userId'], force=True)
         importReport(noProgress, reportInfo['files'], reportInfo['excel'],

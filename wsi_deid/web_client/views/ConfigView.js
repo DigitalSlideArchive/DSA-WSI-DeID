@@ -61,7 +61,9 @@ var ConfigView = View.extend({
             'wsi_deid.sftp_mode': { name: 'SFTP Mode', id: 'g-wsi-deid-sftp-mode' },
             'wsi_deid.ocr_on_import': { name: 'Find Label Text on Import', id: 'g-wsi-deid-ocr-on-import' },
             'wsi_deid.unfiled_folder': { name: 'Unfiled', id: 'g-wsi-deid-unfiled-folder' },
-            'wsi_deid.schema_folder': { name: 'Schema', id: 'g-wsi-deid-schema-folder' }
+            'wsi_deid.schema_folder': { name: 'Schema', id: 'g-wsi-deid-schema-folder' },
+            'wsi_deid.db_api_url': { name: 'SEER*DMS Matching URL', id: 'g-wsi-deid-db-api-url' },
+            'wsi_deid.db_api_key': { name: 'SEER*DMS API Key', id: 'g-wsi-deid-db-api-key' }
         };
         this._browserWidgetView = {};
         $.when(

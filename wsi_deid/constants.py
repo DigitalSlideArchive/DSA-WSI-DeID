@@ -22,6 +22,8 @@ class PluginSettings(object):
     WSI_DEID_OCR_ON_IMPORT = 'wsi_deid.ocr_on_import'
     WSI_DEID_UNFILED_FOLDER = 'wsi_deid.unfiled_folder'
     WSI_DEID_SCHEMA_FOLDER = 'wsi_deid.schema_folder'
+    WSI_DEID_DB_API_URL = 'wsi_deid.db_api_url'
+    WSI_DEID_DB_API_KEY = 'wsi_deid.db_api_key'
 
 
 class SftpMode(Enum):

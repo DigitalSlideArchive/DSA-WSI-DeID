@@ -169,6 +169,22 @@ form#g-wsi_deid-form(role="form")
     p.g-hui-description
       | Run a background job to find label text on new images during an import
     input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
+  .form-group
+    label(for="g-wsi-deid-db-api-url") SEER*DMS URL
+    p.g-hui-description
+      | Remote address to match additional pathology case information.
+    input#g-wsi-deid-db-api-url.form-control.input-sm(
+        type="text", value=settings['wsi_deid.db_api_url'] || '',
+        title="The SEER*DMS url to check for case information.  This might be something like https://demo.seerdms.com/api/matching/wsi",
+        spellcheck="false")
+  .form-group
+    label(for="g-wsi-deid-db-api-key") SEER*DMS API Key
+    p.g-hui-description
+      | The authorized API key used to validate requests to the matching service.
+    input#g-wsi-deid-db-api-key.form-control.input-sm(
+        type="text", value=settings['wsi_deid.db_api_key'] || '',
+        title="The SEER*DMS API key",
+        spellcheck="false")
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save

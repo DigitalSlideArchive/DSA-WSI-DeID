@@ -1,5 +1,6 @@
 import copy
 import datetime
+import json
 import os
 import re
 import tempfile
@@ -302,6 +303,7 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('folder', ':id', 'refileList'), self.getRefileListFolder)
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
+        self.route('POST', ('item', ':id', 'action', 'refile', ':tokenId'), self.refileItemFull)
         self.route('PUT', ('action', 'bulkRefile'), self.refileItems)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
@@ -311,6 +313,8 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('resource', ':id', 'subtreeCount'), self.getSubtreeCount)
         self.route('GET', ('schema',), self.getSchema)
         self.route('GET', ('settings',), self.getSettings)
+        self.route('POST', ('matching', ), self.callMatchingAPI)
+        self.route('POST', ('matching', 'wsi'), self.fakeMatchingAPI)
         self._item_find = apiRoot.item._find
 
     @autoDescribeRoute(
@@ -519,7 +523,10 @@ class WSIDeIDResource(Resource):
     )
     @access.public(scope=TokenScope.DATA_READ)
     def getSettings(self):
-        return config.getConfig()
+        results = config.getConfig().copy()
+        for key in {PluginSettings.WSI_DEID_DB_API_URL}:
+            results[key] = Setting().get(key)
+        return results
 
     @access.public
     @autoDescribeRoute(
@@ -760,6 +767,24 @@ class WSIDeIDResource(Resource):
         return item
 
     @autoDescribeRoute(
+        Description('Perform an action on an item.')
+        .responseClass('Item')
+        # Allow all users to do redaction actions; change to WRITE otherwise
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .param('tokenId', 'The new tokenId', required=True)
+        .jsonParam('refileData', 'Data used instead of internal data', paramType='body')
+        .errorResponse('Write access was denied on the item.', 403)
+    )
+    @access.user
+    def refileItemFull(self, item, tokenId, refileData):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        imageId = TokenOnlyPrefix + tokenId
+        item = process.refile_image(
+            item, user, tokenId, imageId, {imageId: {'fields': refileData}})
+        return item
+
+    @autoDescribeRoute(
         Description('Refile multiple images at once.')
         .jsonParam('imageRefileData', 'Data used to refile images', paramType='body')
         .errorResponse()
@@ -791,3 +816,83 @@ class WSIDeIDResource(Resource):
             item = process.refile_image(item, user, tokenId, imageId, uploadInfo)
             processedImageIds += [imageId]
         return processedImageIds
+
+    @autoDescribeRoute(
+        Description('Pass a set of values to the Matching API.')
+        .jsonParam('match', 'JSON match data', paramType='body')
+    )
+    @access.public
+    def callMatchingAPI(self, match):
+        from .matching_api import APISearch
+
+        apisearch = APISearch()
+        match = {k: v for k, v in match.items() if v}
+        for key in match:
+            if 'date' in key:
+                matches = {}
+                apisearch.addMatches(matches, key, match[key])
+                if len(matches[key]):
+                    match[key] = matches[key][0]['value']
+        queries = [match]
+        if 'name_first' in match or 'name_last' in match:
+            swaps = {'name_first': 'name_last', 'name_last': 'name_first'}
+            alt_match = {swaps.get(k, k): v for k, v in match.items()}
+            queries.append(alt_match)
+        if 'date_of_service' in match or 'date_of_birth' in match:
+            swaps = {'date_of_birth': 'date_of_service', 'date_of_service': 'date_of_birth'}
+            for entry in queries.copy():
+                alt_match = {swaps.get(k, k): v for k, v in entry.items()}
+                queries.append(alt_match)
+        return apisearch.lookupQueries(queries)
+
+    @autoDescribeRoute(  # noqa
+        Description('Simulate the SEER*DMS Matching API for testing.')
+        .jsonParam('match', 'JSON match data', paramType='body')
+    )
+    @access.public
+    def fakeMatchingAPI(self, match):  # noqa
+        fakeData = []
+        try:
+            filepath = '/conf/fake_matches.json'
+            if not os.path.exists(filepath):
+                filepath = os.path.join(os.path.expanduser('~'), '.girder', 'fake_matches.json')
+            fakeData = json.load(open(filepath))
+        except Exception:
+            pass
+        matchMethods = [
+            {'date_of_birth', 'name_last', 'name_first', 'path_case_num'},
+            {'name_last', 'name_first', 'path_case_num'},
+            {'date_of_birth', 'name_last', 'path_case_num'},
+            {'date_of_birth', 'name_first', 'path_case_num'},
+            {'date_of_birth', 'name_last', 'name_first', 'date_of_service'},
+            {'date_of_birth', 'name_last', 'name_first'},
+        ]
+        results = []
+        for matchMethod in matchMethods:
+            for entry in fakeData:
+                matched = True
+                try:
+                    for key in matchMethod:
+                        if key not in match or key not in entry:
+                            matched = False
+                        elif (key in {'name_last', 'name_first'} and
+                                match[key].lower() != entry[key].lower()):
+                            matched = False
+                        elif key == 'date_of_birth' and match[key].lower() != entry[key].lower():
+                            matched = False
+                        elif key == 'date_of_service' and abs((
+                            datetime.datetime.strptime(match[key], '%m-%d-%Y').date() -
+                            datetime.datetime.strptime(entry[key], '%m-%d-%Y').date()
+                        ).days) > 10:
+                            matched = False
+                        elif key == 'path_case_num' and re.sub(
+                                r'[^\w]', '', match[key]).lower() != re.sub(
+                                    r'[^\w]', '', entry[key]).lower():
+                            matched = False
+                except Exception:
+                    matched = False
+                if matched:
+                    results.append(entry['result'])
+            if len(results):
+                return results
+        return results

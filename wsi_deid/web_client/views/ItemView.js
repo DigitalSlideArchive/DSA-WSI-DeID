@@ -12,6 +12,7 @@ import ItemViewWidget from '@girder/large_image/views/itemViewWidget';
 import ItemViewTemplate from '../templates/ItemView.pug';
 import ItemViewNextTemplate from '../templates/ItemViewNext.pug';
 import ItemViewRedactAreaTemplate from '../templates/ItemViewRedactArea.pug';
+import MatchingDialog from './MatchingDialog';
 import '../stylesheets/ItemView.styl';
 import {
     formats, getRedactList, putRedactList, goToNextUnprocessedItem,
@@ -433,6 +434,10 @@ wrap(ItemView, 'render', function (render) {
         });
     };
 
+    const matchingButton = (event) => {
+        MatchingDialog({ model: this.model, itemView: this });
+    };
+
     const rejectionReasonChanged = (event, settings) => {
         const newValue = event.target.value;
         const otherSelect = this.$el.find('.wsi-deid-reject-reason').not(event.target).first();
@@ -632,7 +637,8 @@ wrap(ItemView, 'render', function (render) {
         $('#g-app-body-container').children(':not(.g-widget-next-container)').last().after(ItemViewTemplate({
             project_folder: folderType,
             require_reject_reason: settings.require_reject_reason || false,
-            rejection_reasons: rejectionReasons
+            rejection_reasons: rejectionReasons,
+            hasMatchingApi: settings['wsi_deid.db_api_url']
         }));
         if (folderType === 'unfiled') {
             restRequest({
@@ -657,6 +663,7 @@ wrap(ItemView, 'render', function (render) {
         }
         this.events['click .g-workflow-button'] = workflowButton;
         this.events['click .g-refile-button'] = refileButton;
+        this.events['click .g-matching-button'] = matchingButton;
         this.events['change .wsi-deid-reject-reason'] = (event) => rejectionReasonChanged(event, settings);
         /* Place an area redaction control in the item header */
         if (hasRedactionControls && getFormat() !== 'isyntax') {
