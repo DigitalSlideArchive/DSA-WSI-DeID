@@ -19,6 +19,8 @@ CVE-2019-12098
 
 # libc-bin: Not using ARM
 CVE-2020-6096
+CVE-2023-1380
+CVE-2023-30456
 
 # libdbus-1-3: We don't add users
 CVE-2020-35512
