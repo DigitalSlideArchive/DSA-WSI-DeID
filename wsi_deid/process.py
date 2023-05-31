@@ -234,6 +234,8 @@ def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;isyntax;scanner_operator_id': generate_system_redaction_list_entry(title),
             'internal;isyntax;barcode': generate_system_redaction_list_entry(''),
+            'internal;isyntax;software_versions': generate_system_redaction_list_entry(
+                '"' + get_deid_field(item).replace('"', '') + '"')
         },
     }
     for key in {'acquisition_datetime', 'date_of_last_calibration'}:
@@ -1368,6 +1370,15 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
+    newkeys = {
+        'SOFTWARE_VERSIONS': {
+            'name': 'DICOM_SOFTWARE_VERSIONS',
+            'group': '0x0018',
+            'element': '0x1250',
+            'pmsvr': 'IStringArray',
+        }
+    }
+
     tileSource = ImageItem().tileSource(item)
     sourcePath = tileSource._getLargeImagePath()
     header = b'<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1376,50 +1387,65 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;isyntax;scanner_operator_id'] = title_redaction_list_entry
     redactList['metadata']['internal;isyntax;barcode'] = title_redaction_list_entry
+    redactList['metadata']['internal;isyntax;software_versions'] = \
+        generate_system_redaction_list_entry('"' + get_deid_field(item).replace('"', '') + '"')
     old = open(sourcePath, 'rb').read(tileSource._xmllen)
-    tree = lxmlElementTree.fromstring(old)
-    for mkey in redactList['metadata']:
-        processed = False
-        if mkey.startswith('internal;isyntax;'):
-            key = mkey.split(';', 2)[-1].upper()
-            for xentry in tree.findall('Attribute'):
-                xkey = str(xentry.get('Name'))
-                if xkey == 'DICOM_' + key or (
-                        xkey.startswith('PI') and xkey.endswith('_' + key)):
-                    if redactList['metadata'][mkey]['value'] is not None:
-                        value = redactList['metadata'][mkey]['value']
-                        if key == 'BARCODE':
-                            value = base64.b64encode(value.encode()).decode()
-                        xentry.text = value
-                    else:
-                        xentry.getparent().remove(xentry)
-                    processed = True
-                    break
-        if not processed:
-            logger.info('Cannot redact %s' % mkey)
     quality = 90
     stripping = 0
     prune = 0
     while True:
+        tree = lxmlElementTree.fromstring(old)
+        for mkey in redactList['metadata']:
+            processed = False
+            if mkey.startswith('internal;isyntax;'):
+                key = mkey.split(';', 2)[-1].upper()
+                for xentry in tree.findall('Attribute'):
+                    xkey = str(xentry.get('Name'))
+                    if xkey == 'DICOM_' + key or (
+                            xkey.startswith('PI') and xkey.endswith('_' + key)):
+                        if redactList['metadata'][mkey]['value'] is not None:
+                            value = redactList['metadata'][mkey]['value']
+                            if key == 'BARCODE':
+                                value = base64.b64encode(value.encode()).decode()
+                            xentry.text = value
+                        else:
+                            xentry.getparent().remove(xentry)
+                        processed = True
+                        break
+                if (not processed and prune < 3 and key in newkeys and
+                        redactList['metadata'][mkey]['value']):
+                    tree.append(lxmlElementTree.fromstring("""
+<Attribute Name="%s" Group="%s" Element="%s" PMSVR="%s">%s</Attribute>
+""" % (
+                        newkeys[key]['name'], newkeys[key]['group'],
+                        newkeys[key]['element'], newkeys[key]['pmsvr'],
+                        redactList['metadata'][mkey]['value'])))
+                    processed = True
+            if not processed:
+                logger.info('Cannot redact %s' % mkey)
         stripping = 0
         redact_format_isyntax_images(
             tree, redactList, labelImage, macroImage, quality=quality, prune=prune)
-        result = header + lxmlElementTree.tostring(tree, encoding='UTF-8', method='xml')
+        result = header + lxmlElementTree.tostring(
+            tree, encoding='UTF-8', method='xml', pretty_print=False)
         if len(result) > tileSource._xmllen:
             result = result.replace(b'>\n</', b'></')
             stripping = 1
         if len(result) > tileSource._xmllen:
             result = result.replace(b'>\n<', b'><')
+            result = result.replace(b'>\t<', b'><')
             stripping = 2
         if len(result) > tileSource._xmllen and quality <= 80:
             result = result.replace(b'\n', b'')
+            result = result.replace(b'\t', b'')
             stripping = 3
         if len(result) <= tileSource._xmllen:
             break
+        print(len(result), tileSource._xmllen, stripping)
         if quality <= 20:
             prune += 1
             quality = 90
-            if prune > 2:
+            if prune > 3:
                 break
             continue
         quality -= 5
@@ -1639,6 +1665,8 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     else:
         itemMetadata['deidUpload'] = {}
     itemMetadata['deidUpload']['InputFileName'] = originalName
+    item = Item().setMetadata(item, itemMetadata)
+    itemMetadata['redactList'] = get_standard_redactions(item, imageId)
     item = Item().setMetadata(item, itemMetadata)
     if 'wsi_uploadInfo' in item:
         del item['wsi_uploadInfo']
