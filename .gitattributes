@@ -2,7 +2,7 @@
 * text=false
 
 # Never modify line endings of our bash scripts
-*.sh -crlf
+*.sh text eol=lf
 
 # The above will handle all files NOT found below
 #
