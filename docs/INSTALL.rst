@@ -3,6 +3,11 @@ Installation
 
 See `README.rst <../README.rst>`_ for high level information about how to navigate the full documentation.
 
+.. contents:: Table of Contents
+    :depth: 1
+    :local:
+    :backlinks: none
+
 Prerequisites
 -------------
 
@@ -268,17 +273,17 @@ The export process creates a separate folder for each subject in the export dire
 
 
 Philips iSyntax Support
-=======================
+-----------------------
 
-The system can work with Philips iSyntax and i2Syntax files if teh appropriate Philips SDK is provided.  This SDK needs to be obtained from Philips and must comply with their licensing requirements.  
+The system can work with Philips iSyntax and i2Syntax files if teh appropriate Philips SDK is provided.  This SDK needs to be obtained from Philips and must comply with their licensing requirements.
 
 Prerequisites
--------------
+~~~~~~~~~~~~~
 
 You must have either the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_commercial or the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_research SDK, unzipped and placed in a location that can be mounted as a volume in the docker-compose configuration.
 
 Installation
-------------
+~~~~~~~~~~~~
 
 Enable the appropriate volume command in girder container to the ``docker-compose.yml`` file to mount the main directory of the unzipped SDK to the intenal ``isyntax`` directory.
 
@@ -287,7 +292,7 @@ Switch the girder container start command to ``/wsi_deid/devops/wsi_deid/install
 Use ``docker-compose up`` as with other installations.
 
 Usage
------
+~~~~~
 
 iSyntax files can be redacted in a similar manner to other file formats.  There are some limitations based on the functionality exposed by the Philips SDK:
 
@@ -298,7 +303,7 @@ iSyntax files can be redacted in a similar manner to other file formats.  There 
 * If metadata is blank in the original file, it may not currently be possible to add new values to that metadata in the redacted file.
 
 Windows Server 2019
-===================
+-------------------
 
 There are several versions of Docker available on Windows Server 2019.  The exact version and manner of installation can affect how the software is installed.  Once Docker and docker-compose are installed, the software can start, though there may need to be changes to the ``docker-compose.local.yml`` file.
 
@@ -309,7 +314,7 @@ An example configuration file is provided, see `docker-compose.example-ws2019.lo
 - If after starting, mongo stops immediately (the command ``docker-compose logs`` will include a message containing ``aborting after fassert() failure``), uncomment the line beginning with ``command: "bash -c 'mongod``.
 
 Example Installation on WS 2019
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Note: it is better to install Docker Desktop using official instructions from Docker or Microsoft.  If you have trouble we those, these scripts may work.  They have only been tested an a specific verison of Windows Server 2019 and may not work on anything else.
 
@@ -349,21 +354,21 @@ Start the software::
     docker-compose -f docker-compose.yml -f docker-compose.local.yml up -d
 
 Sample Data
-===========
+-----------
 
 A small set of sample WSI files and a sample DeID Upload excel file are available on `data.kitware.com <https://data.kitware.com/#item/5f87213d50a41e3d19ea89c2>`_.
 
 `Download a zip file of the sample files. <https://data.kitware.com/api/v1/file/5f87213d50a41e3d19ea89c4/download>`_
 
 Redaction Business Rules
-========================
+------------------------
 
 Some metadata fields are automatically modified by default.  For example, certain dates are converted to always be January 1st of the year of the original date.  Embedded titles and filenames are replaced with a specified Image ID.  Some of these modifications vary by WSI vendor format.
 
 To modify these business rules, it is recommended that this repository is forked or an additional python module is created that alters the ``get_standard_redactions`` function and the vendor-specific variations of that function (e.g., ``get_standard_redactions_format_aperio``) located in the `process.py <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/process.py>`_ source file.
 
 Vulnerability Security
-======================
+----------------------
 
 Since the program is installed and run using Docker, most of its security is dependent on Docker.  The standard deployment uses some standard docker images including MongoDB and Memcached.  These images are produced by external sources and are scanned for vulnerabilities by Docker.  There is one custom image used by this program that is created as part of a Continuous Integration (CI) pipeline.  As part of the CI process, this container is scanned for vulnerabilities.
 
