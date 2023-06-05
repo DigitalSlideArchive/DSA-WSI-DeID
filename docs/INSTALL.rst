@@ -275,7 +275,7 @@ The export process creates a separate folder for each subject in the export dire
 Philips iSyntax Support
 -----------------------
 
-The system can work with Philips iSyntax and i2Syntax files if teh appropriate Philips SDK is provided.  This SDK needs to be obtained from Philips and must comply with their licensing requirements.
+The system can work with Philips iSyntax and i2Syntax files if the appropriate Philips SDK is provided.  This SDK needs to be obtained from Philips and must comply with their licensing requirements.
 
 Prerequisites
 ~~~~~~~~~~~~~
