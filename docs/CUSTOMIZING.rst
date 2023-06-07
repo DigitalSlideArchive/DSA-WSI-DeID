@@ -183,3 +183,19 @@ Original Pilot Settings
 -----------------------
 
 To have the same settings as the original pilot, use the ``docker-compose.pilot.yml`` file instead of ``docker-compose.yml``.
+
+..
+  Example Configuration
+  ---------------------
+..
+  Example docker-compose
+  ++++++++++++++++++++++
+..
+  .. include:: ../devops/wsi_deid/docker-compose.example.local.yml
+    :literal:
+..
+  Example girder configuration
+  ++++++++++++++++++++++++++++
+..
+  .. include:: ../devops/wsi_deid/girder.local.conf
+    :literal:
