@@ -23,7 +23,7 @@ def testWebClient(boundServer, db, spec, provisionBoundServer, resetConfig):  # 
 @pytest.mark.parametrize('spec', (
     'wsi_deidDefaultSchemaSpec.js',
 ))
-def testDefaultSchemaWebClient(boundServer, db, spec, provisionDefaultSchemaBoundServer, mocker): # noqa
+def testDefaultSchemaWebClient(boundServer, db, spec, provisionDefaultSchemaBoundServer, mocker):  # noqa
     def mockStartOcrForUnfiled(*args):
         return None
 

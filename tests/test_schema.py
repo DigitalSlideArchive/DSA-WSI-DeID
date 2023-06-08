@@ -40,7 +40,6 @@ csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,99,Biopsy,C717-Brain stem,30,0579XY112001_99_30,01-A.svs"""
 
 
-
 @pytest.mark.parametrize('csv,errorlist', (
     (csv2, [None]),
     (csv1, [

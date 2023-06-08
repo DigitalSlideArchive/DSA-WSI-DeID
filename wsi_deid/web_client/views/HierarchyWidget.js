@@ -42,7 +42,7 @@ function performAction(action) {
         ocrall: { done: 'Started background job to find label text on WSIs in this folder.', fail: 'Failed to start background task to find label text for images.' }
     };
 
-    let data = {};
+    const data = {};
     if (action.startsWith('list/')) {
         if (this.itemListView && this.itemListView.checked && this.itemListView._wsi_deid_item_list) {
             let ids = this.itemListView.checked.map((cid) => this.itemListView.collection.get(cid).id);
@@ -106,7 +106,7 @@ function performAction(action) {
             }
         }
         if (resp.action === 'export' || resp.action === 'exportall') {
-            if (resp['local_export_enabled']) {
+            if (resp.local_export_enabled) {
                 [
                     ['finished', 'exported'],
                     ['present', 'previously exported and already exist(s) in export folder'],
@@ -138,9 +138,9 @@ function performAction(action) {
                 $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/#item/${resp.reportItemId}`));
             }, this);
         }
-        if (resp['sftp_enabled']) {
+        if (resp.sftp_enabled) {
             const message = ' Transfer of files to remote server via SFTP started in background.';
-            let sftpAlertInfo = $(`<span>${message} </span>`);
+            const sftpAlertInfo = $(`<span>${message} </span>`);
             if (resp.sftp_job_id) {
                 sftpAlertInfo.append($('<a/>').text('Track remote transfer here.').attr('href', `/#job/${resp.sftp_job_id}`));
             }
@@ -151,11 +151,11 @@ function performAction(action) {
         if (resp.action === 'ingest') {
             // If import launches an ocr batch job, add that info at the very end of the alert
             [
-                { id: resp['ocr_job'], message: ' Started background job to find label text on WSIs in this folder.' },
-                { id: resp['unfiled_job'], message: ' Started background job to match unfiled images with upload data.' }
+                { id: resp.ocr_job, message: ' Started background job to find label text on WSIs in this folder.' },
+                { id: resp.unfiled_job, message: ' Started background job to match unfiled images with upload data.' }
             ].forEach((jobInfo) => {
                 if (jobInfo.id) {
-                    let jobAlertInfo = $(`<span>${jobInfo.message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${jobInfo.id}`));
+                    const jobAlertInfo = $(`<span>${jobInfo.message} </span>`).append($('<a/>').text('Track its progress here.').attr('href', `/#job/${jobInfo.id}`));
                     events.once('g:alert', () => {
                         $('#g-alerts-container:last div.alert:last').append(jobAlertInfo);
                     }, this);
@@ -172,7 +172,7 @@ function performAction(action) {
             router.navigate('folder/' + this.parentModel.id + '?_=' + Date.now(), { trigger: true });
         }
     }).fail((resp) => {
-        let text = actions[action].fail;
+        const text = actions[action].fail;
         /*
         if (resp.responseJSON && resp.responseJSON.message) {
             text += ' ' + resp.responseJSON.message;
@@ -261,7 +261,7 @@ function addControls(key, settings) {
     }
     var btns = this.$el.find('.g-hierarchy-actions-header .g-folder-header-buttons');
     for (let i = controls[key].length - 1; i >= 0; i -= 1) {
-        let control = controls[key][i];
+        const control = controls[key][i];
         if (control.check()) {
             btns.prepend(`<button class="wsi_deid-${control.key}-button btn ${control.class}">${control.text}</button>`);
             this.events[`click .wsi_deid-${control.key}-button`] = () => { performAction.call(this, control.action); };
@@ -323,7 +323,7 @@ wrap(HierarchyWidget, 'render', function (render) {
         const fileTogether = togetherSelect.find(':selected').val() === 'together';
         const useExistingToken = newOrExistingSelect.find(':selected').val() === 'existing';
         const tokenPattern = this._newTokenPattern;
-        const checkedItemIds = JSON.parse(this._getCheckedResourceParam())['item'];
+        const checkedItemIds = JSON.parse(this._getCheckedResourceParam()).item;
         const existingTokens = JSON.parse(JSON.stringify(this._refileList));
         if (!checkedItemIds.length) {
             return;
@@ -412,13 +412,13 @@ wrap(HierarchyWidget, 'render', function (render) {
 });
 
 wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount) {
-    let showSubtreeCounts = () => {
+    const showSubtreeCounts = () => {
         const folders = this.parentModel.get('nFolders') || 0;
         const items = this.parentModel.get('nItems') || 0;
         const subfolders = Math.max(folders, this.parentModel.get('nSubtreeCount').folders - 1 || 0);
         const subitems = Math.max(items, this.parentModel.get('nSubtreeCount').items || 0);
-        let folderCount = formatCount(folders) + (subfolders > folders ? (' (' + formatCount(subfolders) + ')') : '');
-        let itemCount = formatCount(items) + (subitems > items ? (' (' + formatCount(subitems) + ')') : '');
+        const folderCount = formatCount(folders) + (subfolders > folders ? (' (' + formatCount(subfolders) + ')') : '');
+        const itemCount = formatCount(items) + (subitems > items ? (' (' + formatCount(subitems) + ')') : '');
         let folderTooltip = `${folders} folder${folders === 1 ? '' : 's'}`;
         if (folders < subfolders) {
             folderTooltip += ` (current folder), ${subfolders} total folder${subfolders === 1 ? '' : 's'} (including subfolders)`;
@@ -442,7 +442,7 @@ wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount
         this.$('.g-item-count-container').toggleClass('subtree-info', subitems > items);
     };
 
-    let reshowSubtreeCounts = () => {
+    const reshowSubtreeCounts = () => {
         restRequest({
             url: `wsi_deid/resource/${this.parentModel.id}/subtreeCount`,
             data: { type: this.parentModel.get('_modelType') }

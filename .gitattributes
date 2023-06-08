@@ -1,0 +1,22 @@
+# Specify most files as binary
+* text=false
+
+# Never modify line endings of our bash scripts
+*.sh text eol=lf
+
+# The above will handle all files NOT found below
+#
+# These files are text and should be normalized (Convert crlf => lf)
+*.conf text
+*.css text
+*.html text
+*.js text
+*.json text
+*.md text
+*.py text
+*.rst text
+*.txt text
+*.xml text
+*.yml text
+*.yaml text
+

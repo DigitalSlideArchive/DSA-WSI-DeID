@@ -9,6 +9,7 @@ const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
     philips: 'philips',
+    isyntax: 'isyntax',
     none: ''
 };
 
@@ -55,7 +56,7 @@ function goToNextUnprocessedFolder(callback, skipId) {
                 text: 'Switching to next unprocessed folder',
                 timeout: 4000
             });
-            let id = resp.filter((i) => i !== skipId)[0];
+            const id = resp.filter((i) => i !== skipId)[0];
             router.navigate('folder/' + id, { trigger: true });
             window.scrollTo(0, 0);
         } else {
@@ -66,7 +67,7 @@ function goToNextUnprocessedFolder(callback, skipId) {
                 timeout: 4000
             });
             if (resp) {
-                let id = resp.filter((i) => i !== skipId)[0];
+                const id = resp.filter((i) => i !== skipId)[0];
                 router.navigate('folder/' + id, { trigger: true });
                 window.scrollTo(0, 0);
             }
@@ -79,12 +80,12 @@ function goToNextUnprocessedFolder(callback, skipId) {
 }
 
 function getRedactList(itemModel) {
-    let redactList = ((itemModel.get && itemModel.get('meta')) || itemModel.meta || {}).redactList || {};
+    const redactList = ((itemModel.get && itemModel.get('meta')) || itemModel.meta || {}).redactList || {};
     redactList.metadata = redactList.metadata || {};
     redactList.images = redactList.images || {};
     redactList.area = redactList.area || {};
     ['images', 'metadata'].forEach((main) => {
-        for (let key in redactList[main]) {
+        for (const key in redactList[main]) {
             if (!_.isObject(redactList[main][key]) || redactList[main][key] === null) {
                 redactList[main][key] = { value: redactList[main][key] };
             }
@@ -94,7 +95,7 @@ function getRedactList(itemModel) {
 }
 
 function putRedactList(itemModel, redactList, source) {
-    let id = itemModel.get ? itemModel.id : itemModel._id;
+    const id = itemModel.get ? itemModel.id : itemModel._id;
     restRequest({
         method: 'PUT',
         url: `wsi_deid/item/${id}/redactList`,
@@ -115,7 +116,7 @@ function putRedactList(itemModel, redactList, source) {
 
 function isValidRegex(string) {
     try {
-        void new RegExp(string);
+        new RegExp(string); // eslint-disable-line no-new
     } catch (e) {
         console.error(`There was an error parsing "${string}" as a regular expression: ${e}.`);
         return false;
@@ -184,7 +185,7 @@ function flagRedactionOnItem(itemModel, event) {
             // no change
             return;
         } else {
-            let redactRecord = redactList[category][keyname];
+            const redactRecord = redactList[category][keyname];
             redactList[category][keyname] = { value: newValue, reason: redactRecord.reason, category: redactRecord.category };
         }
     } else {
@@ -196,7 +197,7 @@ function flagRedactionOnItem(itemModel, event) {
             isRedacted = false;
         } else if ((!isRedacted || redactList[category][keyname].reason !== reason) && reason && reason !== 'none') {
             let redactRecordValue = '';
-            let redactRecord = redactList[category][keyname];
+            const redactRecord = redactList[category][keyname];
             if (redactRecord) {
                 redactRecordValue = redactRecord.value;
             }

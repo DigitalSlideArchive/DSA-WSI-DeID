@@ -4,6 +4,7 @@
   font-size 12px
   margin-left 10px
   display inline-block
+
   .g-hui-redact, .wsi-deid-replace-value-input
     margin-left 5px
     font-weight normal
@@ -23,19 +24,24 @@
   text-decoration-line line-through
   text-decoration-color black
   text-decoration-style solid
+
   .redact-replacement
     margin-left 10px
     text-decoration-line none
     display inline-block
+
   .g-hui-redact-label
     text-decoration-line none
+
   .wsi-deid-replace-value
     display inline-block
+
   a.g-hui-redact>span
     text-decoration-line line-through
 
 .g-widget-auximage-image
   position relative
+
 .g-widget-auximage.redacted
   .g-widget-auximage-image:after
     position absolute
@@ -45,12 +51,13 @@
     bottom 0
     content "\a0"
     background linear-gradient(to top left, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%), linear-gradient(to top right, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%)
+
   .g-widget-auximage-image img
     opacity 0.5
+
   .g-widget-auximage-title > .g-widget-redact-area-container
     display inline
     margin-left 10px
-
 
 .g-widget-auximage.redacted, .g-widget-auximage.redact-square
   span.g-hui-redact-square-span
@@ -59,15 +66,18 @@
 .g-widget-auximage
   span.g-hui-redact-square-span
     visibility hidden
+
     input[type="checkbox"].g-hui-redact-square
       margin-left 10px
       margin-right 5px
+
   .g-widget-auximage-image-redact-square
     position absolute
     left 0
     top 0
     right 0
     bottom 0
+
     .fill
       position absolute
       left 0
@@ -77,6 +87,7 @@
       background-size contain
       background-repeat no-repeat
       opacity 0.5
+
   .g-widget-auximage-image-redact-square:after
     position absolute
     left 0
@@ -92,6 +103,7 @@
       // background-image url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQIHWNgAAAAAgABz8g15QAAAABJRU5ErkJggg==")
       // white
       background-image url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVQIHWP4DwABAQEANl9ngAAAAABJRU5ErkJggg==")
+
   .g-widget-auximage-image-redact-square:after
     background linear-gradient(to top left, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%), linear-gradient(to top right, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) calc(50% - 4px), rgba(0, 0, 0, 1) calc(50% - 3px), rgba(0, 0, 0, 1) calc(50% + 3px), rgba(0, 0, 0, 0) calc(50% + 4px), rgba(0, 0, 0, 0) 100%)
 
@@ -111,6 +123,7 @@
   left 0
   background rgba(0, 0, 0, 0.3)
   z-index 1000
+
   div
     font-size 60px
     position relative
@@ -123,11 +136,16 @@
   .g-item-image-viewer-select .g-item-info-header
     .g-workflow-button
       float right
+
     .form-control.image-viewer-control
       visibility hidden
 
+  .image-controls
+    display none
+
 .g-widget-next-container
   padding-bottom 8px
+
   .h-next-image
     float right
 
@@ -142,24 +160,32 @@
 .g-widget-redact-area-container
   button
     padding 3px 5px
+
     .cancel-area, .unredact-area
       display none
+
   select.g-hui-redact
     visibility hidden
+
   select.g-hui-redact option[value="none"]
     display none
+
 .g-widget-redact-area-container.area-adding
   button
     .redact-area
       display none
+
     .cancel-area
       display unset
+
 .g-widget-redact-area-container.area-set
   button
     .redact-area
       display none
+
     .unredact-area
       display unset
+
   select.g-hui-redact
     visibility unset
 
@@ -169,7 +195,9 @@
 .g-refile-controls
   select, input
     margin-left 5px
+
   select, .g-refile-tokenid
     margin-right 10px
+
   .g-refile-button
     margin 10px

@@ -76,7 +76,7 @@ def test_workflow_with_options(server, provisionServer, user):  # noqa
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
-def test_workflow_with_default_schema(server, provisionDefaultSchemaServer, user, mocker): # noqa
+def test_workflow_with_default_schema(server, provisionDefaultSchemaServer, user, mocker):  # noqa
     import wsi_deid.import_export
     from wsi_deid import rest
     from wsi_deid.constants import PluginSettings
