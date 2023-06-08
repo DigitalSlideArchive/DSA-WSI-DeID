@@ -1394,7 +1394,7 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     stripping = 0
     prune = 0
     while True:
-        tree = lxmlElementTree.fromstring(old)
+        tree = lxmlElementTree.fromstring(old, lxmlElementTree.XMLParser(remove_blank_text=True))
         for mkey in redactList['metadata']:
             processed = False
             if mkey.startswith('internal;isyntax;'):
@@ -1414,12 +1414,12 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
                         break
                 if (not processed and prune < 3 and key in newkeys and
                         redactList['metadata'][mkey]['value']):
-                    tree.append(lxmlElementTree.fromstring("""
-<Attribute Name="%s" Group="%s" Element="%s" PMSVR="%s">%s</Attribute>
-""" % (
-                        newkeys[key]['name'], newkeys[key]['group'],
-                        newkeys[key]['element'], newkeys[key]['pmsvr'],
-                        redactList['metadata'][mkey]['value'])))
+                    tree.append(lxmlElementTree.fromstring(
+                        '<Attribute Name="%s" Group="%s" Element="%s" '
+                        'PMSVR="%s">%s</Attribute>' % (
+                            newkeys[key]['name'], newkeys[key]['group'],
+                            newkeys[key]['element'], newkeys[key]['pmsvr'],
+                            redactList['metadata'][mkey]['value'])))
                     processed = True
             if not processed:
                 logger.info('Cannot redact %s' % mkey)
