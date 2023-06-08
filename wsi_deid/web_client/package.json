@@ -17,7 +17,7 @@
         ]
     },
     "scripts": {
-        "lint": "eslint . && pug-lint . && stylint",
+        "lint": "eslint . && pug-lint . && stylus-supremacy format --compare ./**/*.styl --options package.json",
         "format": "eslint --cache --fix . && stylus-supremacy format ./**/*.styl --replace --options package.json"
     },
     "dependencies": {

@@ -1,0 +1,67 @@
+.modal-dialog.matching-dialog(role='document')
+  .modal-content
+    form.modal-form(role='form')
+      .modal-header
+        button.close(type='button', data-dismiss='modal', aria-label='Close')
+          span(aria-hidden='true') &times;
+        h3.modal-title Database Lookup
+      .modal-body
+        .form-group
+          img(src=label_image_url)
+        .form-group
+          label(for='wsi-deid-matching-path_case_num') Pathology Case Number
+          input#wsi-deid-matching-path_case_num.matching-value.input-sm.form-control(
+            key='path_case_num', type='text', placeholder='Enter a pathology case number for matching')
+        .form-group
+          label(for='wsi-deid-matching-name_last') Last Name
+          input#wsi-deid-matching-name_last.matching-value.input-sm.form-control(
+            key='name_last', type='text', placeholder='Enter a last name for matching')
+        .form-group
+          label(for='wsi-deid-matching-name_first') First Name
+          input#wsi-deid-matching-name_first.matching-value.input-sm.form-control(
+            key='name_first', type='text', placeholder='Enter a first name for matching')
+        .form-group
+          label(for='wsi-deid-matching-date_of_service') Date of Service
+          input#wsi-deid-matching-date_of_service.matching-value.input-sm.form-control(
+            key='date_of_service', type='text', placeholder='Enter a date of service for matching')
+        .form-group
+          label(for='wsi-deid-matching-date_of_birth') Date of Birth
+          input#wsi-deid-matching-date_of_birth.matching-value.input-sm.form-control(
+            key='date_of_birth', type='text', placeholder='Enter a date of birth for matching')
+          button.btn.btn-primary.h-lookup(type='button') Lookup
+        h4.modal-title Results
+        table#lookup-results.hidden
+          tr
+            th Token ID
+            th Tumors
+            th
+          tr.hidden(record="none")
+            td.token-id-label none
+            td.result-entry
+          tr.hidden(record="0")
+            td.token-id-label
+            td.result-entry
+            td.apply
+              button.btn.btn-primary.h-apply(type='button') Apply
+          tr.hidden(record="1")
+            td.token-id-label
+            td.result-entry
+            td.apply
+              button.btn.btn-primary.h-apply(type='button') Apply
+          tr.hidden(record="2")
+            td.token-id-label
+            td.result-entry
+            td.apply
+              button.btn.btn-primary.h-apply(type='button') Apply
+          tr.hidden(record="3")
+            td.token-id-label
+            td.result-entry
+            td.apply
+              button.btn.btn-primary.h-apply(type='button') Apply
+          tr.hidden(record="4")
+            td.token-id-label
+            td.result-entry
+            td.apply
+              button.btn.btn-primary.h-apply(type='button') Apply
+      .modal-footer
+        button.btn.btn-default.h-cancel(type='button', data-dismiss='modal') Cancel
