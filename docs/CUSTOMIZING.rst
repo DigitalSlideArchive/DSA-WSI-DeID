@@ -31,6 +31,8 @@ By default, when metadata or images are redacted, the user must pick the type of
 
 Redaction categories can be configured by changing the ``phi_pii_types`` settings.
 
+`See example configuration <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/girder.local.conf#L93>`_
+
 Reasons for Rejection
 +++++++++++++++++++++
 
