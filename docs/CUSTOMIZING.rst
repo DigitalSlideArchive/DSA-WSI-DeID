@@ -17,6 +17,13 @@ Redacting the top/left of the macro image
 
 When the ``redact_macro_square`` setting is set to ``True``, the upper left square of all macro images will automatically be blacked out.  This region often contains the label on the slide, and sometimes that can contain PHI that is visible with contrast or other image adjustment.
 
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  redact_macro_square = True
+  ...
+
 Redaction Categories
 ++++++++++++++++++++
 
