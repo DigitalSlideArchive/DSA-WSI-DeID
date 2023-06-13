@@ -29,6 +29,8 @@ The software is known to work with a variety of operating systems:
 
 - Windows Server 2019.  This operating system require some additional changes beyond the default install configuration, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
 
+Note: the software can work on OSX, but using OCR of label data is unusably slow.
+
 Hardware Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
