@@ -3,7 +3,10 @@ Customizing WSI DeID
 
 There are several ways to customize the installation of WSI DeID to change its behavior to better match your desired workflow and use case.
 
-See the files ``devops/wsi_deid/docker-compose.example.local.yml`` and ``devops/wsi_deid/girder.local.conf`` for comments about many of these options.  Broadly, the options in ``devops/wsi_deid/docker-compose.example.local.yml`` change the deployment environment, such as directories that are used and available memory.  The options in ``devops/wsi_deid/girder.local.conf`` change the run-time behavior, such as how label and macro images are redacted.
+See the files following files for examples and additional comments about configuration options:
+
+* ``devops/wsi_deid/docker-compose.example.local.yml``: change the deployment environment, such as directories that are used and available memory. `View entire example docker-compose file <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/docker-compose.example.local.yml>`_.
+* ``devops/wsi_deid/girder.local.conf``: change the run-time behavior, such as how label and macro images are redacted. `View entire example girder config file <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/girder.local.conf>`_.
 
 When modifying ``devops/wsi_deid/girder.local.conf``, you'll also need to enable using the custom file by uncommenting a few lines as described in ``devops/wsi_deid/docker-compose.example.local.yml``.
 
@@ -229,7 +232,7 @@ By default, if an image has been imported before, it will not be reimported no m
 Customizing Import and Export Reports
 +++++++++++++++++++++++++++++++++++++
 
-If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``. Setting this value to ``None`` will include all columns except ``InputFileName`` to be included in the export reports.
+If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``. Setting this value to ``None`` will include all columns except ``InputFileName`` in the export reports.
 
 .. code-block:: python
 
@@ -352,6 +355,7 @@ will start the system with these permissive import options.  If you modify the s
     docker-compose -f docker-compose.yml -f docker-compose.local.yml restart
 
 to run the system with the modified schema and configuration.
+
 
 Original Pilot Settings
 -----------------------
