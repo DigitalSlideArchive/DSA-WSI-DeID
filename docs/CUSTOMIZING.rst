@@ -363,4 +363,4 @@ to run the system with the modified schema and configuration.
 Original Pilot Settings
 -----------------------
 
-To have the same settings as the original pilot, use the ``docker-compose.pilot.yml`` file instead of ``docker-compose.yml``.
+To have the same settings as the original pilot, use the `docker-compose.pilot.yml <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/docker-compose.pilot.yml>`_ file instead of ``docker-compose.yml``.
