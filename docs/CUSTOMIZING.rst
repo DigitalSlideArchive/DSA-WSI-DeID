@@ -5,8 +5,8 @@ There are several ways to customize the installation of WSI DeID to change its b
 
 See the files following files for examples and additional comments about configuration options:
 
-* ``devops/wsi_deid/docker-compose.example.local.yml``: change the deployment environment, such as directories that are used and available memory. `View entire example docker-compose file <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/docker-compose.example.local.yml>`_.
-* ``devops/wsi_deid/girder.local.conf``: change the run-time behavior, such as how label and macro images are redacted. `View entire example girder config file <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/girder.local.conf>`_.
+* `devops/wsi_deid/docker-compose.example.local.yml <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/docker-compose.example.local.yml>`_: change the deployment environment, such as directories that are used and available memory.
+* `devops/wsi_deid/girder.local.conf <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/girder.local.conf>`_: change the run-time behavior, such as how label and macro images are redacted.
 
 When modifying ``devops/wsi_deid/girder.local.conf``, you'll also need to enable using the custom file by uncommenting a few lines as described in ``devops/wsi_deid/docker-compose.example.local.yml``.
 
@@ -269,7 +269,7 @@ The values in the ``image_name_field`` need to be unique, or only the first row 
 Import Schema Modification
 --------------------------
 
-Import excel files can be customized, allowing for additional metadata to be captured during the import process. The expected schema for import files is described in ``wsi_deid/schema/importManifestScheme.json``. An example of a modified schema can be found in ``importManifestSchema.example.json``. In this example schema, the fields  ``Tumor_Rec_Number``, ``Histology_Code``, and ``Behavior_Code`` have been added. Each of these new fields uses a regular expression for validation. Enums (a set of values) can be used for validation instead of pattern matching (see the property ``Proc_Type`` for an example).
+Import excel files can be customized, allowing for additional metadata to be captured during the import process. The expected schema for import files is described in `wsi_deid/schema/importManifestScheme.json <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/schema/importManifestSchema.json>`_. An example of a modified schema can be found in `importManifestSchema.example.json <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/wsi_deid/schema/importManifestSchema.example.json>`_. In this example schema, the fields  ``Tumor_Rec_Number``, ``Histology_Code``, and ``Behavior_Code`` have been added. Each of these new fields uses a regular expression for validation. Enums (a set of values) can be used for validation instead of pattern matching (see the property ``Proc_Type`` for an example).
 
 Currently, import logic requires ``TokenID``, ``Proc_Seq``, ``Slide_ID``, and ``InputFileName`` in order to properly find and rename images in the import directory. These properties in the schema should not be modified at this time.
 
@@ -330,7 +330,10 @@ An Example to Allow All Import Files
 
 You can use a schema and config file to allow all files to be imported.  If there is an excel file with some minimum standards, files will be added to the ``AvailableToProcess`` folder.  If not, they will still be added to the ``Unfiled`` folder.
 
-For example, using the sample files in the ``devops/wsi_deid`` folder, ``girder.local.example.allowall.conf`` is a configuration that changes the default folder and image column names, doesn't enforce naming constraints, and has some other UI options changed from the default.  The ``importManifestSchema.example.allowall.json`` file uses a very lax schema to not require an input file name.  The columns that are present have fairly minimal requirements.
+For example, using the following sample files in the ``devops/wsi_deid`` folder:
+
+* `girder.local.example.allowall.conf <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/girder.local.example.allowall.conf>`_ is a configuration that changes the default folder and image column names, doesn't enforce naming constraints, and has some other UI options changed from the default.
+* `importManifestSchema.example.allowall.json <https://github.com/DigitalSlideArchive/DSA-WSI-DeID/blob/master/devops/wsi_deid/importManifestSchema.example.allowall.json>`_ is a very lax schema that does not require an input file name.  The columns that are present have fairly minimal requirements.
 
 A ``docker-compose.local.yml`` could then be specified such as::
 
