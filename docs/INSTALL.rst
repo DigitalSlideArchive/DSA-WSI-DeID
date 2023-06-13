@@ -34,7 +34,7 @@ Hardware Requirements
 
 The recommended hardware is 32 GBytes of memory on a system with at least 4 cores.  If you are using OCR, it is highly recommended to have an NVidia Cuda-capable GPU.
 
-The minimum hardware is 4 GBytes of memory on a system with at least 2 cores.
+The minimum hardware is 4 GBytes of memory on a system with at least 2 cores (12 GBytes if using iSyntax files).
 
 The speed of your storage greatly affects the speed of the system.  SSD drives will for import, local storage, and export are recommended.
 
@@ -164,7 +164,7 @@ substituting whichever specific ``docker-compose up`` variant you normally use t
 Memory and Disk Space
 ---------------------
 
-The main docker container should have at least 4 GBytes of memory available.  Some installations of Docker artificially limit memory to 1 or 2 GB, while other installations allows containers to use all of the computer's memory.
+The main docker container should have at least 4 GBytes of memory available (12 GBytes if using iSyntax files).  Some installations of Docker artificially limit memory to 1 or 2 GB, while other installations allows containers to use all of the computer's memory.
 
 By default, WSI images use space in the import directory.  When redacted, they use space in the assetstore directory.  On export, they use space in the export directory.  If deleted from the system, they will free space in the assetstore directory, but will not be removed from the import or export directories.  These directories can be set in the ``docker-compose.local.yml`` file.  If unset, the assetstore directory uses a Docker volume; some installations of Docker artificially limit the size of Docker volumes and using an explicit path will work around this.
 

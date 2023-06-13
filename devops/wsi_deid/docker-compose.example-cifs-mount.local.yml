@@ -48,11 +48,12 @@ services:
       girder serve
       "
     # Use a specific quantity of memory; this is necessary on some Windows/OSX
-    # deployments.  Uncomment if needed.
+    # deployments.  Uncomment if needed.  4g is the minimum is not using
+    # iSyntax, with iSyntax 12g
     # deploy:
     #   resources:
     #     limits:
-    #       memory: 4g
+    #       memory: 12g
   # Uncomment this to specify an explicit database directory
   # mongodb:
   #   volumes:

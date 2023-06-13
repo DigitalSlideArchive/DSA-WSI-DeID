@@ -29,6 +29,9 @@ services:
       # that (dos2unix -n /cifs.credentials /opt/credentials) and then use the
       # converted file for the credentials.
       - C:\cifs.credentials:/cifs.credentials
+    # Use a specific quantity of memory; this is necessary on some Windows/OSX
+    # deployments.  Uncomment if needed.  4g is the minimum is not using
+    # iSyntax, with iSyntax 12g
     deploy:
       resources:
         limits:
