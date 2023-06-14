@@ -134,6 +134,7 @@ Note that fields specified in ``no_redact_control_keys`` will have redaction dis
   no_redact_control_keys_format_hamamatsu = {
       "^internal;openslide;hamamatsu\.SourceLens$": "^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?))*\s*$"}
   no_redact_control_keys_format_philips = {}
+  no_redact_control_keys_format_isyntax = {}
   ...
 
 Hiding Metadata Fields
@@ -160,6 +161,20 @@ If these metadata items contain unexpected values (e.g., text where a number was
   hide_metadata_keys_format_hamamatsu = {
       "^internal;openslide;hamamatsu\.((AHEX|MHLN|YRNP|zCoarse|zFine)\[|(X|Y)OffsetFromSlideCentre|ccd.(width|height)|(focalplane|slant)\.(left|right)(top|bottom)|stage.center)": "^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?))*\s*$"}
   hide_metadata_keys_format_philips = {}
+  hide_metadata_keys_format_isyntax = {}
+  ...
+
+To show ALL possible metadata, set each of these values to ``{}``.
+
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  hide_metadata_keys = {}
+  hide_metadata_keys_format_aperio = {}
+  hide_metadata_keys_format_hamamatsu = {}
+  hide_metadata_keys_format_philips = {}
+  hide_metadata_keys_format_isyntax = {}
   ...
 
 Editing Metadata Values
