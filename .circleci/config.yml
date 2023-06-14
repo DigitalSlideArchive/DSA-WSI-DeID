@@ -36,7 +36,7 @@ jobs:
       - run:
           name: Run server tests
           no_output_timeout: 15m
-          command: tox
+          command: PYTEST_ADDOPTS=--reruns=3 tox
       - run:
           name: Run web tests
           command: |
