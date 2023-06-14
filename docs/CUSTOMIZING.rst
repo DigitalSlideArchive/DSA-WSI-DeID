@@ -247,16 +247,22 @@ By default, if an image has been imported before, it will not be reimported no m
 Customizing Import and Export Reports
 +++++++++++++++++++++++++++++++++++++
 
-If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``. Setting this value to ``None`` will include all columns except ``InputFileName`` in the export reports.
+If you modify your import schema, or would otherwise like to change which import data is included in import and export reports, you can specify which upload metadata fields to include in these reports by modifying the ``upload_metadata_for_export_report`` list in ``girder.local.conf``.
 
 .. code-block:: python
 
   [wsi_deid]
   ...
-  # Only columns from the import manifest file with these explicit titles will be
-  # added to the custom metadata in exported images.  Set to None to allow all
-  # columns except InputFileName to be added.
-  upload_metadata_add_to_images = None
+  upload_metadata_for_export_report = ["TokenID", "SurgPathNum", "Registry", "Tumor_Rec_Number", "Histology_Code", "Behavior_Code"]
+  ...
+
+Setting this value to ``None`` will include all columns except ``InputFileName`` in the export reports.
+
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  upload_metadata_for_export_report = None
   ...
 
 
@@ -321,6 +327,15 @@ By default, any metadata from the upload excel/csv file except ``InputFileName``
   [wsi_deid]
   ...
   upload_metadata_add_to_images = ["Proc_Seq", "Proc_Type", "Spec_Site"]
+  ...
+
+If the setting is absent or set to ``None``, then all metadata from the upload file, except ``InputFileName``, will be included.
+
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  upload_metadata_add_to_images = None
   ...
 
 
