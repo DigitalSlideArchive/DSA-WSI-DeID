@@ -228,14 +228,18 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
 
 
 def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
+    from . import __version__
+
     metadata = tileSource.getInternalMetadata() or {}
     redactList = {
         'images': {},
         'metadata': {
             'internal;isyntax;scanner_operator_id': generate_system_redaction_list_entry(title),
-            'internal;isyntax;barcode': generate_system_redaction_list_entry(''),
-            'internal;isyntax;software_versions': generate_system_redaction_list_entry(
-                '"' + get_deid_field(item).replace('"', '') + '"')
+            'internal;isyntax;barcode': generate_system_redaction_list_entry(
+                title + ' ' + get_deid_field(item)),
+            'internal;isyntax;software_versions': generate_system_redaction_list_entry((
+                tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
+                ' "DSA Redaction %s' % __version__ + '"').strip())
         },
     }
     for key in {'acquisition_datetime', 'date_of_last_calibration'}:
@@ -1370,13 +1374,27 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
+    from . import __version__
+
     newkeys = {
         'SOFTWARE_VERSIONS': {
             'name': 'DICOM_SOFTWARE_VERSIONS',
             'group': '0x0018',
             'element': '0x1250',
             'pmsvr': 'IStringArray',
-        }
+        },
+        'BARCODE': {
+            'name': 'PIM_DP_UFS_BARCODE',
+            'group': '0x301D',
+            'element': '0x1002',
+            'pmsvr': 'IString',
+        },
+        'SCANNER_OPERATOR_ID': {
+            'name': 'PIIM_DP_SCANNER_OPERATOR_ID',
+            'group': '0x101D',
+            'element': '0x1009',
+            'pmsvr': 'IString',
+        },
     }
 
     tileSource = ImageItem().tileSource(item)
@@ -1386,9 +1404,12 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;isyntax;scanner_operator_id'] = title_redaction_list_entry
-    redactList['metadata']['internal;isyntax;barcode'] = title_redaction_list_entry
+    redactList['metadata']['internal;isyntax;barcode'] = generate_system_redaction_list_entry(
+        title + ' ' + get_deid_field(item))
     redactList['metadata']['internal;isyntax;software_versions'] = \
-        generate_system_redaction_list_entry('"' + get_deid_field(item).replace('"', '') + '"')
+        generate_system_redaction_list_entry((
+            tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
+            ' "DSA Redaction %s' % __version__ + '"').strip())
     old = open(sourcePath, 'rb').read(tileSource._xmllen)
     quality = 90
     stripping = 0
@@ -1441,7 +1462,6 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
             stripping = 3
         if len(result) <= tileSource._xmllen:
             break
-        print(len(result), tileSource._xmllen, stripping)
         if quality <= 20:
             prune += 1
             quality = 90
