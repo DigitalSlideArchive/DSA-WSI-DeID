@@ -77,10 +77,11 @@ def get_generated_title(item):
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
     for key in {
-            'internal;openslide;aperio.Title',
-            'internal;openslide;hamamatsu.Reference',
-            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
-            'internal;xml;PIM_DP_UFS_BARCODE'}:
+        'internal;openslide;aperio.Title',
+        'internal;openslide;hamamatsu.Reference',
+        'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
+        'internal;isyntax;scanner_operator_id',
+    }:
         if redactList['metadata'].get(key):
             return redactList['metadata'].get(key)['value']
     # TODO: Pull from appropriate 'meta' if not otherwise present
@@ -198,7 +199,8 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
         'images': {},
         'metadata': {
             'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': generate_system_redaction_list_entry(title),
-            'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(title),
+            'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(
+                title + '|' + get_deid_field(item)),
             'internal;tiff;software': generate_system_redaction_list_entry(
                 get_deid_field(item, metadata.get('tiff', {}).get('software'))
             ),
@@ -236,7 +238,7 @@ def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;isyntax;scanner_operator_id': generate_system_redaction_list_entry(title),
             'internal;isyntax;barcode': generate_system_redaction_list_entry(
-                title + ' ' + get_deid_field(item)),
+                title + '|' + get_deid_field(item)),
             'internal;isyntax;software_versions': generate_system_redaction_list_entry((
                 tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
                 ' "DSA Redaction %s' % __version__ + '"').strip())
@@ -1185,7 +1187,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;xml;PIIM_DP_SCANNER_OPERATOR_ID'] = title_redaction_list_entry
-    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = title_redaction_list_entry
+    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = \
+        generate_system_redaction_list_entry(title + '|' + get_deid_field(item))
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
@@ -1207,6 +1210,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
             continue
         key = key.split(';', 2)[-1]
         if value is not None and '|' not in key and key in PhilipsTagElements:
+            value = value['value'] if isinstance(value, dict) else value
             plist = xmldict['DataObject']['Attribute']
             pelem = PhilipsTagElements[key]
             entry = {
@@ -1214,7 +1218,9 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
                 'Group': pelem[0],
                 'Element': pelem[1],
                 'PMSVR': pelem[2],
-                'text': value,
+                'text': (
+                    value if key != 'PIM_DP_UFS_BARCODE' else
+                    base64.b64encode(value.encode()).decode()),
             }
             plist.insert(0, entry)
     tag = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
@@ -1405,7 +1411,7 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;isyntax;scanner_operator_id'] = title_redaction_list_entry
     redactList['metadata']['internal;isyntax;barcode'] = generate_system_redaction_list_entry(
-        title + ' ' + get_deid_field(item))
+        title + '|' + get_deid_field(item))
     redactList['metadata']['internal;isyntax;software_versions'] = \
         generate_system_redaction_list_entry((
             tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
