@@ -386,6 +386,10 @@ wrap(HierarchyWidget, 'render', function (render) {
             error: null
         }).done((resp) => {
             if (resp) {
+                // Hide the upload button for WSI DEID folders. Users should be utilizing the
+                // `import` functionality instead of girder's `upload`.
+                const uploadButton = this.$el.find('.g-upload-here-button');
+                uploadButton.hide();
                 restRequest({
                     url: `wsi_deid/settings`,
                     error: null
