@@ -13,7 +13,7 @@ from bson import ObjectId
 from girder import logger
 from girder.api import access
 from girder.api.describe import Description, autoDescribeRoute
-from girder.api.rest import Resource
+from girder.api.rest import Resource, boundHandler
 from girder.constants import AccessType, SortDir, TokenScope
 from girder.exceptions import AccessException, RestException
 from girder.models.file import File
@@ -896,3 +896,49 @@ class WSIDeIDResource(Resource):
             if len(results):
                 return results
         return results
+
+
+def addSystemEndpoints(apiRoot):
+    """
+    This adds endpoints to routes that already exist in Girder.
+
+    :param apiRoot: Girder api root class.
+    """
+    # Added to the system route
+    apiRoot.system.route('GET', ('config',), getCurrentConfig)
+
+
+@access.admin(scope=TokenScope.SETTINGS_READ)
+@autoDescribeRoute(
+    Description('Get the current system config and full settings.')
+    .notes('Must be a system administrator to call this.')
+    .param('includeSettings', 'False to only show config; true to include full '
+           'settings.', required=False, dataType='boolean', default=False)
+    .errorResponse('You are not a system administrator.', 403)
+)
+@boundHandler
+def getCurrentConfig(self, includeSettings=False):
+    import json
+
+    from girder.utility import config
+    result = {}
+    for k, v in config.getConfig().items():
+        if isinstance(v, dict):
+            result[k] = {}
+            for subk, subv in v.items():
+                if not callable(subv):
+                    try:
+                        result[k][subk] = json.loads(json.dumps(subv))
+                    except Exception:
+                        print(k, subk, subv)
+                        pass
+        elif not callable(v):
+            result[k] = v
+    if includeSettings:
+        result['settings'] = {}
+        for record in Setting().find({}):
+            result['settings'][record['key']] = record['value']
+        envkeys = {key for key in os.environ if key.startswith('GIRDER_SETTING_')}
+        if len(envkeys):
+            result['environment'] = {key: os.environ.get(key) for key in envkeys}
+    return result

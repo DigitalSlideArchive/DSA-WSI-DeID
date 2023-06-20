@@ -13,7 +13,7 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from .constants import PluginSettings
 from .import_export import SftpMode
-from .rest import WSIDeIDResource
+from .rest import WSIDeIDResource, addSystemEndpoints
 
 try:
     __version__ = get_distribution(__name__).version
@@ -79,6 +79,7 @@ class GirderPlugin(plugin.GirderPlugin):
     def load(self, info):
         plugin.getPlugin('histomicsui').load(info)
         info['apiRoot'].wsi_deid = WSIDeIDResource(info['apiRoot'])
+        addSystemEndpoints(info['apiRoot'])
         memory = psutil.virtual_memory().total
         girder.logprint.info('Total system memory: %3.1f GB' % (memory / 1024**3))
         if memory < 3.5 * 1024**3:
