@@ -67,7 +67,7 @@ See `GIRDER.rst <GIRDER.rst>`_ for more information.
 Workflow Overview
 =================
 
-There are six Folders an image file can be in within the WSI DeID Tool, including:
+There are seven folders an image file can be in within the WSI DeID Tool, including:
 
 - ``AvailableToProcess``
 - ``Quarantined``
