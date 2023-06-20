@@ -153,6 +153,36 @@ You can follow the logs and see them update as they change::
     docker-compose logs -f
     docker-compose exec girder tail -F /logs/info.log
 
+Failures To Start
+-----------------
+
+If you have followed the installation instructions and the system fails to start, often the problem can be found by looking at the docker logs. 
+
+Mongo Container
+~~~~~~~~~~~~~~~
+
+Mongo is the database used to store metadata and track files.  You can check the logs of the mongo container via::
+    
+    docker-compose logs mongodb
+
+If this shows the error ``MongoDB 5.0+ requires a CPU with AVX support``, you are probably running the system in a virtual machine of some sort.  Either enable AVX support on that virtual machine or adjust the ``docker-compose.local.yml`` file to use an older version of Mongo.  This could be done, for eaxmple, by adding::
+
+    ---
+    version: '3'
+    services:
+      mongodb:
+        image: "mongo:4.4"
+
+
+Girder Container
+~~~~~~~~~~~~~~~~
+
+Girder is the main server for the system.  You can check the logs of the girder container via::
+    
+    docker-compose logs girder
+
+If Girder has failed to start, it is mostly caused by an invalid configuration file or an unexpected volume configuration in the docker-compose setup.  The logs will show the specific issue.
+
 Fixing Common Problems
 ----------------------
 
