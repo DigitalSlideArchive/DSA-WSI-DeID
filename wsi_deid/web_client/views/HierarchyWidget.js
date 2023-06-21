@@ -449,8 +449,12 @@ wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount
     const reshowSubtreeCounts = () => {
         restRequest({
             url: `wsi_deid/resource/${this.parentModel.id}/subtreeCount`,
-            data: { type: this.parentModel.get('_modelType') }
+            data: { type: this.parentModel.get('_modelType') },
+            error: null
         }).done((data) => {
+            if (!data || data.folders === undefined) {
+                return;
+            }
             this.parentModel.set('nSubtreeCount', data);
             showSubtreeCounts();
         });
