@@ -540,8 +540,22 @@ class WSIDeIDResource(Resource):
         user = self.getCurrentUser()
         model = ModelImporter.model(type)
         doc = model.load(id=id, user=self.getCurrentUser(), level=AccessType.READ)
-        folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
-        totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
+        if not hasattr(self, '_pendingSubtreeCounts'):
+            self._pendingSubtreeCounts = {}
+        key = (user['_id'], doc['_id'])
+        try:
+            # Don't make the request a second time if we made it recently
+            # and think it is pending.  Some subtree counts can take minutes
+            if time.time() - self._pendingSubtreeCounts.get(key, 0) < 3600:
+                return
+            self._pendingSubtreeCounts[key] = time.time()
+            folderCount = model.subtreeCount(doc, False, user=user, level=AccessType.READ)
+            totalCount = model.subtreeCount(doc, True, user=user, level=AccessType.READ)
+        finally:
+            try:
+                del self._pendingSubtreeCounts[key]
+            except Exception:
+                pass
         return {'folders': folderCount, 'items': totalCount - folderCount, 'total': totalCount}
 
     def _folderItemListGetItem(self, item):
