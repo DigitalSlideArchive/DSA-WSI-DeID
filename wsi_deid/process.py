@@ -1426,14 +1426,14 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
             processed = False
             if mkey.startswith('internal;isyntax;'):
                 key = mkey.split(';', 2)[-1].upper()
+                value = redactList['metadata'][mkey]['value']
+                if key == 'BARCODE':
+                    value = base64.b64encode(value.encode()).decode()
                 for xentry in tree.findall('Attribute'):
                     xkey = str(xentry.get('Name'))
                     if xkey == 'DICOM_' + key or (
                             xkey.startswith('PI') and xkey.endswith('_' + key)):
                         if redactList['metadata'][mkey]['value'] is not None:
-                            value = redactList['metadata'][mkey]['value']
-                            if key == 'BARCODE':
-                                value = base64.b64encode(value.encode()).decode()
                             xentry.text = value
                         else:
                             xentry.getparent().remove(xentry)
@@ -1446,7 +1446,7 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
                         'PMSVR="%s">%s</Attribute>' % (
                             newkeys[key]['name'], newkeys[key]['group'],
                             newkeys[key]['element'], newkeys[key]['pmsvr'],
-                            redactList['metadata'][mkey]['value'])))
+                            xml.sax.saxutils.escape(value))))
                     processed = True
             if not processed:
                 logger.info('Cannot redact %s' % mkey)
