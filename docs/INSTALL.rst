@@ -303,6 +303,17 @@ The ``SFTP MODE`` setting has three choices:
 
 The export process creates a separate folder for each subject in the export directory and/or on the remote server.  If you are using SFTP, the account needs to have privileges to create directories at the destination path for the transfer to be successful.
 
+SEER*DMS Database Lookup
+------------------------
+
+Additional pathology metadata can be retreived from the SEER*DMS database if you have an appropriate access URL and API key.  By default, when images are imported that are not listed in a DeID Upload file and the labels on the slides are processed with OCR, the label information can be used to get additional informatuion such as primary site, tumor record number, and histology code.  This information is retreived from the SEER*DMS database based on the pathology case number, first and last name, and dates of birth and service that are on the label.
+
+To use the database lookup, go to the Admin console, navigate to ``Plugins``, and then click the cog icon in the WSI DeID section.  Configure the database URL and API Key in this section. 
+
+.. image:: screenshots/database_settings.png
+    :alt: SEEM*DMS Database Settings
+
+If both a URL and API Key are set, the database will be consulted for otherwise unfiled images.  If exactly one match is found, the image will be refiled based on that inforamation.  If no matches or multiple matches are found, A ``Database Lookup`` button is shown on the Unfiled image page.  A user can manually enter the appropriate information (often shown on the slide label) and check if the SEEM*DMS database contains a matching record.
 
 Philips iSyntax Support
 -----------------------
