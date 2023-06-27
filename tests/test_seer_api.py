@@ -7,6 +7,7 @@ from wsi_deid import matching_api
 def api_search():
     return matching_api.APISearch('localhost:8080/matching/wsi', 'api-key')
 
+
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 def test_api_search(api_search):
@@ -36,6 +37,7 @@ def test_api_search(api_search):
     query_tokens = set([token for sublist in query_tokens_list for token in sublist])
     assert len(query_tokens) == 6
 
+
 match_name_cases = [
     ('FizzBuzz', ['Fizz', 'Buzz', 'FizzBuzz']),
     ('fizzBuzz', ['fizz', 'Buzz', 'fizzBuzz']),
@@ -43,6 +45,7 @@ match_name_cases = [
     ('fizz', ['fizz']),
     ('hosp', []),
 ]
+
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
@@ -53,6 +56,7 @@ def test_api_search_add_matches_name(api_search, match_key, token, expected_valu
     api_search.addMatches(matches, match_key, token)
     key_match_values = [item['value'] for item in matches[match_key]]
     assert all([value in expected_values for value in key_match_values])
+
 
 expected_date = '01-01-2020'
 expected_date_1920 = '01-01-1920'
@@ -79,6 +83,7 @@ match_dob_cases = [
     ('DOB.01/01/20', expected_date),
     ('DOB01/01/20', expected_date),
 ]
+
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
@@ -112,6 +117,7 @@ match_dos_cases = [
     ('1/01/20', expected_date),
 ]
 
+
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 @pytest.mark.parametrize('token,expected_value', match_dos_cases)
@@ -131,6 +137,8 @@ match_case_num_cases = [
     ('11-B2', '11-B2'),
     ('A1-22', 'A1-22'),
 ]
+
+
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
 @pytest.mark.parametrize('token,expected_value', match_case_num_cases)
