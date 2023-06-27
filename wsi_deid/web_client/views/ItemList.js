@@ -177,7 +177,6 @@ wrap(ItemListWidget, 'render', function (render) {
 
     /* Largely taken from girder/web_client/src/views/widgets/ItemListWidget.js
      */
-    this.checked = [];
     // If we set a selected item in the beginning we will center the selection while loading
     if (this._selectedItem && this._highlightItem) {
         this.scrollPositionObserver();
@@ -227,6 +226,14 @@ wrap(ItemListWidget, 'render', function (render) {
     };
     this.delegateEvents();
     this.listenTo(this, 'g:checkboxesChanged', updateChecked);
+    const itemCheckboxes = this.$el.find('.g-list-checkbox');
+    itemCheckboxes.each((index, checkbox) => {
+        const cid = $(checkbox).attr('g-item-cid');
+        if (this.checked.includes(cid)) {
+            $(checkbox).attr('checked', true);
+        }
+    });
+    this.trigger('g:checkboxesChanged');
     return this;
 });
 

@@ -51,6 +51,9 @@ describe('Test WSI DeID plugin with default schema', function () {
             waitsFor(function () {
                 return $('.wsi_deid-import-button').length;
             }, 'import button to appear');
+            waitsFor(function () {
+                return $('.g-upload-here-button').first().css('display') === 'none';
+            }, 'upload button to disappear');
         });
         it('clicks the import button', function () {
             runs(function () {

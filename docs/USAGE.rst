@@ -67,7 +67,7 @@ See `GIRDER.rst <GIRDER.rst>`_ for more information.
 Workflow Overview
 =================
 
-There are six Folders an image file can be in within the WSI DeID Tool, including:
+There are seven folders an image file can be in within the WSI DeID Tool, including:
 
 - ``AvailableToProcess``
 - ``Quarantined``
@@ -298,6 +298,30 @@ Next, navigate back to the ``Unfiled`` directory. Check the box next to the item
    :alt: checked items menu
 
 Once your items are picked, navigate to the ``AvailableToProcess`` directory. From the ``Checked items`` dropdown, click ``Move checked resources here``.
+
+Database Lookup
+---------------
+
+If you have the SEER*DMS database configured, the images can also be filed based on information scanned from their labels and found in the SEER*DMS database.  If the label could not be read via OCR well enough to find a match, or multiple matches were found, the database can be manually searched and the results applied to the image.
+
+In addition to the ``Refile Image`` button, there will be a ``Database Lookup`` button.
+
+.. image:: screenshots/database_lookup_button.png
+   :alt: Database Lookup button
+
+This will show a dialog with the label image of the current slide.  This example image is a test label that was attached to a slide with mouse tissue; it is not from a real person.  The dialog will look like:
+
+.. image:: screenshots/database_lookup_empty.png
+   :width: 50%
+   :alt: Database Lookup Dialog before data entry
+
+Enter as much of the requested information as you can from the slide label and select ``Lookup``.  If the database returns any matches, they are shown in the dialog.  There may be multiple matches.  This might result in:
+
+.. image:: screenshots/database_lookup_example.png
+   :width: 50%
+   :alt: Database Lookup Dialog with results
+
+Select ``Apply`` next to the desired result.  The image will be refiled with the information from the database.
 
 Checking on Running Jobs
 ------------------------

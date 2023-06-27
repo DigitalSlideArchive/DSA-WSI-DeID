@@ -386,6 +386,10 @@ wrap(HierarchyWidget, 'render', function (render) {
             error: null
         }).done((resp) => {
             if (resp) {
+                // Hide the upload button for WSI DEID folders. Users should be utilizing the
+                // `import` functionality instead of girder's `upload`.
+                const uploadButton = this.$el.find('.g-upload-here-button');
+                uploadButton.hide();
                 restRequest({
                     url: `wsi_deid/settings`,
                     error: null
@@ -445,8 +449,12 @@ wrap(HierarchyWidget, 'fetchAndShowChildCount', function (fetchAndShowChildCount
     const reshowSubtreeCounts = () => {
         restRequest({
             url: `wsi_deid/resource/${this.parentModel.id}/subtreeCount`,
-            data: { type: this.parentModel.get('_modelType') }
+            data: { type: this.parentModel.get('_modelType') },
+            error: null
         }).done((data) => {
+            if (!data || data.folders === undefined) {
+                return;
+            }
             this.parentModel.set('nSubtreeCount', data);
             showSubtreeCounts();
         });
