@@ -31,6 +31,3 @@ Navigating the Documentation
 * `docs/CUSTOMIZING.rst <docs/CUSTOMIZING.rst>`_ contains details on customizing the workflow for different use cases.
 * `docs/APIUSAGE.rst <docs/APIUSAGE.rst>`_ describes how to make API called for perform common workflow actions.
 * `docs/rationale.md <docs/rationale.md>`_ contains a rationale of the SEER WSI DeID pilot project.
-
-
-

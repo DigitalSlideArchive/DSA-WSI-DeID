@@ -37,7 +37,7 @@ services:
     # https://github.com/moby/moby/issues/22197)
     privileged: True
     # We need to override the default command to mount the shared directory.
-    # This installs teh cifs libraries, creates a /data directory to place the
+    # This installs the cifs libraries, creates a /data directory to place the
     # mount, mounts the cifs/smb share, and then starts Girder normally.
     command: bash -c "
       apt-get update &&

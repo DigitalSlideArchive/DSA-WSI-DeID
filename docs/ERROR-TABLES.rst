@@ -1,4 +1,4 @@
-============== 
+==============
 Error Messages
 ==============
 
@@ -13,7 +13,7 @@ Possible Error Messages Encountered After Import
     :widths: 10, 25, 65
 
     ID#,DSA WSI DeID Error Message,How is the error message triggered?
-    1,Import Completed,whenever an import run was attempted and completed regardless of the result or if any issues with the input WSI files or DeID Upload File 
+    1,Import Completed,whenever an import run was attempted and completed regardless of the result or if any issues with the input WSI files or DeID Upload File
     2,"Import process completed, with errors","when the system is working, sees folders and WSI files, but something is off such as a file cannot be imported for some semantic issues"
     3,Nothing to import. Import Folder is empty,"when the import folder is empty, and an import run was attempted"
     4,Failed to import.,"will only be displayed if there is a condition that we did not anticipate (which means that I can't give an example of how to make it appear).  If this occurs, it probably means someone needs to check the logs and figure out what happened and how to improve things in a future version."
@@ -59,4 +59,3 @@ Possible Messages In The Import Job Report
     9,Failed to import,WSI,Image file is not an accepted WSI format,10
     10,File missing,WSI,File missing,7
     11,Duplicate ImageID,WSI,A different image with the same ImageID was previously imported,6
-        
