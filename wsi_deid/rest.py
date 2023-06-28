@@ -811,7 +811,7 @@ class WSIDeIDResource(Resource):
         folderNameField = config.getConfig('folder_name_field', 'TokenID')
         processedImageIds = []
         for itemId in imageRefileData:
-            item = Item().load(itemId, user=user)
+            item = Item().load(itemId, user=user, level=AccessType.READ)
             uploadInfo = item.get('wsi_uploadInfo')
             tokenId = imageRefileData[itemId]['tokenId']
             imageId = imageRefileData[itemId]['imageId']

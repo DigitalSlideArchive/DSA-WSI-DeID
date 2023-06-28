@@ -119,7 +119,7 @@ Information about images is stored in a persistent database located in a docker 
 Using a Specific Version
 ------------------------
 
-By default, `docker-compose up` will use the most recent stable version of the software.  To use a specific version (e.g., `v1.0.0`), make sure you switch to that version from GitHub::
+By default, ``docker-compose up`` will use the most recent stable version of the software.  To use a specific version (e.g., ``v1.0.0``), make sure you switch to that version from GitHub::
 
     git checkout v1.0.0
 
@@ -156,16 +156,16 @@ You can follow the logs and see them update as they change::
 Failures To Start
 -----------------
 
-If you have followed the installation instructions and the system fails to start, often the problem can be found by looking at the docker logs. 
+If you have followed the installation instructions and the system fails to start, often the problem can be found by looking at the docker logs.
 
 Mongo Container
 ~~~~~~~~~~~~~~~
 
 Mongo is the database used to store metadata and track files.  You can check the logs of the mongo container via::
-    
+
     docker-compose logs mongodb
 
-If this shows the error ``MongoDB 5.0+ requires a CPU with AVX support``, you are probably running the system in a virtual machine of some sort.  Either enable AVX support on that virtual machine or adjust the ``docker-compose.local.yml`` file to use an older version of Mongo.  This could be done, for eaxmple, by adding::
+If this shows the error ``MongoDB 5.0+ requires a CPU with AVX support``, you are probably running the system in a virtual machine of some sort.  Either enable AVX support on that virtual machine or adjust the ``docker-compose.local.yml`` file to use an older version of Mongo.  This could be done, for example, by adding::
 
     ---
     version: '3'
@@ -178,7 +178,7 @@ Girder Container
 ~~~~~~~~~~~~~~~~
 
 Girder is the main server for the system.  You can check the logs of the girder container via::
-    
+
     docker-compose logs girder
 
 If Girder has failed to start, it is mostly caused by an invalid configuration file or an unexpected volume configuration in the docker-compose setup.  The logs will show the specific issue.
@@ -210,7 +210,7 @@ Once the system is up and running, you can check the available memory in kilobyt
 
 If the printed value is less than 3000000, you should add the appropriate lines to the ``docker-compose.local.yml`` file to specify the available memory.
 
-Similarly, you can check the available diskspace for the assetstore directory via ::
+Similarly, you can check the available disk space for the assetstore directory via ::
 
     docker exec wsi_deid_girder_1 bash -c "df -h /assetstore"
 
@@ -219,7 +219,7 @@ If this is not large enough to hold all of the WSI files that will be worked on,
 Additional Girder Plugins
 -------------------------
 
-The WSI DeID software is based on the Girder data management system.  There are a wide variety of plugins available for Girder, some of which can be used in conjuction with the WSI DeID software.  These can be installed by modifying the local docker-compose configuration.  If the plugin has any user-facing interface, remember that the girder web client needs to be built as part of installation process.
+The WSI DeID software is based on the Girder data management system.  There are a wide variety of plugins available for Girder, some of which can be used in conjunction with the WSI DeID software.  These can be installed by modifying the local docker-compose configuration.  If the plugin has any user-facing interface, remember that the girder web client needs to be built as part of installation process.
 
 For example, to install the Girder LDAP plugin to support LDAP authentication, modify your ``docker-compose.local.yml`` file, changing the starting command::
 
@@ -306,14 +306,14 @@ The export process creates a separate folder for each subject in the export dire
 SEER*DMS Database Lookup
 ------------------------
 
-Additional pathology metadata can be retreived from the SEER*DMS database if you have an appropriate access URL and API key.  By default, when images are imported that are not listed in a DeID Upload file and the labels on the slides are processed with OCR, the label information can be used to get additional informatuion such as primary site, tumor record number, and histology code.  This information is retreived from the SEER*DMS database based on the pathology case number, first and last name, and dates of birth and service that are on the label.
+Additional pathology metadata can be retrieved from the SEER*DMS database if you have an appropriate access URL and API key.  By default, when images are imported that are not listed in a DeID Upload file and the labels on the slides are processed with OCR, the label information can be used to get additional information such as primary site, tumor record number, and histology code.  This information is retrieved from the SEER*DMS database based on the pathology case number, first and last name, and dates of birth and service that are on the label.
 
-To use the database lookup, go to the Admin console, navigate to ``Plugins``, and then click the cog icon in the WSI DeID section.  Configure the database URL and API Key in this section. 
+To use the database lookup, go to the Admin console, navigate to ``Plugins``, and then click the cog icon in the WSI DeID section.  Configure the database URL and API Key in this section.
 
 .. image:: screenshots/database_settings.png
     :alt: SEEM*DMS Database Settings
 
-If both a URL and API Key are set, the database will be consulted for otherwise unfiled images.  If exactly one match is found, the image will be refiled based on that inforamation.  If no matches or multiple matches are found, A ``Database Lookup`` button is shown on the Unfiled image page.  A user can manually enter the appropriate information (often shown on the slide label) and check if the SEEM*DMS database contains a matching record.
+If both a URL and API Key are set, the database will be consulted for otherwise unfiled images.  If exactly one match is found, the image will be refiled based on that information.  If no matches or multiple matches are found, A ``Database Lookup`` button is shown on the Unfiled image page.  A user can manually enter the appropriate information (often shown on the slide label) and check if the SEEM*DMS database contains a matching record.
 
 Philips iSyntax Support
 -----------------------
@@ -328,7 +328,7 @@ You must have either the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_commercial
 Installation
 ~~~~~~~~~~~~
 
-Enable the appropriate volume command in girder container to the ``docker-compose.yml`` file to mount the main directory of the unzipped SDK to the intenal ``isyntax`` directory.
+Enable the appropriate volume command in girder container to the ``docker-compose.yml`` file to mount the main directory of the unzipped SDK to the internal ``isyntax`` directory.
 
 Switch the girder container start command to ``/wsi_deid/devops/wsi_deid/install_and_start_isyntax.sh``.
 
@@ -339,7 +339,7 @@ Usage
 
 iSyntax files can be redacted in a similar manner to other file formats.  There are some limitations based on the functionality exposed by the Philips SDK:
 
-* Portions of the WSI image cannot be redacted.
+* Portions of the WSI image cannot be redacted.  That is, if there is writing on the whole slide image, this can be blacked out on other formats but not on iSyntax files.
 
 * If there is no label image in the original file, it may not be possible to add a label image.
 
@@ -359,7 +359,7 @@ An example configuration file is provided, see `docker-compose.example-ws2019.lo
 Example Installation on WS 2019
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Note: it is better to install Docker Desktop using official instructions from Docker or Microsoft.  If you have trouble we those, these scripts may work.  They have only been tested an a specific verison of Windows Server 2019 and may not work on anything else.
+Note: it is better to install Docker Desktop using official instructions from Docker or Microsoft.  If you have trouble we those, these scripts may work.  They have only been tested on a specific version of Windows Server 2019 and may not work on anything else.
 
 As an example of installing the software on a fresh install of Windows Server 2019 (tested on version 1809, OS Build 17763.737), the following powershell commands were used.
 

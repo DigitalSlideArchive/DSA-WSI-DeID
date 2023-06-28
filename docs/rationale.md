@@ -17,5 +17,3 @@ The WSI DeID tool is an open-source software that can be deployed in either a Wi
 ## Assessment of Software Validation
 
 Between August 2020 and August 2021, NCI/SRP is conducting the SEER-Linked Pediatric Cancer Whole Slide Imaging Pilot (Pilot) to test the validity of this WSI deidentification software. This Pilot entails collecting WSIs and associated metadata from pediatric cancer cases via participating cancer registries.
-
-
