@@ -77,8 +77,35 @@ describe('Test WSI DeID plugin with default schema', function () {
             waitsFor(function () {
                 return $('.g-refile-button').length;
             }, 'refile button to appear');
+            waitsFor(function () {
+                return $('.g-matching-button').length;
+            }, 'Database lookup button to appear');
         });
-        it('refiles the image', function () {
+        it('clicks the lookup button to open the dialog', function () {
+            runs(function () {
+                $('.g-matching-button').eq(0).click();
+            });
+            girderTest.waitForDialog();
+            runs(function () {
+                expect($('h3.modal-title').text()).toBe('Database Lookup');
+            });
+            expect($('.token-label-id').length).toEqual(0);
+        });
+        it('makes an API call', function () {
+            runs(function () {
+                $('.h-lookup').eq(0).click();
+            });
+            waitsFor(function () {
+                return $('.token-id-label').length;
+            }, 'The results table to appear');
+        });
+        it('closes the lookup dialog', function () {
+            $('#g-dialog-container').girderModal('close');
+            waitsFor(function () {
+                return $('body.modal-open').length === 0;
+            }, 'The lookup dialog to be closed');
+        });
+        it('refiles the image manually', function () {
             runs(function () {
                 var tokenInput = $('input.g-refile-tokenid').first();
                 tokenInput.val(tokenId);
