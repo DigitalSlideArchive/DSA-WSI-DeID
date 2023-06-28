@@ -121,6 +121,8 @@ In order to disable redaction controls for certain metadata fields, you can add 
 
 Note that fields specified in ``no_redact_control_keys`` will have redaction disabled on all image formats. If you wish to disable redaction of a metadata field on, for example, Aperio images only, you can add that metadata key and expected value to the ``no_redact_control_keys_format_aperio`` dictionary.
 
+If you are unfamilar with regular expressions, please consult a tutorial on them before trying to edit these, as they can quite complex.
+
 .. code-block:: python
 
   [wsi_deid]
@@ -137,6 +139,8 @@ Note that fields specified in ``no_redact_control_keys`` will have redaction dis
   no_redact_control_keys_format_philips = {}
   no_redact_control_keys_format_isyntax = {}
   ...
+
+As an explanation of one of the rows above, if an Aperio (SVS) file have a key for "AppMag", "MPP", "Exposure Time", or "Exposure Scale", and the value is a numerical value or a comma-separated list of numerical values, possibly with white-space, then it is considered a safe value that cannot contain PHI and should not be a candidate for redaction.
 
 Hiding Metadata Fields
 ++++++++++++++++++++++

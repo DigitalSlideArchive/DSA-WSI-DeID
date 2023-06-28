@@ -265,7 +265,7 @@ Below is a screenshot of a message presented to the user after an import. See th
 Following Up on Unfiled Images
 ------------------------------
 
-If your import schema does not have or does not requre an ``InputFileName`` field, any WSIs in your import folder that could not be associated with a row on the DeID Upload file will first be ingested into the ``Unfiled`` directory.
+If your import schema does not have or does not require an ``InputFileName`` field, any WSIs in your import folder that could not be associated with a row on the DeID Upload file will first be ingested into the ``Unfiled`` directory.
 
 After all files are ingested in this way, the system will attempt to match unfiled images to upload data by running Optical Character Recognition (OCR) to extract label text. If the system finds a match, that image will be copied to the ``AvailableToProcess`` directory, where redaction can continue as normal.
 
@@ -283,7 +283,7 @@ Refiling images can also be performed at the folder level. Selecting any number 
 
 Selected images can be refiled together (to a single subdirectory in ``AvailableToProcess``) or separately (to many subdirectories of ``AvailableToProcess``). If filing together, there is an additional option to use an existing TokenID. Available TokenIDs are determined during the import process. If filing as new tokens, the new token is generated randomly.
 
-See `CUSTOMIZING.rst <../CUSTOMIZING.rst>` for more details on how new tokens are randomly generated.
+See `CUSTOMIZING.rst <../CUSTOMIZING.rst>`_ for more details on how new tokens are randomly generated.
 
 You can also rename an unfiled image manually.  The image should be renamed and moved to the ``AvailableToProcess`` folder. See the screenshots below for more information.  In the item view for an item you would like to rename and transfer, from the Girder ``Actions`` button, click ``Edit Item``.
 
