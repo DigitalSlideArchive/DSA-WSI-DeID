@@ -15,7 +15,7 @@ class APISearch:
     dateRE = re.compile(
         r'(?P<month>\d?\d)(?:[-_/.])(?P<day>\d?\d)(?:[-_/.])(?P<year>(?:19|20|)\d\d)$')
     date2RE = re.compile(
-        r'(?P<year>(?:19|20|)\d\d)(?:[-_/.])(?P<month>\d?\d)(?:[-_/.])(?P<day>\d?\d)$')
+        r'(?P<year>(?:19|20|)\d\d)(?:[-_/.])(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>\d?\d)$')
     nameRE = re.compile(r'^(?P<name>[a-zA-Z]{2,50})$')
     name1RE = re.compile(r'^(?P<name>[a-zA-Z][a-z]{1,49})(?:[A-Z][a-zA-Z]{1,49})$')
     name2RE = re.compile(r'^(?:[a-zA-Z][a-z]{1,49})(?P<name>[A-Z][a-z][a-zA-Z]{0,48})$')
