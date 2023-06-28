@@ -89,6 +89,8 @@ def _provisionDefaultSchemaServer(tmp_path):
     # os.makedirs(unfiledPath, exist_ok=True)
     Setting().set(PluginSettings.WSI_DEID_IMPORT_PATH, str(importPath))
     Setting().set(PluginSettings.WSI_DEID_EXPORT_PATH, str(exportPath))
+    Setting().set(PluginSettings.WSI_DEID_DB_API_KEY, 'api-key')
+    Setting().set(PluginSettings.WSI_DEID_DB_API_URL, 'http://localhost:8080/matching/wsi')
     # Setting().set(PluginSettings.WSI_DEID_UNFILED_FOLDER, str(unfiledPath))
     for filename in {
         'SEER_Mouse_1_17158539.svs',
