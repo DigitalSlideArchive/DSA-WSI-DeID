@@ -77,10 +77,11 @@ def get_generated_title(item):
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
     for key in {
-            'internal;openslide;aperio.Title',
-            'internal;openslide;hamamatsu.Reference',
-            'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
-            'internal;xml;PIM_DP_UFS_BARCODE'}:
+        'internal;openslide;aperio.Title',
+        'internal;openslide;hamamatsu.Reference',
+        'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
+        'internal;isyntax;scanner_operator_id',
+    }:
         if redactList['metadata'].get(key):
             return redactList['metadata'].get(key)['value']
     # TODO: Pull from appropriate 'meta' if not otherwise present
@@ -198,7 +199,8 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
         'images': {},
         'metadata': {
             'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID': generate_system_redaction_list_entry(title),
-            'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(title),
+            'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(
+                title + '|' + get_deid_field(item)),
             'internal;tiff;software': generate_system_redaction_list_entry(
                 get_deid_field(item, metadata.get('tiff', {}).get('software'))
             ),
@@ -228,14 +230,18 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
 
 
 def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
+    from . import __version__
+
     metadata = tileSource.getInternalMetadata() or {}
     redactList = {
         'images': {},
         'metadata': {
             'internal;isyntax;scanner_operator_id': generate_system_redaction_list_entry(title),
-            'internal;isyntax;barcode': generate_system_redaction_list_entry(''),
-            'internal;isyntax;software_versions': generate_system_redaction_list_entry(
-                '"' + get_deid_field(item).replace('"', '') + '"')
+            'internal;isyntax;barcode': generate_system_redaction_list_entry(
+                title + '|' + get_deid_field(item)),
+            'internal;isyntax;software_versions': generate_system_redaction_list_entry((
+                tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
+                ' "DSA Redaction %s' % __version__ + '"').strip())
         },
     }
     for key in {'acquisition_datetime', 'date_of_last_calibration'}:
@@ -1181,7 +1187,8 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;xml;PIIM_DP_SCANNER_OPERATOR_ID'] = title_redaction_list_entry
-    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = title_redaction_list_entry
+    redactList['metadata']['internal;xml;PIM_DP_UFS_BARCODE'] = \
+        generate_system_redaction_list_entry(title + '|' + get_deid_field(item))
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
     add_deid_metadata(item, ifds)
@@ -1203,6 +1210,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
             continue
         key = key.split(';', 2)[-1]
         if value is not None and '|' not in key and key in PhilipsTagElements:
+            value = value['value'] if isinstance(value, dict) else value
             plist = xmldict['DataObject']['Attribute']
             pelem = PhilipsTagElements[key]
             entry = {
@@ -1210,7 +1218,9 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
                 'Group': pelem[0],
                 'Element': pelem[1],
                 'PMSVR': pelem[2],
-                'text': value,
+                'text': (
+                    value if key != 'PIM_DP_UFS_BARCODE' else
+                    base64.b64encode(value.encode()).decode()),
             }
             plist.insert(0, entry)
     tag = philips_tag(xmldict, 'PIM_DP_SCANNED_IMAGES')
@@ -1370,13 +1380,27 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     :returns: (filepath, mimetype) The redacted filepath in the tempdir and
         its mimetype.
     """
+    from . import __version__
+
     newkeys = {
         'SOFTWARE_VERSIONS': {
             'name': 'DICOM_SOFTWARE_VERSIONS',
             'group': '0x0018',
             'element': '0x1250',
             'pmsvr': 'IStringArray',
-        }
+        },
+        'BARCODE': {
+            'name': 'PIM_DP_UFS_BARCODE',
+            'group': '0x301D',
+            'element': '0x1002',
+            'pmsvr': 'IString',
+        },
+        'SCANNER_OPERATOR_ID': {
+            'name': 'PIIM_DP_SCANNER_OPERATOR_ID',
+            'group': '0x101D',
+            'element': '0x1009',
+            'pmsvr': 'IString',
+        },
     }
 
     tileSource = ImageItem().tileSource(item)
@@ -1386,9 +1410,12 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     redactList = copy.copy(redactList)
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
     redactList['metadata']['internal;isyntax;scanner_operator_id'] = title_redaction_list_entry
-    redactList['metadata']['internal;isyntax;barcode'] = title_redaction_list_entry
+    redactList['metadata']['internal;isyntax;barcode'] = generate_system_redaction_list_entry(
+        title + '|' + get_deid_field(item))
     redactList['metadata']['internal;isyntax;software_versions'] = \
-        generate_system_redaction_list_entry('"' + get_deid_field(item).replace('"', '') + '"')
+        generate_system_redaction_list_entry((
+            tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
+            ' "DSA Redaction %s' % __version__ + '"').strip())
     old = open(sourcePath, 'rb').read(tileSource._xmllen)
     quality = 90
     stripping = 0
@@ -1399,14 +1426,14 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
             processed = False
             if mkey.startswith('internal;isyntax;'):
                 key = mkey.split(';', 2)[-1].upper()
+                value = redactList['metadata'][mkey]['value']
+                if key == 'BARCODE':
+                    value = base64.b64encode(value.encode()).decode()
                 for xentry in tree.findall('Attribute'):
                     xkey = str(xentry.get('Name'))
                     if xkey == 'DICOM_' + key or (
                             xkey.startswith('PI') and xkey.endswith('_' + key)):
                         if redactList['metadata'][mkey]['value'] is not None:
-                            value = redactList['metadata'][mkey]['value']
-                            if key == 'BARCODE':
-                                value = base64.b64encode(value.encode()).decode()
                             xentry.text = value
                         else:
                             xentry.getparent().remove(xentry)
@@ -1419,7 +1446,7 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
                         'PMSVR="%s">%s</Attribute>' % (
                             newkeys[key]['name'], newkeys[key]['group'],
                             newkeys[key]['element'], newkeys[key]['pmsvr'],
-                            redactList['metadata'][mkey]['value'])))
+                            xml.sax.saxutils.escape(value))))
                     processed = True
             if not processed:
                 logger.info('Cannot redact %s' % mkey)
@@ -1441,7 +1468,6 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
             stripping = 3
         if len(result) <= tileSource._xmllen:
             break
-        print(len(result), tileSource._xmllen, stripping)
         if quality <= 20:
             prune += 1
             quality = 90
