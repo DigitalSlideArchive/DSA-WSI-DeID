@@ -1544,7 +1544,9 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
                 )
             except IOError:
                 imageDrawFont = PIL.ImageFont.load_default()
-        textW, textH = imageDraw.textsize(title, imageDrawFont)
+        textL, textT, textR, textB = imageDrawFont.getbbox(title)
+        textW = textR - textL
+        textH = textB  # from old imageDraw.textsize(title, imageDrawFont)
         if iter != 1 and (textW > targetW * 0.95 or textW < targetW * 0.85):
             fontSize = fontSize * targetW * 0.9 / textW
     titleH = int(math.ceil(textH * 1.25))

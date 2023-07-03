@@ -56,6 +56,8 @@ setup(
         'xlrd',
         # Pinned for easyocr
         'torchvision<0.14.0',
+        # Pinned until easyocr is updated
+        'pillow<10',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
