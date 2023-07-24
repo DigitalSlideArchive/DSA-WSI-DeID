@@ -17,6 +17,7 @@ const Formats = {
 };
 Formats['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'] = Formats['application/vnd.ms-excel'];
 Formats['text/csv'] = Formats['application/vnd.ms-excel'];
+Formats['text/tab-separated-values'] = Formats['application/vnd.ms-excel'];
 
 const SpreadsheetWidget = View.extend({
     initialize: function (settings) {
