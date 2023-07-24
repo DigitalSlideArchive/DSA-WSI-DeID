@@ -130,3 +130,8 @@ CVE-2022-43945
 
 # Not using this feature in torch
 CVE-2022-45907
+
+# Accept these; revisit as needed
+CVE-2023-3090
+CVE-2023-3389
+CVE-2023-3390
