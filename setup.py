@@ -56,6 +56,7 @@ setup(
         'xlrd',
         # Pinned for easyocr
         'torchvision<0.14.0',
+        # 'torchvision',
         # Pinned until easyocr is updated
         'pillow<10',
     ],
