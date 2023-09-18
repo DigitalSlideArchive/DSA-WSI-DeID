@@ -86,7 +86,7 @@ RUN pip install --no-cache-dir virtualenv && \
 
 ENV PATH="/venv/bin:$PATH"
 
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash && \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash && \
     apt-get update && \
     apt-get install --no-install-recommends --yes \
     nodejs && \
