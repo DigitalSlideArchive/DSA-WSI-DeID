@@ -44,9 +44,10 @@ setup(
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
         'easyocr',
+        'girder>=3.1.23.dev10',
         'girder-homepage',
         'histomicsui',
-        'large_image[tiff,openslide,memcached,openjpeg,converter]',
+        'large_image[tiff,ometiff,dicom,openslide,memcached,openjpeg,converter]',
         'lxml',
         'openpyxl',
         'pandas',
