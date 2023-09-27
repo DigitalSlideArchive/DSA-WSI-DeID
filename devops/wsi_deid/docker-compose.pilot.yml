@@ -38,7 +38,6 @@ services:
     # so that local file database and logs are owned by yourself.
     # user: ${CURRENT_UID}
     restart: unless-stopped
-    command: --nojournal
     volumes:
       # Location to store database files
       # Change for local files:

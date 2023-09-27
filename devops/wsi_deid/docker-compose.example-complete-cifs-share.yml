@@ -74,7 +74,7 @@ services:
       apt-get install -y cifs-utils &&
       mount -t cifs //smb.server.uri/share_name /data -o credentials=/cifs.credentials,iocharset=utf8 &&
       mkdir -p /data/wsideid/db &&
-      mongod --nojournal --noauth --bind_ip_all --dbpath /data/wsideid/db
+      mongod --noauth --bind_ip_all --dbpath /data/wsideid/db
       "
   memcached:
     image: memcached
