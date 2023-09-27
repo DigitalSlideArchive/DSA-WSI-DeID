@@ -32,6 +32,6 @@ services:
 
     # If mongo fails to start and the errors show an issue with "aborting after
     # fassert() failure", uncomment the "command:" line below.
-    # command: "bash -c 'mongod --nojournal --bind_ip_all'"
+    # command: "bash -c 'mongod --bind_ip_all'"
   memcached:
     command: -u root -m 4096
