@@ -1,6 +1,7 @@
 import os
 
 import girder.utility.config
+from girder.models import getDbConnection
 from girder.models.assetstore import Assetstore
 from girder.models.collection import Collection
 from girder.models.folder import Folder
@@ -11,7 +12,7 @@ from girder.utility.server import configureServer
 from girder_large_image.constants import PluginSettings as liSettings
 
 
-def provision():
+def provision():  # noqa
     import wsi_deid
     from wsi_deid.constants import PluginSettings
     print('Provisioning')
@@ -105,6 +106,23 @@ WSI DeID Version: %s
     # Set default SFTP/Export mode
     if not Setting().get(PluginSettings.WSI_DEID_SFTP_MODE):
         Setting().set(PluginSettings.WSI_DEID_SFTP_MODE, 'local')
+    # Mongo compatibility version
+    try:
+        db = getDbConnection()
+    except Exception:
+        print('Could not connect to mongo.')
+    try:
+        # In mongo shell, this is functionally
+        #   db.adminCommand({setFeatureCompatibilityVersion:
+        #     db.version().split('.').slice(0, 2).join('.')})
+        db.admin.command({'setFeatureCompatibilityVersion': '.'.join(
+            db.server_info()['version'].split('.')[:2]), 'confirm': True})
+    except Exception:
+        try:
+            db.admin.command({'setFeatureCompatibilityVersion': '.'.join(
+                db.server_info()['version'].split('.')[:2])})
+        except Exception:
+            print('Could not set mongo feature compatibility version.')
 
 
 if __name__ == '__main__':
