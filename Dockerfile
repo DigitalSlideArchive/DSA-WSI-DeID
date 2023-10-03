@@ -119,6 +119,7 @@ RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM
     # Get rid of unnecessary files to keep the docker image smaller \
     find /venv -name node_modules -exec rm -rf {} \+ && \
     find /venv -name package-lock.json -exec rm -f {} \+ && \
+    find /usr/lib -name package-lock.json -exec rm -f {} \+ && \
     npm cache clear --force && \
     rm -rf /tmp/npm*
 
