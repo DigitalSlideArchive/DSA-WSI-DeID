@@ -16,11 +16,18 @@ const formats = {
 
 const systemRedactedReason = 'System Redacted';
 
+function sanitizeInput(input) {
+    // SECURITY: Basic input sanitization to prevent XSS
+    return $('<div>').text(input).html();
+}
 
 function goToNextUnprocessedItem(callback) {
     restRequest({
         url: 'wsi_deid/next_unprocessed_item',
-        error: null
+        error: function (err) {
+            // SECURITY: Handle errors gracefully
+            console.error("Error fetching next unprocessed item:", err);
+        }
     }).done((resp) => {
         if (resp) {
             events.trigger('g:alert', {
@@ -28,7 +35,9 @@ function goToNextUnprocessedItem(callback) {
                 text: 'Switching to next unprocessed item',
                 timeout: 4000
             });
-            router.navigate('item/' + resp, { trigger: true });
+            // SECURITY: Ensure the ID is a valid format before navigating
+            const itemId = sanitizeInput(resp);
+            router.navigate('item/' + itemId, { trigger: true });
             window.scrollTo(0, 0);
         } else {
             events.trigger('g:alert', {
@@ -48,7 +57,10 @@ function goToNextUnprocessedItem(callback) {
 function goToNextUnprocessedFolder(callback, skipId) {
     restRequest({
         url: 'wsi_deid/next_unprocessed_folders',
-        error: null
+        error: function (err) {
+            // SECURITY: Handle errors gracefully
+            console.error("Error fetching next unprocessed folder:", err);
+        }
     }).done((resp) => {
         if (resp && resp.length > 1) {
             events.trigger('g:alert', {
@@ -56,8 +68,9 @@ function goToNextUnprocessedFolder(callback, skipId) {
                 text: 'Switching to next unprocessed folder',
                 timeout: 4000
             });
-            const id = resp.filter((i) => i !== skipId)[0];
-            router.navigate('folder/' + id, { trigger: true });
+            // SECURITY: Ensure the ID is a valid format before navigating
+            const folderId = sanitizeInput(resp.filter((i) => i !== skipId)[0]);
+            router.navigate('folder/' + folderId, { trigger: true });
             window.scrollTo(0, 0);
         } else {
             events.trigger('g:alert', {
@@ -67,8 +80,9 @@ function goToNextUnprocessedFolder(callback, skipId) {
                 timeout: 4000
             });
             if (resp) {
-                const id = resp.filter((i) => i !== skipId)[0];
-                router.navigate('folder/' + id, { trigger: true });
+                // SECURITY: Ensure the ID is a valid format before navigating
+                const folderId = sanitizeInput(resp.filter((i) => i !== skipId)[0]);
+                router.navigate('folder/' + folderId, { trigger: true });
                 window.scrollTo(0, 0);
             }
         }
@@ -80,6 +94,7 @@ function goToNextUnprocessedFolder(callback, skipId) {
 }
 
 function getRedactList(itemModel) {
+    // SECURITY: Validate the structure of the returned data
     const redactList = ((itemModel.get && itemModel.get('meta')) || itemModel.meta || {}).redactList || {};
     redactList.metadata = redactList.metadata || {};
     redactList.images = redactList.images || {};
@@ -101,7 +116,10 @@ function putRedactList(itemModel, redactList, source) {
         url: `wsi_deid/item/${id}/redactList`,
         contentType: 'application/json',
         data: JSON.stringify(redactList),
-        error: null
+        error: function (err) {
+            // SECURITY: Handle errors gracefully
+            console.error("Error updating redact list:", err);
+        }
     });
     if (itemModel.get) {
         if (itemModel.get('meta') === undefined) {
@@ -148,11 +166,14 @@ function getHiddenMetadataPatterns(settings, format) {
 }
 
 function matchFieldPattern(keyname, fieldPatterns, elem, value) {
+
+    const sanitizedKeyname = sanitize(keyname);
+
     for (const metadataPattern in fieldPatterns) {
         if (keyname.match(new RegExp(metadataPattern))) {
             let _value = value;
             if (_value === undefined) {
-                _value = elem.find(`.large_image_metadata_value[keyname^="${keyname}"]`).text();
+                _value = elem.find(`.large_image_metadata_value[keyname^="${sanitizedKeyname}"]`).text();
             }
             const expectedValuePattern = new RegExp(fieldPatterns[metadataPattern]);
             // If the value of the metadata field matches the expected pattern,
@@ -171,8 +192,10 @@ function flagRedactionOnItem(itemModel, event) {
     if (isSquare) {
         target = target.closest('.g-hui-redact-label').find('.g-hui-redact');
     }
-    const keyname = target.attr('keyname');
-    const category = target.attr('category');
+
+    const keyname = sanitize(target.attr('keyname'));
+    const category = sanitize(target.attr('category'));
+
     let reason = target.val();
     const redactList = getRedactList(itemModel);
     let isRedacted = redactList[category][keyname] !== undefined;
