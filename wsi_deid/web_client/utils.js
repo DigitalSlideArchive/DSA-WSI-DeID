@@ -166,7 +166,6 @@ function getHiddenMetadataPatterns(settings, format) {
 }
 
 function matchFieldPattern(keyname, fieldPatterns, elem, value) {
-
     const sanitizedKeyname = sanitizeInput(keyname);
 
     for (const metadataPattern in fieldPatterns) {
