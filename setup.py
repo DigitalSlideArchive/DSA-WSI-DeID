@@ -55,9 +55,6 @@ setup(
         'python-magic',
         'pyvips',
         'xlrd',
-        # Pinned for easyocr
-        'torchvision<0.14.0',
-        # 'torchvision',
     ],
     license='Apache Software License 2.0',
     long_description=readme,
