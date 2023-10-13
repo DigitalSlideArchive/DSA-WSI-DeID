@@ -26,7 +26,7 @@ function goToNextUnprocessedItem(callback) {
         url: 'wsi_deid/next_unprocessed_item',
         error: function (err) {
             // SECURITY: Handle errors gracefully
-            console.error("Error fetching next unprocessed item:", err);
+            console.error('Error fetching next unprocessed item:', err);
         }
     }).done((resp) => {
         if (resp) {
@@ -59,7 +59,7 @@ function goToNextUnprocessedFolder(callback, skipId) {
         url: 'wsi_deid/next_unprocessed_folders',
         error: function (err) {
             // SECURITY: Handle errors gracefully
-            console.error("Error fetching next unprocessed folder:", err);
+            console.error('Error fetching next unprocessed folder:', err);
         }
     }).done((resp) => {
         if (resp && resp.length > 1) {
@@ -118,7 +118,7 @@ function putRedactList(itemModel, redactList, source) {
         data: JSON.stringify(redactList),
         error: function (err) {
             // SECURITY: Handle errors gracefully
-            console.error("Error updating redact list:", err);
+            console.error('Error updating redact list:', err);
         }
     });
     if (itemModel.get) {
@@ -167,7 +167,7 @@ function getHiddenMetadataPatterns(settings, format) {
 
 function matchFieldPattern(keyname, fieldPatterns, elem, value) {
 
-    const sanitizedKeyname = sanitize(keyname);
+    const sanitizedKeyname = sanitizeInput(keyname);
 
     for (const metadataPattern in fieldPatterns) {
         if (keyname.match(new RegExp(metadataPattern))) {
@@ -193,8 +193,8 @@ function flagRedactionOnItem(itemModel, event) {
         target = target.closest('.g-hui-redact-label').find('.g-hui-redact');
     }
 
-    const keyname = sanitize(target.attr('keyname'));
-    const category = sanitize(target.attr('category'));
+    const keyname = sanitizeInput(target.attr('keyname'));
+    const category = sanitizeInput(target.attr('category'));
 
     let reason = target.val();
     const redactList = getRedactList(itemModel);
