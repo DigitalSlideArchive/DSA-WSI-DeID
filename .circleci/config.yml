@@ -1,5 +1,12 @@
 ---
 version: 2.1
+executors:
+  toxandnode:
+    working_directory: ~/project
+    docker:
+      - image: girder/tox-and-node
+      - image: mongo:latest
+        command: bash -c "mkdir /dev/shm/mongo && mongod --dbpath=/dev/shm/mongo --noauth --bind_ip_all"
 commands:
   usedockers:
     description: "Make built dockers available"
@@ -16,7 +23,77 @@ commands:
           name: Load archived docker images
           command: |
             docker load -i /tmp/workspace/wsi_deid_girder.tar
+  easyocr:
+    description: Install libraries for easyocr
+    steps:
+      - run:
+          name: Install libraries for easyocr
+          command: apt-get update && apt-get install -y libsm6 libxext6 libxrender-dev libgl1-mesa-dev
+  tox:
+    description: "Run tox"
+    parameters:
+      env:
+        type: string
+    steps:
+      - run:
+          name: Preinstall phantomjs to work around an npm permission issue
+          command: npm install -g phantomjs-prebuilt --unsafe-perm
+      - run:
+          name: Run tests via tox
+          # Piping through cat does less buffering of the output but can
+          # consume the exit code
+          command: PYTEST_ADDOPTS=--reruns=3 PYTEST_NUMPROCESSES=2 tox -e << parameters.env >> | cat; test ${PIPESTATUS[0]} -eq 0
+  coverage:
+    description: "Upload coverage"
+    steps:
+      - run:
+          name: Install Codecov client
+          command: |
+              curl -Os https://uploader.codecov.io/latest/linux/codecov
+              chmod +x codecov
+      - run:
+          name: Upload coverage
+          # Retry as codecov can be flaky
+          command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml,.tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
 jobs:
+  py38:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py38
+      - coverage
+  py39:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py39
+      - coverage
+  py310:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py310
+      - coverage
+  py311:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py311
+      - coverage
+  lint_and_docs:
+    executor: toxandnode
+    steps:
+      - checkout
+      - tox:
+          env: flake8,lintclient
   test:
     docker:
       - image: girder/tox-and-node
@@ -121,7 +198,23 @@ workflows:
   version: 2
   ci:
     jobs:
-      - test:
+      - py38:
+          filters:
+            tags:
+              only: /^v.*/
+      - py39:
+          filters:
+            tags:
+              only: /^v.*/
+      - py310:
+          filters:
+            tags:
+              only: /^v.*/
+      - py311:
+          filters:
+            tags:
+              only: /^v.*/
+      - lint_and_docs:
           filters:
             tags:
               only: /^v.*/
@@ -137,7 +230,11 @@ workflows:
               only: /^v.*/
       - publish-docker:
           requires:
-            - test
+            - py38
+            - py39
+            - py310
+            - py311
+            - lint_and_docs
             - docker-compose
             - scan-docker
           filters:
@@ -155,13 +252,21 @@ workflows:
               only:
                 - master
     jobs:
-      - test
+      - py38
+      - py39
+      - py310
+      - py311
+      - lint_and_docs
       - docker-compose
       - scan-docker:
           requires:
             - docker-compose
       - publish-docker:
           requires:
-            - test
+            - py38
+            - py39
+            - py310
+            - py311
+            - lint_and_docs
             - docker-compose
             - scan-docker

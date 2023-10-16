@@ -37,7 +37,9 @@ def get_reader():
         if OCRReader is None:
             import easyocr
 
-            OCRReader = easyocr.Reader(['en'], verbose=False)
+            # quantize = False doesn't seem to affect our results, but does let
+            # easyocr work with modern torch and either gpu or cpu.
+            OCRReader = easyocr.Reader(['en'], verbose=False, quantize=False)
         return OCRReader
 
 
