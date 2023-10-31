@@ -1648,8 +1648,40 @@ def get_image_text(item):
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
-    results = get_text_from_associated_image(tile_source, key, reader)
+    try:
+        results = get_text_from_associated_image(tile_source, key, reader)
+    except Exception:
+        results = {}
+        logger.exception('Failed in OCR')
     item = ImageItem().setMetadata(item, {f'{key}_ocr': results})
+    return results
+
+
+def get_image_barcode(item):
+    """
+    Use a barcode reader and return text on any associated image.
+
+    :param item: a girder item.
+    :returns: a list of found text .
+    """
+    results = []
+    tile_source = ImageItem().tileSource(item)
+    image_format = determine_format(tile_source)
+    if image_format in ['aperio', 'philips', 'isyntax']:
+        key = 'label'
+    elif image_format == 'hamamatsu':
+        key = 'macro'
+    associated_image, _ = tile_source.getAssociatedImage(key)
+    associated_image = PIL.Image.open(io.BytesIO(associated_image))
+    results = {}
+    try:
+        import zxingcpp
+
+        barcodes = zxingcpp.read_barcodes(associated_image)
+        results = [entry.text for entry in barcodes]
+    except Exception:
+        logger.exception('Failed in barcode reader')
+    item = ImageItem().setMetadata(item, {f'{key}_barcode': results})
     return results
 
 

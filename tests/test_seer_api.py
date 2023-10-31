@@ -27,7 +27,7 @@ def test_api_search(api_search):
         'x0x0-XXX': {'count': 1, 'average_confidence': 0.19517887159795738},
         '4': {'count': 1, 'average_confidence': 0.06642707626467459}
     }
-    queries = api_search.getQueryList(ocr_record)
+    queries = api_search.getOCRQueryList(ocr_record)
 
     # Ensure each query has enough data
     assert all([len(query) >= 3 for query in queries])

@@ -54,6 +54,7 @@ setup(
         'paramiko',
         'python-magic',
         'pyvips',
+        'zxing-cpp',
         'xlrd',
     ],
     license='Apache Software License 2.0',

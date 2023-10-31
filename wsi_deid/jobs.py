@@ -8,7 +8,7 @@ from girder_jobs.models.job import Job, JobStatus
 
 from . import config, matching_api
 from .constants import TokenOnlyPrefix
-from .process import get_image_text, refile_image
+from .process import get_image_barcode, get_image_text, refile_image
 
 
 def start_ocr_item_job(job):
@@ -23,11 +23,14 @@ def start_ocr_item_job(job):
         return
     item = job_args[0]
     try:
+        label_barcode = get_image_barcode(item)
         label_text = get_image_text(item)
         status = JobStatus.SUCCESS
     except Exception as e:
         message = f'Attempting to find label text for file {item["name"]} resulted in {str(e)}.'
         status = JobStatus.ERROR
+    if status == JobStatus.SUCCESS and len(label_barcode) > 0:
+        message = f'Found label barcode for file {item["name"]}: {label_barcode}.\n',
     if status == JobStatus.SUCCESS and len(label_text) > 0:
         message = f'Found label text for file {item["name"]}: {label_text}.\n',
     else:
@@ -39,16 +42,20 @@ def get_label_text_for_item(itemId, job):
     item = Item().load(itemId, force=True)
     Job().updateJob(job, log=f'Finding label text for file: {item["name"]}.\n')
     try:
+        label_barcode = get_image_barcode(item)
+        if len(label_barcode) > 0:
+            message = f'Found label barcode for file {item["name"]}: {label_barcode}.\n'
+            Job().updateJob(job, log=message)
         label_text = get_image_text(item)
         if len(label_text) > 0:
             message = f'Found label text for file {item["name"]}: {label_text}.\n'
         else:
             message = f'Could not find label text for file {item["name"]}.\n'
         Job().updateJob(job, log=message)
-        return label_text
+        return (label_text, label_barcode)
     except Exception as e:
         Job().updateJob(job, log=f'Failed to process file {item["name"]}; {e}\n')
-        return {}
+        return ({}, {})
 
 
 def start_ocr_batch_job(job):
@@ -136,10 +143,15 @@ def match_images_via_api(imageIds, userId, job, reportInfo):
     apisearch = matching_api.APISearch()
     for imageId in imageIds:
         item = Item().load(imageId, force=True)
-        if not len(item.get('meta', {}).get('label_ocr', {})):
+        if not len(item.get('meta', {}).get('label_ocr', {})) and not len(
+                item.get('meta', {}).get('label_barcodes', {})):
             remainingImages.add(imageId)
             continue
-        result = apisearch.lookupOcrRecord(item['meta']['label_ocr'])
+        result = []
+        if 'label_barcode' in item['meta']:
+            result = apisearch.lookupBarcodeRecord(item['meta']['label_barcode'])
+        if len(result) == 0 and 'label_ocr' in item['meta']:
+            result = apisearch.lookupOcrRecord(item['meta']['label_ocr'])
         if len(result) != 1 or not result[0].get('token_id'):
             Job().updateJob(
                 job,
@@ -183,7 +195,7 @@ def addToReport(reportInfo, item, data):
     report.update(data)
 
 
-def associate_unfiled_images(job):
+def associate_unfiled_images(job):  # noqa
     """
     Function to be run for girder jobs of type wsi_deid.associate_unfiled. Jobs using this function
     should include a list of girder item ids as the first argument, and associated data from the
@@ -222,16 +234,24 @@ def associate_unfiled_images(job):
             for future in futures:
                 label_text_list.append(future.result())
         for idx, itemId in enumerate(itemIds):
-            label_text = label_text_list[idx]
+            label_text, barcode_text = label_text_list[idx]
             # And, without concurrent futures, the code resumes here
+            # TODO: do something with the barcode for matching
             item = Item().load(itemId, force=True)
             imageToRowMatches = []
             addToReport(reportInfo, item, {'label': ' '.join(
                 [word for conf, word in sorted([
                     (-entry['average_confidence'], word)
                     for word, entry in label_text.items() if len(word) > 1])])})
+            addToReport(reportInfo, item, {'barcode': '|'.join(barcode_text)})
             # Don't rely on matching tokens that are only 1 character in length
             label_text = [word for word in label_text if len(word) > 1]
+            for barcode in barcode_text:
+                for chunk in barcode.split(';'):
+                    if len(chunk.strip()):
+                        for subchunk in chunk.strip().split():
+                            if subchunk not in label_text:
+                                label_text.append(subchunk)
             if len(label_text) > 0:
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info

@@ -19,6 +19,7 @@ RUN apt-get update && \
     curl \
     fonts-dejavu \
     git \
+    less \
     libmagic-dev \
     vim \
     # needed for easyocr \
