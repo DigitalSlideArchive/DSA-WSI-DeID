@@ -51,8 +51,7 @@ class APISearch:
         },
         'path_case_num': {
             're': [pathnumRE],
-            'format': lambda match: match['pathnum'].replace('_', '-').replace(
-                '.', '-').replace('/', '-'),
+            'format': lambda match: re.sub(r'^5', 'S', re.sub(r'[_./]', '-', match['pathnum'])),
         },
     }
 
