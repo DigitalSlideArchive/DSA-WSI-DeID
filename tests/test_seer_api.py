@@ -32,10 +32,10 @@ def test_api_search(api_search):
     # Ensure each query has enough data
     assert all([len(query) >= 3 for query in queries])
 
-    # Ensure tokens with confidence < .75 aren't used for queries
+    # Ensure tokens with confidence < .5 aren't used for queries
     query_tokens_list = [list(query.values()) for query in queries]
     query_tokens = set([token for sublist in query_tokens_list for token in sublist])
-    assert len(query_tokens) == 6
+    assert len(query_tokens) == 7
 
 
 match_name_cases = [
