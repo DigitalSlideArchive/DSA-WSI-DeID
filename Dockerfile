@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 LABEL maintainer="Kitware, Inc. <kitware@kitware.com>"
 
 # See logs faster; don't write pyc or pyo files
@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/.pyenv/bin:/.pyenv/shims:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHON_VERSIONS="3.9.16 3.8.16"
+    PYTHON_VERSIONS="3.11 3.8"
 
 RUN apt-get update && \
     # DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
@@ -53,7 +53,7 @@ RUN apt-get update && \
     libjpeg-dev \
     liblcms2-dev \
     libtinyxml-dev \
-    # for ldap in we optionally install it \
+    # for ldap if we optionally install it \
     libldap2-dev \
     libsasl2-dev \
     && \
