@@ -8,17 +8,17 @@ import requests
 class APISearch:
     dateDOBRE = re.compile(
         r'^(?P<dob>(?:DOB(?:[:.]|)|))'
-        r'(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>[0-3]?\d)(?:[-_/.])(?P<year>(?:19|20|)\d\d)$')
+        r'(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>[0-3]?\d)(?:[-_/.])(?P<year>(?:19|20|29|)\d\d)$')
     dateDOB2RE = re.compile(
         r'^(?P<dob>(?:DOB(?:[:.]|)|))'
-        r'(?P<year>(?:19|20)\d\d)(?:[-_/.])(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>[0-3]?\d)$')
+        r'(?P<year>(?:19|20|29)\d\d)(?:[-_/.])(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>[0-3]?\d)$')
     dateRE = re.compile(
         r'(?P<month>\d?\d)(?:[-_/.])(?P<day>\d?\d)(?:[-_/.])(?P<year>(?:19|20|)\d\d)$')
     date2RE = re.compile(
         r'(?P<year>(?:19|20|)\d\d)(?:[-_/.])(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>\d?\d)$')
     nameRE = re.compile(r'^(?P<name>[a-zA-Z]{2,50})$')
     name1RE = re.compile(r'^(?P<name>[a-zA-Z][a-z]{1,49})(?:[A-Z][a-zA-Z]{1,49})$')
-    name2RE = re.compile(r'^(?:[a-zA-Z][a-z]{1,49})(?P<name>[A-Z][a-z][a-zA-Z]{0,48})$')
+    name2RE = re.compile(r'^(?:([a-zA-Z][a-z]{0,49}|\d))(?P<name>[A-Z][a-z][a-zA-Z]{0,48})$')
     name3RE = re.compile(r'^(?P<name>[a-zA-Z]{2,50})(?:[-_/.])(?:[a-zA-Z]{2,50})$')
     name4RE = re.compile(r'^(?:[a-zA-Z]{2,50})(?:[-_/.])(?P<name>[a-zA-Z]{2,50})$')
     pathnumRE = re.compile(r'^(?P<pathnum>(?:\w{2,10}|\d{2,10})[-_/.](?:\w{2,10}|\d{2,10}))$')
@@ -28,7 +28,8 @@ class APISearch:
             'format': lambda match: '%02d-%02d-%04d' % (
                 int(match['month']),
                 int(match['day']),
-                int(match['year']) if int(match['year']) > 100 else (int(match['year']) + 2000),
+                int(re.sub('^29', '20', match['year']))
+                if int(match['year']) > 100 else (int(match['year']) + 2000),
             ),
         },
         'date_of_service': {
@@ -36,7 +37,8 @@ class APISearch:
             'format': lambda match: '%02d-%02d-%04d' % (
                 int(match['month']),
                 int(match['day']),
-                int(match['year']) if int(match['year']) > 100 else (int(match['year']) + 2000),
+                int(re.sub('^29', '20', match['year']))
+                if int(match['year']) > 100 else (int(match['year']) + 2000),
             ),
         },
         'name_first': {
@@ -55,7 +57,7 @@ class APISearch:
         },
     }
 
-    confidenceThreshold = 0.75
+    confidenceThreshold = 0.50
 
     def __init__(self, url=None, apikey=None, logger=None):
         """
@@ -121,8 +123,10 @@ class APISearch:
             if (len(params) >= 3 and (
                     params.get('name_first') or params.get('name_last')) and (
                     params.get('date_of_birth') or params.get('path_case_num'))):
-                queries.append((-len(params), len(queries), params))
+                if params not in [entry[-1] for entry in queries]:
+                    queries.append((-len(params), len(queries), params))
         queries = [entry[-1] for entry in sorted(queries)]
+        self.logger.debug('QUERYLIST %r %r', ocrRecord, queries)
         return queries
 
     def lookupQuery(self, query):
