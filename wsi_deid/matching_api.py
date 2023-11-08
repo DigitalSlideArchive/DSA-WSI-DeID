@@ -17,8 +17,8 @@ class APISearch:
     date2RE = re.compile(
         r'(?P<year>(?:19|20|)\d\d)(?:[-_/.])(?P<month>[0-1]?\d)(?:[-_/.])(?P<day>\d?\d)$')
     nameRE = re.compile(r'^(?P<name>[a-zA-Z]{2,50})$')
-    name1RE = re.compile(r'^(?P<name>[a-zA-Z][a-z]{1,49})(?:[A-Z][a-zA-Z]{1,49})$')
-    name2RE = re.compile(r'^(?:([a-zA-Z][a-z]{0,49}|\d))(?P<name>[A-Z][a-z][a-zA-Z]{0,48})$')
+    name1RE = re.compile(r'^(?P<name>[a-zA-Z][a-z]{1,49})\s*(?:[A-Z][a-zA-Z]{1,49})$')
+    name2RE = re.compile(r'^(?:([a-zA-Z][a-z]{0,49}|\d))\s*(?P<name>[A-Z][a-z][a-zA-Z]{0,48})$')
     name3RE = re.compile(r'^(?P<name>[a-zA-Z]{2,50})(?:[-_/.])(?:[a-zA-Z]{2,50})$')
     name4RE = re.compile(r'^(?:[a-zA-Z]{2,50})(?:[-_/.])(?P<name>[a-zA-Z]{2,50})$')
     pathnumRE = re.compile(r'^(?P<pathnum>(?:\w{2,10}|\d{2,10})[-_/.](?:\w{2,10}|\d{2,10}))$')
@@ -100,12 +100,7 @@ class APISearch:
                     'word': word,
                     'value': value})
 
-    def getQueryList(self, ocrRecord):
-        # Sort the works by confidence and count, culling for confidence
-        words = {e[-2]: e[-1] for e in sorted([
-            (-v['average_confidence'], -v['count'], k, v)
-            for k, v in ocrRecord.items()
-            if v['average_confidence'] >= self.confidenceThreshold])}
+    def getQueryList(self, words):
         matches = {key: [] for key in self.matchers}
         for word in words:
             for key in self.matchers:
@@ -126,7 +121,16 @@ class APISearch:
                 if params not in [entry[-1] for entry in queries]:
                     queries.append((-len(params), len(queries), params))
         queries = [entry[-1] for entry in sorted(queries)]
-        self.logger.debug('QUERYLIST %r %r', ocrRecord, queries)
+        return queries
+
+    def getOCRQueryList(self, ocrRecord):
+        # Sort the works by confidence and count, culling for confidence
+        words = {e[-2]: e[-1] for e in sorted([
+            (-v['average_confidence'], -v['count'], k, v)
+            for k, v in ocrRecord.items()
+            if v['average_confidence'] >= self.confidenceThreshold])}
+        queries = self.getQueryList(words)
+        self.logger.debug('OCR query list %r %r', ocrRecord, queries)
         return queries
 
     def lookupQuery(self, query):
@@ -152,5 +156,19 @@ class APISearch:
         return []
 
     def lookupOcrRecord(self, ocrRecord):
-        queryList = self.getQueryList(ocrRecord)
+        queryList = self.getOCRQueryList(ocrRecord)
+        return self.lookupQueries(queryList)
+
+    def getBarcodeQueryList(self, barcodeRecord):
+        queries = []
+        for record in barcodeRecord:
+            words = [val.strip() for val in record.split(';') if val.strip()]
+            for query in self.getQueryList(words):
+                if query not in queries:
+                    queries.append(query)
+        self.logger.debug('Barcode query list %r %r', barcodeRecord, queries)
+        return queries
+
+    def lookupBarcodeRecord(self, barcodeRecord):
+        queryList = self.getBarcodeQueryList(barcodeRecord)
         return self.lookupQueries(queryList)
