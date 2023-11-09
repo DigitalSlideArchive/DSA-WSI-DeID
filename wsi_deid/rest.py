@@ -865,6 +865,8 @@ class WSIDeIDResource(Resource):
     )
     @access.public
     def fakeMatchingAPI(self, match):  # noqa
+        from .matching_api import APISearch
+
         fakeData = []
         try:
             filepath = '/conf/fake_matches.json'
@@ -873,16 +875,8 @@ class WSIDeIDResource(Resource):
             fakeData = json.load(open(filepath))
         except Exception:
             pass
-        matchMethods = [
-            {'date_of_birth', 'name_last', 'name_first', 'path_case_num'},
-            {'name_last', 'name_first', 'path_case_num'},
-            {'date_of_birth', 'name_last', 'path_case_num'},
-            {'date_of_birth', 'name_first', 'path_case_num'},
-            {'date_of_birth', 'name_last', 'name_first', 'date_of_service'},
-            {'date_of_birth', 'name_last', 'name_first'},
-        ]
         results = []
-        for matchMethod in matchMethods:
+        for matchMethod in APISearch.apiMatchMethods:
             for entry in fakeData:
                 matched = True
                 try:
