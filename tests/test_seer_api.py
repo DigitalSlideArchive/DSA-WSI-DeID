@@ -30,7 +30,7 @@ def test_api_search(api_search):
     queries = api_search.getOCRQueryList(ocr_record)
 
     # Ensure each query has enough data
-    assert all([len(query) >= 3 for query in queries])
+    assert all([len(query) >= 2 for query in queries])
 
     # Ensure tokens with confidence < .5 aren't used for queries
     query_tokens_list = [list(query.values()) for query in queries]

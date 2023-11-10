@@ -57,6 +57,17 @@ class APISearch:
         },
     }
 
+    apiMatchMethods = [
+        {'path_case_num', 'name_last', 'name_first', 'date_of_birth'},
+        {'path_case_num', 'name_last', 'name_first'},
+        {'path_case_num', 'name_last', 'date_of_birth'},
+        {'path_case_num', 'name_first', 'date_of_birth'},
+        {'path_case_num', 'name_last', 'name_first', 'date_of_service'},
+        {'name_last', 'name_first', 'date_of_birth'},
+        {'path_case_num', 'name_last'},
+        {'path_case_num', 'date_of_birth'},
+    ]
+
     confidenceThreshold = 0.50
 
     def __init__(self, url=None, apikey=None, logger=None):
@@ -115,9 +126,7 @@ class APISearch:
                 if v is not None and (v['word'], v['value']) not in used:
                     params[k] = v['value']
                     used.add((v['word'], v['value']))
-            if (len(params) >= 3 and (
-                    params.get('name_first') or params.get('name_last')) and (
-                    params.get('date_of_birth') or params.get('path_case_num'))):
+            if any(not len(apiset - set(params)) for apiset in self.apiMatchMethods):
                 if params not in [entry[-1] for entry in queries]:
                     queries.append((-len(params), len(queries), params))
         queries = [entry[-1] for entry in sorted(queries)]
