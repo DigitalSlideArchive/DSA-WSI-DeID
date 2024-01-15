@@ -1523,6 +1523,7 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
     :param item: the original item record.
     :returns: a PIL image.
     """
+    title = title or ''
     mode = 'RGB'
     if image is None:
         image = PIL.Image.new(mode, (0, 0))
