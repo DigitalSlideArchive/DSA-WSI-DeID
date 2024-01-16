@@ -1658,6 +1658,29 @@ def get_image_text(item):
     return results
 
 
+def read_barcodes(img):
+    """
+    Read barcodes from a PIL image.  This also checks if taking subregions of
+    the image yield barcodes.  All unique barcodes are returned.
+
+    :param img: a PIL Image.
+    :returns: a list of zxingcpp barcodes.
+    """
+    import zxingcpp
+
+    results = []
+    for scale in range(1, 4 + 1):
+        w2 = img.width // scale
+        h2 = img.height // scale
+        for yy in range(0, img.height - h2 + 1, h2 // 2):
+            for xx in range(0, img.width - w2 + 1, w2 // 2):
+                barcodes = zxingcpp.read_barcodes(img.crop((xx, yy, xx + w2, yy + h2)))
+                for result in barcodes:
+                    if result.text not in {r.text for r in results}:
+                        results.append(result)
+    return results
+
+
 def get_image_barcode(item):
     """
     Use a barcode reader and return text on any associated image.
@@ -1676,9 +1699,7 @@ def get_image_barcode(item):
     associated_image = PIL.Image.open(io.BytesIO(associated_image))
     results = {}
     try:
-        import zxingcpp
-
-        barcodes = zxingcpp.read_barcodes(associated_image)
+        barcodes = read_barcodes(associated_image)
         results = [entry.text for entry in barcodes]
     except Exception:
         logger.exception('Failed in barcode reader')
