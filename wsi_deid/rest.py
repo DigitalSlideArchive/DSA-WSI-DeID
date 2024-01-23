@@ -304,6 +304,9 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('item', ':id', 'action', ':action'), self.itemAction)
         self.route('PUT', ('item', ':id', 'action', 'refile'), self.refileItem)
         self.route('POST', ('item', ':id', 'action', 'refile', ':tokenId'), self.refileItemFull)
+        self.route('PUT', ('folder', ':id', 'action', ':action'), self.folderAction)
+        self.route('POST', ('folder', ':id', 'action', 'refile', ':tokenId'),
+                   self.refileFolderFull)
         self.route('PUT', ('action', 'bulkRefile'), self.refileItems)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
@@ -673,6 +676,10 @@ class WSIDeIDResource(Resource):
             return
         user = self.getCurrentUser()
         items = [Item().load(id=id, user=user, level=AccessType.READ) for id in ids]
+        self._itemListAction(action, items, user)
+        return len(items)
+
+    def _itemListAction(self, action, items, user):
         actionfunc, actionargs, actname, pp = self._actionForItem(items[0], user, action)
         with ItemActionLock:
             ItemActionList.extend(items)
@@ -680,7 +687,7 @@ class WSIDeIDResource(Resource):
             with ProgressContext(
                 True, user=user, title='%s items' % pp.capitalize(),
                 message='%s %s' % (pp.capitalize(), items[0]['name']),
-                total=len(ids), current=0
+                total=len(items), current=0
             ) as ctx:
                 try:
                     for idx, item in enumerate(items):
@@ -688,20 +695,46 @@ class WSIDeIDResource(Resource):
                             item, user, action)
                         ctx.update(
                             message='%s %s' % (pp.capitalize(), item['name']),
-                            total=len(ids), current=idx)
+                            total=len(items), current=idx)
                         try:
                             actionfunc(*actionargs)
                         except Exception:
                             logger.exception('Failed to %s item' % actname)
                             ctx.update('Error %s %s' % (pp, item['name']))
                             raise
-                    ctx.update(message='Done %s' % pp, total=len(ids), current=len(ids))
+                    ctx.update(message='Done %s' % pp, total=len(items), current=len(items))
                 except Exception:
                     pass
         finally:
             with ItemActionLock:
                 for item in items:
                     ItemActionList.remove(item)
+
+    @autoDescribeRoute(
+        Description('Perform an action on a folder of items.')
+        .modelParam('id', 'The folder ID', model=Folder, level=AccessType.READ)
+        .param('action', 'Action to perform on the item.  One of process, '
+               'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
+               enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
+        .param('limit', 'Maximum number of items in folder to process',
+               required=False, dataType='int')
+        .param('recurse', 'Return items recursively under this folder.',
+               dataType='boolean', default=False, required=False)
+        .errorResponse()
+    )
+    @access.user
+    def folderAction(self, folder, action, limit=None, recurse=False):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        text = '_recurse_:' if recurse else None
+        filters = {'largeImage.fileId': {'$exists': True}}
+        limit = int(limit or 0)
+        sort = [('lowerName', SortDir.ASCENDING)]
+        items = list(self._item_find(
+            folder['_id'], text=text, name=None, limit=limit, offset=0,
+            sort=sort, filters=filters))
+        self._itemListAction(action, items, user)
+        return len(items)
 
     @autoDescribeRoute(
         Description('Get the list of known and allowed image names for refiling.')
@@ -781,7 +814,7 @@ class WSIDeIDResource(Resource):
         return item
 
     @autoDescribeRoute(
-        Description('Perform an action on an item.')
+        Description('Refile an item with a specific token ID.')
         .responseClass('Item')
         # Allow all users to do redaction actions; change to WRITE otherwise
         .modelParam('id', model=Item, level=AccessType.READ)
@@ -797,6 +830,35 @@ class WSIDeIDResource(Resource):
         item = process.refile_image(
             item, user, tokenId, imageId, {imageId: {'fields': refileData}})
         return item
+
+    @autoDescribeRoute(
+        Description('Refile items in a folder with a specific token ID.')
+        .modelParam('id', 'The folder ID', model=Folder, level=AccessType.READ)
+        .param('tokenId', 'The new tokenId', required=True)
+        .param('limit', 'Maximum number of items in folder to process',
+               required=False, dataType='int')
+        .param('recurse', 'Return items recursively under this folder.',
+               dataType='boolean', default=False, required=False)
+    )
+    @access.user
+    def refileFolderFull(self, folder, tokenId, limit=None, recurse=False):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        text = '_recurse_:' if recurse else None
+        filters = {'largeImage.fileId': {'$exists': True}}
+        sort = [('lowerName', SortDir.ASCENDING)]
+        processedImageIds = []
+        limit = int(limit or 0)
+        for item in self._item_find(
+                folder['_id'], text=text, name=None, limit=limit, offset=0,
+                sort=sort, filters=filters):
+            imageId = TokenOnlyPrefix + tokenId
+            uploadInfo = item.get('wsi_uploadInfo')
+            if uploadInfo and TokenOnlyPrefix + imageId in uploadInfo:
+                imageId = TokenOnlyPrefix + imageId
+            item = process.refile_image(item, user, tokenId, imageId, uploadInfo)
+            processedImageIds += [imageId]
+        return processedImageIds
 
     @autoDescribeRoute(
         Description('Refile multiple images at once.')
