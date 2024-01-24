@@ -1645,6 +1645,7 @@ def get_image_text(item):
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
+    key = 'label'
     if image_format in ['aperio', 'philips', 'isyntax']:
         key = 'label'
     elif image_format == 'hamamatsu':
@@ -1691,6 +1692,7 @@ def get_image_barcode(item):
     results = []
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
+    key = 'label'
     if image_format in ['aperio', 'philips', 'isyntax']:
         key = 'label'
     elif image_format == 'hamamatsu':
