@@ -1,11 +1,13 @@
 import os
 
 import girder
+import PIL.Image
 import psutil
 from girder import plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.setting import Setting
 from girder.utility import setting_utilities
@@ -100,3 +102,7 @@ class GirderPlugin(plugin.GirderPlugin):
                 space = psutil.disk_usage(path).free
                 girder.logprint.info('Available disk space for %s: %3.1f GB' % (
                     pathkey, space / 1024**3))
+        idx1 = ([('path', 1)], {})
+        if idx1 not in File()._indices:
+            File().ensureIndex(idx1)
+        PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
