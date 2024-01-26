@@ -18,6 +18,7 @@ RUN apt-get update && \
     ca-certificates \
     curl \
     fonts-dejavu \
+    fuse \
     git \
     less \
     libmagic-dev \
@@ -93,6 +94,8 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash && \
     nodejs && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN mkdir -p /fuse --mode=a+rwx
+
 RUN mkdir -p wsi_deid && \
     mkdir -p /conf
 
@@ -105,7 +108,7 @@ RUN python -m pip install --no-cache-dir \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
-    # girder[mount] \
+    girder[mount] \
     # Add additional girder plugins here \
     # girder-homepage \
     # Use prebuilt wheels whenever possible \
@@ -132,4 +135,4 @@ COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-CMD python /conf/provision.py && girder serve
+CMD python /conf/provision.py && (girder mount /fuse 2>/dev/null || true) && girder serve

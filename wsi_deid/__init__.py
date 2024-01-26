@@ -3,7 +3,7 @@ import os
 import girder
 import PIL.Image
 import psutil
-from girder import plugin
+from girder import events, plugin
 from girder.constants import AssetstoreType
 from girder.exceptions import GirderException, ValidationException
 from girder.models.assetstore import Assetstore
@@ -13,6 +13,7 @@ from girder.models.setting import Setting
 from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
+from . import assetstore_import
 from .constants import PluginSettings
 from .import_export import SftpMode
 from .rest import WSIDeIDResource, addSystemEndpoints
@@ -106,3 +107,6 @@ class GirderPlugin(plugin.GirderPlugin):
         if idx1 not in File()._indices:
             File().ensureIndex(idx1)
         PIL.Image.ANTIALIAS = PIL.Image.LANCZOS
+
+        events.bind('rest.post.assetstore/:id/import.after', 'wsi_deid',
+                    assetstore_import.assetstoreImportEvent)
