@@ -1,6 +1,7 @@
 import base64
 import copy
 import io
+import logging
 import math
 import os
 import re
@@ -30,6 +31,20 @@ from .constants import PluginSettings, TokenOnlyPrefix
 OCRLock = threading.Lock()
 OCRReader = None
 
+logger = logging.getLogger('matching_api')
+logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
+
+# Create a file handler and set its path to /tmp/matching_api.log
+file_handler = logging.FileHandler('/tmp/matching_api.log')
+file_handler.setLevel(logging.DEBUG)
+
+# Create a formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 def get_reader():
     global OCRReader
@@ -1580,12 +1595,18 @@ def redact_topleft_square(image):
     :param image: a PIL image to adjust.
     :returns: an adjusted PIL image.
     """
+    width_percentage = int(config.getConfig('redact_macro_width_percent'))
+    height_percentage = int(config.getConfig('redact_macro_height_percent'))
+
     mode = 'RGB'
     newImage = image.convert(mode)
     w, h = image.size
     background = PIL.ImageColor.getcolor('#000000', mode)
     imageDraw = PIL.ImageDraw.Draw(newImage)
-    imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
+    if width_percentage > 0 and height_percentage > 0:
+        imageDraw.rectangle((0, 0, w*(width_percentage/100), h*(height_percentage/100)), fill=background, outline=None, width=0)
+    else:
+        imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
 

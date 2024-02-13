@@ -8,6 +8,8 @@ NUMERIC_VALUES = (
 
 defaultConfig = {
     'redact_macro_square': False,
+    'redact_macro_width_percent': 0,
+    'redact_macro_height_percent': 0,
     'always_redact_label': False,
     'require_redact_category': True,
     'require_reject_reason': False,
