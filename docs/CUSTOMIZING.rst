@@ -27,6 +27,16 @@ When the ``redact_macro_square`` setting is set to ``True``, the upper left squa
   redact_macro_square = True
   ...
 
+Rather than redacting a square, a fixed percentage of the macro image can be blacked out.  This is done based on the short and long axes, where, if the macro image is in "landscape" mode, the long axis is the width and the short axis is the height.  If both ``redact_macro_short_axis_percent`` and ``redact_macro_long_axis_percent`` are greater than zero, these values will be used instead of a square.
+
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  redact_macro_long_axis_percent = 20
+  redact_macro_short_axis_percent = 100
+  ...
+
 Redaction Categories
 ++++++++++++++++++++
 
