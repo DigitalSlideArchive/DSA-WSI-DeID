@@ -1580,12 +1580,22 @@ def redact_topleft_square(image):
     :param image: a PIL image to adjust.
     :returns: an adjusted PIL image.
     """
+    short_percentage = int(config.getConfig('redact_macro_short_axis_percent'))
+    long_percentage = int(config.getConfig('redact_macro_long_axis_percent'))
+
     mode = 'RGB'
     newImage = image.convert(mode)
     w, h = image.size
     background = PIL.ImageColor.getcolor('#000000', mode)
     imageDraw = PIL.ImageDraw.Draw(newImage)
-    imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
+    if short_percentage > 0 and long_percentage > 0:
+        imageDraw.rectangle((
+            0, 0,
+            w * (long_percentage if w >= h else short_percentage) / 100,
+            h * (short_percentage if w >= h else long_percentage) / 100),
+            fill=background, outline=None, width=0)
+    else:
+        imageDraw.rectangle((0, 0, min(w, h), min(w, h)), fill=background, outline=None, width=0)
     return newImage
 
 
