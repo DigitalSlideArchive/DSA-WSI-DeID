@@ -1,5 +1,6 @@
 import os
 
+from girder import logger
 from girder.api.rest import getCurrentUser
 from girder.models.folder import Folder
 from girder.models.item import Item
@@ -15,6 +16,7 @@ def assetstoreImportEvent(event):
     After an assetstore import, check if the import was done within the Unfiled
     folder.  If so, import the data.
     """
+    logger.info('Processing assetstore import event')
     check = False
     try:
         params = event.info['returnVal']['params']
@@ -23,9 +25,12 @@ def assetstoreImportEvent(event):
             if import_export.isProjectFolder(folder) == 'unfiled':
                 check = True
     except Exception:
+        logger.exception('Processing assetstore import event: Failed to check')
         return
     if not check:
+        logger.info('Processing assetstore import event: not the unfiled folder')
         return
+    logger.info('Processing assetstore import event: will process')
     progress = True
     user = getCurrentUser()
     with ProgressContext(progress, user=user, title='Importing data') as ctx:

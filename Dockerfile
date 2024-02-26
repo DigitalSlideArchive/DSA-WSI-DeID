@@ -105,6 +105,7 @@ COPY . .
 
 # By using --no-cache-dir the Docker image is smaller
 RUN python -m pip install --no-cache-dir \
+    git+https://github.com/DigitalSlideArchive/import-tracker.git \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
