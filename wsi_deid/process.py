@@ -164,14 +164,14 @@ def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
             'internal;openslide;aperio.Filename': title_redaction_list_entry,
             'internal;openslide;aperio.Title': title_redaction_list_entry,
             'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
-                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))
+                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software')),
             ),
         },
     }
     if metadata['openslide'].get('aperio.Date'):
         redactList['metadata']['internal;openslide;aperio.Date'] = (
             generate_system_redaction_list_entry(
-                '01/01/' + metadata['openslide']['aperio.Date'][6:]
+                '01/01/' + metadata['openslide']['aperio.Date'][6:],
             )
         )
     return redactList
@@ -184,8 +184,8 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
         'metadata': {
             'internal;openslide;hamamatsu.Reference': generate_system_redaction_list_entry(title),
             'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
-                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software'))
-            )
+                get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software')),
+            ),
         },
     }
     for key in {'Created', 'Updated'}:
@@ -204,7 +204,7 @@ def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
             'internal;xml;PIM_DP_UFS_BARCODE': generate_system_redaction_list_entry(
                 title + '|' + get_deid_field(item)),
             'internal;tiff;software': generate_system_redaction_list_entry(
-                get_deid_field(item, metadata.get('tiff', {}).get('software'))
+                get_deid_field(item, metadata.get('tiff', {}).get('software')),
             ),
         },
     }
@@ -243,7 +243,7 @@ def get_standard_redactions_format_isyntax(item, tileSource, tiffinfo, title):
                 title + '|' + get_deid_field(item)),
             'internal;isyntax;software_versions': generate_system_redaction_list_entry((
                 tileSource.getInternalMetadata()['isyntax'].get('software_versions', '') +
-                ' "DSA Redaction %s' % __version__ + '"').strip())
+                ' "DSA Redaction %s' % __version__ + '"').strip()),
         },
     }
     for key in {'acquisition_datetime', 'date_of_last_calibration'}:
@@ -418,7 +418,8 @@ def redact_item(item, tempdir):
         fadvise_willneed(item)
         func = globals().get('redact_format_' + format)
     if func is None:
-        raise Exception('Cannot redact this format.')
+        msg = 'Cannot redact this format.'
+        raise Exception(msg)
     file, mimetype = func(item, tempdir, redactList, newTitle, labelImage, macroImage)
     info = {
         'format': format,
@@ -493,7 +494,7 @@ def redact_tiff_tags(ifds, redactList, title):
             tag = tifftools.Tag[tiffkey].value
             redactedTags.setdefault(tiffdir, {})
             redactedTags[tiffdir][tag] = value['value']
-    for titleKey in {'DocumentName', 'NDPI_REFERENCE', }:
+    for titleKey in {'DocumentName', 'NDPI_REFERENCE'}:
         redactedTags[tifftools.Tag[titleKey].value] = title
     for idx, ifd in enumerate(ifds):
         # convert to a list since we may mutage the tag dictionary
@@ -643,7 +644,8 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
     associatedImages = tileSource.getAssociatedImagesList()
     if mainImageDir != [d + (1 if d and 'thumbnail' in associatedImages else 0)
                         for d in range(len(mainImageDir))]:
-        raise Exception('Aperio TIFF directories are not in the expected order.')
+        msg = 'Aperio TIFF directories are not in the expected order.'
+        raise Exception(msg)
     firstAssociatedIdx = max(mainImageDir) + 1
     # Set new image description
     ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
@@ -709,7 +711,7 @@ def redact_format_aperio_add_image(key, image, ifds, firstAssociatedIdx, tempdir
         key, image.width, image.height)
     imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
         'datatype': tifftools.Datatype.ASCII,
-        'data': imageDescription
+        'data': imageDescription,
     }
     imageinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
         'data': [9 if key == 'macro' else 1], 'datatype': tifftools.Datatype.LONG}
@@ -1109,7 +1111,7 @@ PhilipsTagElements = {  # Group, Element, Format
     'UFS_IMAGE_DIMENSION_TYPE': ('0x301D', '0x2005', 'IString'),
     'UFS_IMAGE_DIMENSION_UNIT': ('0x301D', '0x2006', 'IString'),
     'UFS_IMAGE_GENERAL_HEADERS': ('0x301D', '0x2000', 'IDataObjectArray'),
-    'UFS_IMAGE_NUMBER_OF_BLOCKS': ('0x301D', '0x2001', 'IUInt32')
+    'UFS_IMAGE_NUMBER_OF_BLOCKS': ('0x301D', '0x2001', 'IUInt32'),
 }
 
 
@@ -1235,7 +1237,7 @@ def redact_format_philips(item, tempdir, redactList, title, labelImage, macroIma
         labelinfo = tifftools.read_tiff(labelPath)
         labelinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
             'datatype': tifftools.Datatype.ASCII,
-            'data': 'Label'
+            'data': 'Label',
         }
         labelinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
             'data': [1], 'datatype': tifftools.Datatype.LONG}
@@ -1538,12 +1540,12 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
         try:
             imageDrawFont = PIL.ImageFont.truetype(
                 font='/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
-                size=int(fontSize * targetW)
+                size=int(fontSize * targetW),
             )
         except IOError:
             try:
                 imageDrawFont = PIL.ImageFont.truetype(
-                    size=int(fontSize * targetW)
+                    size=int(fontSize * targetW),
                 )
             except IOError:
                 imageDrawFont = PIL.ImageFont.load_default()

@@ -93,7 +93,7 @@ jobs:
     steps:
       - checkout
       - tox:
-          env: flake8,lintclient
+          env: lint,lintclient
   test:
     docker:
       - image: girder/tox-and-node

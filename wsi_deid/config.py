@@ -1,5 +1,7 @@
 import girder.utility.config
 
+from .constants import PluginSettings
+
 CONFIG_SECTION = 'wsi_deid'
 NUMERIC_VALUES = (
     r'^\s*[+-]?(\d+([.]\d*)?([eE][+-]?\d+)?|[.]\d+([eE][+-]?\d+)?)(\s*,\s*[+-]?'
@@ -60,6 +62,7 @@ defaultConfig = {
     'upload_metadata_for_export_report': [
         'ImageID', 'Proc_Seq', 'Proc_Type', 'Slide_ID', 'Spec_Site', 'TokenID',
     ],
+    'upload_metadata_add_to_images': None,
     'import_text_association_columns': [],
     'folder_name_field': 'TokenID',
     'image_name_field': 'ImageID',
@@ -67,7 +70,7 @@ defaultConfig = {
     'reject_reasons': [{
         'category': 'Cannot_Redact',
         'text': 'Cannot redact PHI',
-        'key': 'Cannot_Redact'
+        'key': 'Cannot_Redact',
     }, {
         'category': 'Slide_Quality',
         'text': 'Slide Quality',
@@ -79,16 +82,16 @@ defaultConfig = {
             {'key': 'Debris', 'text': 'Debris or dust'},
             {'key': 'Air_Bubbles', 'text': 'Air bubbles'},
             {'key': 'Pathologist_Markings', 'text': "Pathologist's Markings"},
-            {'key': 'Other_Slide_Quality', 'text': 'Other'}
-        ]
+            {'key': 'Other_Slide_Quality', 'text': 'Other'},
+        ],
     }, {
         'category': 'Image_Quality',
         'text': 'Image Quality',
         'types': [
             {'key': 'Out_Of_Focus', 'text': 'Out of focus'},
             {'key': 'Low_Resolution', 'text': 'Low resolution'},
-            {'key': 'Other_Image_Quality', 'text': 'Other'}
-        ]
+            {'key': 'Other_Image_Quality', 'text': 'Other'},
+        ],
     }],
     'phi_pii_types': [
         {
@@ -98,30 +101,111 @@ defaultConfig = {
                 {'key': 'Patient_Name', 'text': 'Patient Name'},
                 {'key': 'Patient_DOB', 'text': 'Date of Birth '},
                 {'key': 'SSN', 'text': 'Social Security Number'},
-                {'key': 'Other_Personal', 'text': 'Other Personal'}
-            ]
+                {'key': 'Other_Personal', 'text': 'Other Personal'},
+            ],
         },
         {
             'category': 'Demographics',
             'key': 'Demographics',
-            'text': 'Demographics'
+            'text': 'Demographics',
         },
         {
             'category': 'Facility_Physician',
             'key': 'Facility_Physician',
-            'text': 'Facility/Physician Information'
+            'text': 'Facility/Physician Information',
         },
         {
             'category': 'Other_PHIPII',
             'key': 'Other_PHIPII',
-            'text': 'Other PHI/PII'
-        }
-    ]
+            'text': 'Other PHI/PII',
+        },
+    ],
+    'reimport_if_moved': False,
+    'new_token_pattern': '####@@####',
+}
+
+
+configSchemas = {
+    'hide_metadata_keys': {
+        '$schema': 'http://json-schema.org/schema#',
+        'patternProperties': {
+            '^.*$':
+            {'type': 'string'},
+        },
+        'additionalProperties': False,
+    },
+    'import_text_association_columns': {
+        '$schema': 'http://json-schema.org/schema#',
+        'type': 'array',
+        'items': {'type': 'string'}},
+    'no_redact_control_keys': {
+        '$schema': 'http://json-schema.org/schema#',
+        'patternProperties': {
+            '^.*$':
+            {'type': 'string'},
+        },
+        'additionalProperties': False,
+    },
+    'phi_pii_types': {
+        '$schema': 'http://json-schema.org/schema#',
+        'type': 'array',
+        'items': {'type': 'object', 'properties': {
+            'category': {'type': 'string'},
+            'text': {'type': 'string'},
+            'types': {'type': 'array',
+                      'items': {'type': 'object', 'properties': {
+                          'key': {'type': 'string'},
+                          'text': {'type': 'string'}},
+                          'required': ['key', 'text']}},
+            'key': {'type': 'string'}},
+            'anyOf': [
+            {'required': ['category', 'text', 'key']},
+            {'required': ['category', 'text', 'types']},
+        ]}},
+    'reject_reasons': {
+        '$schema': 'http://json-schema.org/schema#',
+        'type': 'array',
+        'items': {'type': 'object', 'properties': {
+            'category': {'type': 'string'},
+            'text': {'type': 'string'},
+            'types': {'type': 'array',
+                      'items': {'type': 'object', 'properties': {
+                          'key': {'type': 'string'},
+                          'text': {'type': 'string'}},
+                          'required': ['key', 'text']}},
+            'key': {'type': 'string'}},
+            'anyOf': [
+            {'required': ['category', 'text', 'key']},
+            {'required': ['category', 'text', 'types']},
+        ]}},
+    'upload_metadata_add_to_images': {
+        '$schema': 'http://json-schema.org/schema#',
+        'anyOf': [
+            {'type': 'null'},
+            {'type': 'array', 'items': {'type': 'string'}}]},
+    'upload_metadata_for_export_report': {
+        '$schema': 'http://json-schema.org/schema#',
+        'anyOf': [
+            {'type': 'null'},
+            {'type': 'array', 'items': {'type': 'string'}}]},
 }
 
 
 def getConfig(key=None, fallback=None):
     configDict = girder.utility.config.getConfig().get(CONFIG_SECTION) or {}
+    configDict = configDict.copy()
+    try:
+        from girder.models.setting import Setting
+
+        for subkey in defaultConfig:
+            try:
+                val = Setting().get(PluginSettings.WSI_DEID_BASE + subkey)
+                if val is not None:
+                    configDict[subkey] = val
+            except Exception:
+                pass
+    except Exception:
+        pass
     if key is None:
         config = defaultConfig.copy()
         config.update(configDict)

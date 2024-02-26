@@ -165,10 +165,10 @@ form#g-wsi_deid-form(role="form")
       option(value='remote', selected=(settings['wsi_deid.sftp_mode'] === 'remote')) Remote (SFTP) transfer only
       option(value='both', selected=(settings['wsi_deid.sftp_mode'] === 'both')) Local export and remote transfer
   .form-group
+    input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
     label(for="g-wsi-deid-ocr-on-import") Find Label Text on Import
     p.g-hui-description
       | Run a background job to find label text on new images during an import
-    input#g-wsi-deid-ocr-on-import.input-sm(type="checkbox", checked=(settings['wsi_deid.ocr_on_import'] ? "checked" : undefined))
   .form-group
     label(for="g-wsi-deid-db-api-url") SEER*DMS URL
     p.g-hui-description
@@ -185,6 +185,193 @@ form#g-wsi_deid-form(role="form")
         type="text", value=settings['wsi_deid.db_api_key'] || '',
         title="The SEER*DMS API key",
         spellcheck="false")
+
+  .g-settings-form-container
+    h4 Configuration Settings
+    .form-group
+      p.g-hui-description
+        | All of the settings in this section can be specified through the Girder configuration file.  If changed via these settings, these values override the values in the configuration file.
+
+    .form-group
+      input#g-wsi-deid-base_add_title_to_label.input-sm(type="checkbox", checked=(settings['wsi_deid.base_add_title_to_label'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_add_title_to_label") Add File Name To Label
+      p.g-hui-description
+        | The label image will be redacted if appropriate; the file name is added to the top of the output label image.
+    .form-group
+      input#g-wsi-deid-base_always_redact_label.input-sm(type="checkbox", checked=(settings['wsi_deid.base_always_redact_label'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_always_redact_label") Always Redact Label Image
+      p.g-hui-description
+        | The label image will be always be redacted.
+    .form-group
+      input#g-wsi-deid-base_redact_macro_square.input-sm(type="checkbox", checked=(settings['wsi_deid.base_redact_macro_square'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_redact_macro_square") Always Redact Region of Macro Image
+      p.g-hui-description
+        | If selected, a default region of the macro image will be redacted.  If a size is not specified, this region is a square at the upper left of the image spacing the shorter of the width or height.
+      label(for="g-wsi-deid-base_redact_macro_long_axis_percent") Redact Macro Image, Percentage of Long Axis
+      input#g-wsi-deid-base_redact_macro_long_axis_percent.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_redact_macro_long_axis_percent'],
+          title="Specify 0 to redact a square, otherwise a positive value less than or equal to 100")
+      label(for="g-wsi-deid-base_redact_macro_short_axis_percent") Redact Macro Image, Percentage of Short Axis
+      input#g-wsi-deid-base_redact_macro_short_axis_percent.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_redact_macro_short_axis_percent'],
+          title="Specify 0 to redact a square, otherwise a positive value less than or equal to 100")
+
+    .form-group
+      input#g-wsi-deid-base_edit_metadata.input-sm(type="checkbox", checked=(settings['wsi_deid.base_edit_metadata'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_edit_metadata") Allow Editing Metadata
+      p.g-hui-description
+        | If selected, metadata can be changed; otherwise redaction only removes metadata
+    .form-group
+      input#g-wsi-deid-base_show_metadata_in_lists.input-sm(type="checkbox", checked=(settings['wsi_deid.base_show_metadata_in_lists'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_show_metadata_in_lists") Show Metadata In Lists
+      p.g-hui-description
+        | If selected, metadata is shown in lists, making them much more detailed
+    .form-group
+      label(for="g-wsi-deid-base_upload_metadata_for_export_report") Uploaded Metadata for Export Report
+      p.g-hui-description
+        | This is a JSON list of column names from the manifest file.  Data from these columns will be added to the export report on the redacted images.
+      input#g-wsi-deid-base_upload_metadata_for_export_report.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_upload_metadata_for_export_report'] || '',
+          title='A JSON list of column names, like ["histology", "primary_site", "tumor_record_number"]',
+          spellcheck="false")
+    .form-group
+      label(for="g-wsi-deid-base_upload_metadata_add_to_images") Uploaded Metadata to Add to Images
+      p.g-hui-description
+        | This is a JSON list of column names from the manifest file.  Data from these columns will be added to the custom metadata on the redacted images.
+      input#g-wsi-deid-base_upload_metadata_add_to_images.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_upload_metadata_add_to_images'] || '',
+          title='A JSON list of column names, like ["histology", "primary_site", "tumor_record_number"]',
+          spellcheck="false")
+
+    .form-group
+      input#g-wsi-deid-base_require_redact_category.input-sm(type="checkbox", checked=(settings['wsi_deid.base_require_redact_category'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_require_redact_category") Require a Redaction Category
+      p.g-hui-description
+        | If selected, when redacting metadata or an image, the type of PHI/PII must be selected
+
+    .form-group
+      input#g-wsi-deid-base_require_reject_reason.input-sm(type="checkbox", checked=(settings['wsi_deid.base_require_reject_reason'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_require_reject_reason") Require a Rejection Reason
+      p.g-hui-description
+        | If an image is rejected, the reason for rejection must be selected
+
+    .form-group
+      input#g-wsi-deid-base_show_import_button.input-sm(type="checkbox", checked=(settings['wsi_deid.base_show_import_button'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_show_import_button") Show Import Button
+    .form-group
+      label(for="g-wsi-deid-base_folder_name_field") Token ID Column Name
+      p.g-hui-description
+        | The token id column of a manifest file is used to group subjects.
+      input#g-wsi-deid-base_folder_name_field.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_folder_name_field'] || '',
+          title="The column in the manifest file with the subject name",
+          spellcheck="false")
+    .form-group
+      label(for="g-wsi-deid-base_image_name_field") Image ID Column Name
+      p.g-hui-description
+        | The image id column of a manifest file is used to distinguish images for a single subject.  This may be blank
+      input#g-wsi-deid-base_image_name_field.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_image_name_field'] || '',
+          title="The column in the manifest file with the image name",
+          spellcheck="false")
+    .form-group
+      input#g-wsi-deid-base_validate_image_id_field.input-sm(type="checkbox", checked=(settings['wsi_deid.base_validate_image_id_field'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_validate_image_id_field") Validate Image Name Field
+      p.g-hui-description
+        | If selected and the import manifest file contains an image id column (regardless of column name), the value in that field must be is the folder name field value combined with the Proc_Seq and Slide_ID field.  In unselected, only the schema imposes requirements on the image id column values.
+    .form-group
+      label(for="g-wsi-deid-base_new_token_pattern") New Token Pattern
+      p.g-hui-description
+        | A template for generating new token IDs for otherwise unfiled images.  # is replaced by a random digit.  @ is replaced by a random uppercase letter.
+      input#g-wsi-deid-base_new_token_pattern.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_new_token_pattern'] || '',
+          title="A pattern for new tokens, such as ####@@####",
+          spellcheck="false")
+    .form-group
+      label(for="g-wsi-deid-base_import_text_association_columns") Import Text Association Columns
+      p.g-hui-description
+        | This is a JSON list of column names from the manifest file.  Data from these columns will be compared against label OCR results to find match metadata with images.
+      input#g-wsi-deid-base_import_text_association_columns.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_import_text_association_columns'] || '',
+          title='A JSON list of column names, like ["Name", "DOB", "PatientID"]',
+          spellcheck="false")
+    .form-group
+      input#g-wsi-deid-base_reimport_if_moved.input-sm(type="checkbox", checked=(settings['wsi_deid.base_reimport_if_moved'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_reimport_if_moved") Reimport Files if Moved
+      p.g-hui-description
+        | When importing from the import directory, if a file is already in the system (for instance, already processed), then if this is unselected, the file will not be reimported.  If selected, files already in the system WILL be reimported.
+    .form-group
+      input#g-wsi-deid-base_show_export_button.input-sm(type="checkbox", checked=(settings['wsi_deid.base_show_export_button'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_show_export_button") Show Export Button
+    .form-group
+      input#g-wsi-deid-base_show_next_item.input-sm(type="checkbox", checked=(settings['wsi_deid.base_show_next_item'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_show_next_item") Show Next Item on Left Navigation Pane
+      p.g-hui-description
+        | If you change this, you need to reload the webpage for it to take effect.
+
+    .form-group
+      input#g-wsi-deid-base_show_next_folder.input-sm(type="checkbox", checked=(settings['wsi_deid.base_show_next_folder'] ? "checked" : undefined))
+      label(for="g-wsi-deid-base_show_next_folder") Show Next Folder on Left Navigation Pane
+      p.g-hui-description
+        | If you change this, you need to reload the webpage for it to take effect.
+
+    #g-configuration-accordion.panel-group
+      .panel.panel-default
+        .panel-heading(data-toggle="collapse",
+            data-parent="#g-configuration-accordion",
+            data-target="#g-advanced-settings-tab")
+          .panel-title
+            a
+              b Advanced Settings
+        #g-advanced-settings-tab.panel-collapse.collapse
+          .panel-body
+            p These settings should only be changed if you are certain of what you are doing.
+
+            .form-group
+              button#g-wsi-deid-reset-settings.btn.btn-sm.btn-default Reset to Configuration File Values
+
+            .form-group
+              label(for="g-wsi-deid-base_phi_pii_types") PHI/PII Redaction Categories
+              p.g-hui-description
+                | This is a JSON list of redaction reasons.  Each entry needs to have a category (stored internally), a text field (shown in the UI), and either a key (stored internally), or a types entry with a list of entries with text and key values.
+              input#g-wsi-deid-base_phi_pii_types.form-control.input-sm(
+                  type="text", value=settings['wsi_deid.base_phi_pii_types'] || '',
+                  title='A JSON list of dictionaries.',
+                  spellcheck="false")
+            .form-group
+              label(for="g-wsi-deid-base_reject_reasons") Rejection Reasons
+              p.g-hui-description
+                | This is a JSON list of rejection reasons.  Each entry needs to have a category (stored internally), a text field (shown in the UI), and either a key (stored internally), or a types entry with a list of entries with text and key values.
+              input#g-wsi-deid-base_reject_reasons.form-control.input-sm(
+                  type="text", value=settings['wsi_deid.base_reject_reasons'] || '',
+                  title='A JSON list of dictionaries.',
+                  spellcheck="false")
+
+            -
+              var regexList = [
+                ['hide_metadata_keys', 'Hide Metadata - General'],
+                ['hide_metadata_keys_format_aperio', 'Hide Metadata - Aperio (.svs)'],
+                ['hide_metadata_keys_format_hamamatsu', 'Hide Metadata - Hamamatsu (.ndpi)'],
+                ['hide_metadata_keys_format_philips', 'Hide Metadata - Philips TIFF (.ptif)'],
+                ['hide_metadata_keys_format_isyntax', 'Hide Metadata - Philips iSyntax (.isyntax, .isyntax2)'],
+                ['no_redact_control_keys', 'No Redaction Controls - General'],
+                ['no_redact_control_keys_format_aperio', 'No Redaction Controls - Aperio (.svs)'],
+                ['no_redact_control_keys_format_hamamatsu', 'No Redaction Controls - Hamamatsu (.ndpi)'],
+                ['no_redact_control_keys_format_philips', 'No Redaction Controls - Philips TIFF (.ptif)'],
+                ['no_redact_control_keys_format_isyntax', 'No Redaction Controls - Philips iSyntax (.isyntax, .isyntax2)']
+              ];
+            for entry in regexList
+              .form-group
+                label(for="g-wsi-deid-base_" + entry[0])
+                  = entry[1]
+                p.g-hui-description
+                  | A dictionary where the keys are regular expressions to match metadata keys and the values are regular expressions to match metadata values.
+                input.form-control.input-sm(
+                    id='g-wsi-deid-base_' + entry[0],
+                    type="text", value=settings['wsi_deid.base_' + entry[0]] || '',
+                    title='A JSON dictionary of regex keys and values.',
+                    spellcheck="false")
+
   p#g-hui-error-message.g-validation-failed-message
 .g-hui-buttons
   button#g-hui-save.btn.btn-sm.btn-primary Save
