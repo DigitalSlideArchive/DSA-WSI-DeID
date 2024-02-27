@@ -8,6 +8,22 @@ services:
     # so that local file assetstores and logs are owned by yourself.
     # user: ${CURRENT_UID}
     restart: unless-stopped
+    # To have full capabilities with S3 assetstores, we use a user file system
+    # (fuse).  This requires some privileges.  This is not needed if only
+    # filesystem assetstores are used.  Instead of privileged mode, fuse can
+    # use specific devices, security_opt, and cap_add:
+    # devices:
+    #   - /dev/fuse:/dev/fuse
+    # security_opt:
+    #   - apparmor:unconfined
+    # cap_add:
+    #   - SYS_ADMIN
+    # but these may be somewhat host specific, so we default to privileged.  If
+    # the docker daemon is being run with --no-new-privileges, fuse may not
+    # work.
+    # See also https://github.com/docker/for-linux/issues/321 for possible
+    # methods to avoid both privileged mode and cap_add SYS_ADMIN.
+    privileged: true
     # Set DSA_PORT to expose the interface on another port (default 8080).
     ports:
       - "${DSA_PORT:-8080}:8080"

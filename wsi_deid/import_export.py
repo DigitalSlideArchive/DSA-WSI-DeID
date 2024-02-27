@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 
 import jsonschema
 import magic
@@ -30,7 +31,7 @@ SFTP_HISTORY_KEY = 'wsi_deidExportedSftp'
 SCHEMA_FILE_PATH = os.path.join(os.path.dirname(__file__), 'schema', 'importManifestSchema.json')
 
 
-def readExcelData(filepath):
+def readExcelData(filepathOrFptr):
     """
     Read in the data from excel, while attempting to be forgiving about
     the exact location of the header row.
@@ -44,10 +45,17 @@ def readExcelData(filepath):
     validateImageIDField = config.getConfig('validate_image_id_field', True)
     potential_header = 0
     reader = pd.read_csv
-    mimetype = magic.from_file(filepath, mime=True)
+    ispath = not hasattr(filepathOrFptr, 'seek')
+    if ispath:
+        filepath = filepathOrFptr
+        mimetype = magic.from_file(filepath, mime=True)
+    else:
+        fptr = filepathOrFptr
+        mimetype = magic.from_buffer(fptr.read(16384), mime=True)
+        fptr.seek(0)
     if 'excel' in mimetype or 'openxmlformats' in mimetype:
         reader = pd.read_excel
-    df = reader(filepath, header=potential_header, dtype=str)
+    df = reader(filepathOrFptr, header=potential_header, dtype=str)
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
@@ -58,11 +66,13 @@ def readExcelData(filepath):
         if not validateImageIDField and folderNameField in df.columns:
             return df, potential_header
         potential_header += 1
-        df = reader(filepath, header=potential_header, dtype=str)
+        if not ispath:
+            fptr.seek(0)
+        df = reader(filepathOrFptr, header=potential_header, dtype=str)
     err = (f'Was expecting columns named {folderNameField} and {imageNameField}.'
            if validateImageIDField else
            f'Was expecting a column named {folderNameField}.')
-    raise ValueError(f'Excel file {filepath} lacks a header row.  ' + err)
+    raise ValueError(f'Excel file {filepath if ispath else "-"} lacks a header row.  ' + err)
 
 
 def validateDataRow(validator, row, rowNumber, df):
@@ -163,9 +173,24 @@ def readExcelFiles(filelist, ctx):  # noqa
     else:
         properties = set(validator.schema['properties'])
     for filepath in filelist:
+        filepathOrFptr = filepath
+        if isinstance(filepath, dict):
+            item = filepath
+            filepath = item['name']
+            try:
+                filepathOrFptr = File().open(next(Item().childFiles(item)))
+            except Exception as exc:
+                logger.info(f'Exception: {exc}')
+                message = 'Cannot read %s' % (os.path.basename(filepath), )
+                status = 'badformat'
+                continue
+            # Set metadata indicating that we've parsed this file
+            timestamp = time.mktime(item['created'].timetuple())
+        else:
+            timestamp = os.path.getmtime(filepath)
         ctx.update(message='Reading %s' % os.path.basename(filepath))
         try:
-            df, header_row_number = readExcelData(filepath)
+            df, header_row_number = readExcelData(filepathOrFptr)
             for key in ['ScannedFileName', 'InputFileName']:
                 if key in properties and key in df:
                     df[key] = df[key].fillna('')
@@ -189,7 +214,6 @@ def readExcelFiles(filelist, ctx):  # noqa
             ctx.update(message=message)
             logger.info(message)
             continue
-        timestamp = os.path.getmtime(filepath)
         count = 0
         totalErrors = []
         for row_num, row in enumerate(df.itertuples()):
@@ -282,8 +306,11 @@ def getExisting(imagePath, ctx):
         item because the file size changed.
     :returns: a status if the document exists or None if it doesn't.
     """
+    if isinstance(imagePath, dict):
+        return None
     reimportIfMoved = config.getConfig('reimport_if_moved', False)
-    existingList = list(File().find({'path': imagePath, 'imported': True}))
+    existingList = list(File().find(
+        {'$or': [{'path': imagePath}, {'s3Key': imagePath}], 'imported': True}))
     existing = existingList[0] if existingList else None
     if reimportIfMoved and existing:
         moved = True
@@ -328,25 +355,30 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
         'name': record[folderNameField], 'parentId': importFolder['_id']})
     if not parentFolder:
         parentFolder = Folder().createFolder(importFolder, record[folderNameField], creator=user)
-    # TODO: (a) use the getTargetAssetstore method from Upload(), (b) ensure
-    # that the assetstore is a filesystem assestore.
-    assetstore = Assetstore().getCurrent()
-    # TODO: When imageNameFiled is blank or undefined, use the folder name
-    # plus a number
-    name = (record[imageNameField] or '') + os.path.splitext(record['name'])[1]
-    mimeType = 'image/tiff'
-    if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
-        return 'duplicate'
-    item = Item().createItem(name=name, creator=user, folder=parentFolder)
-    stat = os.stat(imagePath)
-    file = File().createFile(
-        name=name, creator=user, item=item, reuseExisting=False,
-        assetstore=assetstore, mimeType=mimeType, size=stat.st_size,
-        saveFile=False)
-    file['path'] = os.path.abspath(os.path.expanduser(imagePath))
-    file['mtime'] = stat.st_mtime
-    file['imported'] = True
-    file = File().save(file)
+    if not isinstance(imagePath, dict):
+        # TODO: (a) use the getTargetAssetstore method from Upload(), (b)
+        # ensure that the assetstore is a filesystem assestore.
+        assetstore = Assetstore().getCurrent()
+        # TODO: When imageNameFiled is blank or undefined, use the folder name
+        # plus a number
+        name = (record[imageNameField] or '') + os.path.splitext(record['name'])[1]
+        mimeType = 'image/tiff'
+        if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
+            return 'duplicate'
+        item = Item().createItem(name=name, creator=user, folder=parentFolder)
+        stat = os.stat(imagePath)
+        file = File().createFile(
+            name=name, creator=user, item=item, reuseExisting=False,
+            assetstore=assetstore, mimeType=mimeType, size=stat.st_size,
+            saveFile=False)
+        file['path'] = os.path.abspath(os.path.expanduser(imagePath))
+        file['mtime'] = stat.st_mtime
+        file['imported'] = True
+        file = File().save(file)
+    else:
+        # Move an existing item to the parent folder
+        item = Item().move(item, parentFolder)
+        # TODO: add metadata marking that this was added
     # Reload the item as it will have changed
     item = Item().load(item['_id'], force=True)
     if isinstance(record['fields'], dict):
@@ -367,21 +399,27 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
 def ingestImageToUnfiled(imagePath, unfiledFolder, ctx, user, unfiledItems, uploadInfo):
     if getExisting(imagePath, ctx) == 'present':
         return
-    ctx.update(message='Importing %s to the Unfiled folder' % imagePath)
-    assetstore = Assetstore().getCurrent()
-    _, name = os.path.split(imagePath)
-    mimeType = 'image/tiff'
-    item = Item().createItem(name=name, creator=user, folder=unfiledFolder)
-    item['wsi_uploadInfo'] = uploadInfo
-    item = Item().save(item)
-    stat = os.stat(imagePath)
-    file = File().createFile(
-        name=name, creator=user, item=item, reuseExisting=False,
-        assetstore=assetstore, mimeType=mimeType, size=stat.st_size, saveFile=False)
-    file['path'] = os.path.abspath(os.path.expanduser(imagePath))
-    file['mtime'] = stat.st_mtime
-    file['imported'] = True
-    file = File().save(file)
+    if not isinstance(imagePath, dict):
+        ctx.update(message='Importing %s to the Unfiled folder' % imagePath)
+        assetstore = Assetstore().getCurrent()
+        _, name = os.path.split(imagePath)
+        mimeType = 'image/tiff'
+        item = Item().createItem(name=name, creator=user, folder=unfiledFolder)
+        item['wsi_uploadInfo'] = uploadInfo
+        item = Item().save(item)
+        stat = os.stat(imagePath)
+        file = File().createFile(
+            name=name, creator=user, item=item, reuseExisting=False,
+            assetstore=assetstore, mimeType=mimeType, size=stat.st_size, saveFile=False)
+        file['path'] = os.path.abspath(os.path.expanduser(imagePath))
+        file['mtime'] = stat.st_mtime
+        file['imported'] = True
+        file = File().save(file)
+    else:
+        item = imagePath
+        ctx.update(message='Importing %s to the Unfiled folder' % item['name'])
+        item = Item().move(item, unfiledFolder)
+        # TODO: add metadata marking that this was added
     unfiledItems.append(item['_id'])
 
 
@@ -400,26 +438,13 @@ def startOcrJobForUnfiled(itemIds, imageInfoDict, user, reportInfo):
     return unfiledJob['_id']
 
 
-def ingestData(ctx, user=None):  # noqa
+def directIngestFindFiles(importPath):
     """
-    Scan the import folder for image and excel files.  For each excel file,
-    extract the appropriate data.  For each file listed in an excel file,
-    if the import path is already in the system and has the same length as the
-    file, do nothing.  If the length has changed, remove the existing item.
-    For each listed file that is now not in the system, add it to the import
-    directory with an appropriate name.  Add each listed file that is not in
-    the system to a report; add each file present that is not listed to a
-    report.  Emit the report.
+    Find all the image and excel files in the import path.
 
-    :param ctx: a progress context.
-    :param user: the user triggering this.
+    :param importPath: the import path.
+    :returns: a two tuple of lists of excel files and image files.
     """
-    importPath = Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)
-    importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
-    if not importPath or not importFolderId:
-        raise Exception('Import path and/or folder not specified.')
-    importFolder = Folder().load(importFolderId, force=True, exc=True)
-    ctx.update(message='Scanning import folder')
     excelFiles = []
     imageFiles = []
     for base, _dirs, files in os.walk(importPath):
@@ -432,6 +457,36 @@ def ingestData(ctx, user=None):  # noqa
             elif (ext.lower() not in {'.zip', '.txt', '.xml', '.swp', '.xlk'} and
                     not file.startswith('~$') and not file.startswith('.~')):
                 imageFiles.append(filePath)
+    return excelFiles, imageFiles
+
+
+def ingestData(ctx, user=None, walkData=None):  # noqa
+    """
+    Scan the import folder for image and excel files.  For each excel file,
+    extract the appropriate data.  For each file listed in an excel file,
+    if the import path is already in the system and has the same length as the
+    file, do nothing.  If the length has changed, remove the existing item.
+    For each listed file that is now not in the system, add it to the import
+    directory with an appropriate name.  Add each listed file that is not in
+    the system to a report; add each file present that is not listed to a
+    report.  Emit the report.
+
+    :param ctx: a progress context.
+    :param user: the user triggering this.
+    :param walkData: None to find files in the import path, otherwise a
+        function that takes an import path and yields a two tuple of a list of
+        excelFiles and a list of imageFiles.
+    """
+    importPath = Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)
+    importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
+    if not importPath or not importFolderId:
+        raise Exception('Import path and/or folder not specified.')
+    importFolder = Folder().load(importFolderId, force=True, exc=True)
+    ctx.update(message='Scanning import folder')
+    if not walkData:
+        excelFiles, imageFiles = directIngestFindFiles(importPath)
+    else:
+        excelFiles, imageFiles = walkData(importPath)
     if not len(excelFiles):
         ctx.update(message='Failed to find any excel files in import directory.')
     if not len(imageFiles):
@@ -484,10 +539,14 @@ def ingestData(ctx, user=None):  # noqa
     for image in imageFiles:
         if unfiledFolder is None:
             status = 'unlisted'
-            report.append({'record': None, 'status': status, 'path': image})
+            report.append({
+                'record': None, 'status': status,
+                'path': image if not isinstance(image, dict) else image['name']})
         else:
             ingestImageToUnfiled(image, unfiledFolder, ctx, user, unfiledItems, unfiledImages)
-            report.append({'status': 'unfiled', 'path': image})
+            report.append({
+                'status': 'unfiled',
+                'path': image if not isinstance(image, dict) else image['name']})
     if len(unfiledItems):
         unfiledJobId = startOcrJobForUnfiled(
             unfiledItems, unfiledImages, user,
@@ -507,7 +566,7 @@ def ingestData(ctx, user=None):  # noqa
             args=(newItems),
         )
         Job().scheduleJob(job=batchJob)
-    file = importReport(ctx, report, excelReport, user, importPath)
+    file = importReport(ctx, report, excelReport, user, importPath if not walkData else None)
     summary = reportSummary(report, excelReport, file=file)
     if startOcrDuringImport and batchJob:
         summary['ocr_job'] = batchJob['_id']
@@ -525,7 +584,7 @@ def importReport(ctx, report, excelReport, user, importPath, reason=None):
     :param excelReport: a list of excel files that were processed.
     :param user: the user triggering this.
     :param importPath: the path of the import folder.  Used to show relative
-        paths in the report.
+        paths in the report.  None to not use relative reporting.
     :return: the Girder file with the report
     """
     ctx.update(message='Generating report')
@@ -564,7 +623,8 @@ def importReport(ctx, report, excelReport, user, importPath, reason=None):
     anyErrors = False
     for row in excelReport:
         data = {
-            'ExcelFilePath': os.path.relpath(row['path'], importPath),
+            'ExcelFilePath': os.path.relpath(row['path'], importPath)
+            if importPath else row['path'],
             statusKey: excelStatusDict.get(row['status'], row['status']),
             reasonKey: row.get('reason'),
         }
@@ -575,7 +635,7 @@ def importReport(ctx, report, excelReport, user, importPath, reason=None):
     for row in report:
         data = {
             'WSIFilePath': os.path.relpath(row['path'], importPath) if row.get(
-                'path') and row['status'] != 'missing' else row.get('path'),
+                'path') and row['status'] != 'missing' and importPath else row.get('path'),
             statusKey: statusDict.get(row['status'], row['status']),
         }
         if row.get('record'):
@@ -583,7 +643,7 @@ def importReport(ctx, report, excelReport, user, importPath, reason=None):
             fields = {key: value for key, value in fields.items() if key in reportFields}
             data.update(fields)
             for k, v in row['record'].items():
-                if k == 'excel' and v:
+                if k == 'excel' and v and importPath:
                     v = os.path.relpath(v, importPath)
                 if k != 'fields':
                     data[keyToColumns.get(k, k)] = v

@@ -22,4 +22,5 @@ set -e
 ) || true
 # This is our original start method
 python /conf/provision.py
+girder mount /fuse || true
 girder serve
