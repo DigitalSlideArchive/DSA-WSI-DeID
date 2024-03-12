@@ -1,7 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
-import View from '@girder/core/views/View';
+import Backbone from 'backbone';
 
+import View from '@girder/core/views/View';
 import PluginConfigBreadcrumbWidget from '@girder/core/views/widgets/PluginConfigBreadcrumbWidget';
 import BrowserWidget from '@girder/core/views/widgets/BrowserWidget';
 import { restRequest } from '@girder/core/rest';
@@ -30,10 +31,33 @@ var ConfigView = View.extend({
                 }
                 return result;
             });
+            Object.keys(this.baseSettings).forEach((key) => {
+                const element = this.$('#g-wsi-deid-base_' + key.replace('wsi_deid.base_', ''));
+                if (!element.length) {
+                    return;
+                }
+                var result = {
+                    key,
+                    value: (element.is('input[type="checkbox"]') ? !!element.is(':checked') : (element.val().trim()))
+                };
+                if (this.baseSettings[key] !== result.value) {
+                    settings.push(result);
+                }
+            });
             this._saveSettings(settings);
         },
         'click #g-hui-cancel': function (event) {
             router.navigate('plugins', { trigger: true });
+        },
+        'click #g-wsi-deid-reset-settings': function (event) {
+            const settings = [];
+            Object.keys(this.baseSettings).forEach((key) => settings.push({
+                key,
+                value: null
+            }));
+            this._saveSettings(settings).done(() => {
+                Backbone.history.loadUrl(Backbone.history.fragment);
+            });
         },
         'click .g-open-browser': '_openBrowser'
     },
@@ -86,8 +110,18 @@ var ConfigView = View.extend({
                 }
             }).done((resp) => {
                 this.defaults = resp;
+            }),
+            restRequest({
+                url: `wsi_deid/settings`,
+                error: null
+            }).done((settings) => {
+                this.baseSettings = {};
+                Object.keys(settings).forEach((key) => {
+                    this.baseSettings['wsi_deid.base_' + key] = settings[key];
+                });
             })
         ).done(() => {
+            Object.assign(this.settings, this.baseSettings);
             this.render();
 
             for (const [key, value] of Object.entries(this.settingsKeys)) {

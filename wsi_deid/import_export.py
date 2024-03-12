@@ -432,7 +432,7 @@ def startOcrJobForUnfiled(itemIds, imageInfoDict, user, reportInfo):
         type='wsi_deid.associate_unfiled',
         user=user,
         asynchronous=True,
-        args=(itemIds, imageInfoDict, reportInfo)
+        args=(itemIds, imageInfoDict, reportInfo),
     )
     Job().scheduleJob(unfiledJob)
     return unfiledJob['_id']
@@ -480,7 +480,8 @@ def ingestData(ctx, user=None, walkData=None):  # noqa
     importPath = Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH)
     importFolderId = Setting().get(PluginSettings.HUI_INGEST_FOLDER)
     if not importPath or not importFolderId:
-        raise Exception('Import path and/or folder not specified.')
+        msg = 'Import path and/or folder not specified.'
+        raise Exception(msg)
     importFolder = Folder().load(importFolderId, force=True, exc=True)
     ctx.update(message='Scanning import folder')
     if not walkData:
@@ -617,7 +618,7 @@ def importReport(ctx, report, excelReport, user, importPath, reason=None):
         'excel': 'ExcelFilePath',
     }
     dataList = []
-    reportFields = config.getConfig('upload_metadata_for_export_report')
+    reportFields = config.getConfig('upload_metadata_for_export_report') or []
     statusKey = 'SoftwareStatus'
     reasonKey = 'Status/FailureReason'
     anyErrors = False
@@ -715,7 +716,8 @@ def exportItems(ctx, user=None, all=False):
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     if not exportPath or not exportFolderId:
-        raise Exception('Export path and/or finished folder not specified.')
+        msg = 'Export path and/or finished folder not specified.'
+        raise Exception(msg)
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
     summary = {}
@@ -729,7 +731,7 @@ def exportItems(ctx, user=None, all=False):
             type='wsi_deid.sftp_job',
             user=user,
             asynchronous=True,
-            args=(exportFolder, user, all)
+            args=(exportFolder, user, all),
         )
         Job().scheduleJob(job=sftp_job)
     if export_enabled:
@@ -805,7 +807,7 @@ def sftp_items(job):
                     job,
                     export_all,
                     user,
-                    sftp_report
+                    sftp_report,
                 )
                 if export_result == ExportResult.PREVIOUSLY_EXPORTED:
                     previous_exported_count += 1
@@ -837,7 +839,7 @@ def sftp_items(job):
         Job.updateJob(
             job,
             log=f'Job failed with the following exception: {str(exc)}.',
-            status=JobStatus.ERROR
+            status=JobStatus.ERROR,
         )
     finally:
         sftp_client.close()
@@ -854,7 +856,8 @@ def get_sftp_client():
     transport.connect(username=user, password=password)
     sftp_client = paramiko.SFTPClient.from_transport(transport)
     if sftp_client is None:
-        raise Exception('There was an error connecting to the remote server.')
+        msg = 'There was an error connecting to the remote server.'
+        raise Exception(msg)
     return sftp_client
 
 
@@ -959,13 +962,12 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
             reports.append({
                 'item': item,
                 'status': 'finished',
-                'time': new_export_record['time']
+                'time': new_export_record['time'],
             })
             return ExportResult.EXPORTED_SUCCESSFULLY
         else:
-            raise Exception(
-                f'There was an error transferring file {file_name} to remote destination.'
-            )
+            msg = f'There was an error transferring file {file_name} to remote destination.'
+            raise Exception(msg)
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
@@ -1078,7 +1080,7 @@ def buildExportDataSet(report):
         'different': 'FailedToExport',
     }
     curtime = datetime.datetime.utcnow()
-    exportFields = config.getConfig('upload_metadata_for_export_report')
+    exportFields = config.getConfig('upload_metadata_for_export_report') or []
     statusReasonFields = []
     rejectReasonRequired = config.getConfig('require_reject_reason')
     if rejectReasonRequired:
@@ -1121,7 +1123,7 @@ def buildExportDataSet(report):
                 data['Total_VendorMetadataFields_ModifiedOrCreated'] = len(
                     info['redactList']['metadata'])
                 data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ', '.join(sorted(
-                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items())
+                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()),
                 ) or 'N/A'
                 data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'Yes' if (
                     info['details']['redactionCount']['images'] or
@@ -1131,13 +1133,13 @@ def buildExportDataSet(report):
                 data['Addtl_UserIdentifiedPHIPII_MetadataFields'] = ', '.join(sorted(
                     k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
                     if v.get('reason'))) or 'N/A'
-                data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ', '.join(sorted(set(
+                data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['metadata'].items()
-                    if v.get('reason') and v.get('category')))) or 'N/A'
+                    if v.get('reason') and v.get('category')})) or 'N/A'
                 data['Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields'] = ', '.join(sorted(
-                    set(
+                    {
                         v['reason'] for k, v in info['redactList']['metadata'].items()
-                        if v.get('reason') and v.get('category') == 'Personal_Info'))) or 'N/A'
+                        if v.get('reason') and v.get('category') == 'Personal_Info'})) or 'N/A'
                 data['Total_VendorImageComponents'] = info[
                     'details']['fieldCount']['images']
                 data['Total_UserIdentifiedPHIPII_ImageComponents'] = info[
@@ -1145,12 +1147,12 @@ def buildExportDataSet(report):
                 data['UserIdentifiedPHIPII_ImageComponents'] = ', '.join(sorted(
                     k for k, v in info['redactList']['images'].items()
                     if v.get('reason'))) or 'N/A'
-                data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted(set(
+                data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['images'].items()
-                    if v.get('reason') and v.get('category')))) or 'N/A'
-                data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ', '.join(sorted(set(
+                    if v.get('reason') and v.get('category')})) or 'N/A'
+                data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ', '.join(sorted({
                     v['reason'] for k, v in info['redactList']['images'].items()
-                    if v.get('reason') and v.get('category') == 'Personal_Info'))) or 'N/A'
+                    if v.get('reason') and v.get('category') == 'Personal_Info'})) or 'N/A'
             except KeyError:
                 pass
         dataList.append(data)
@@ -1243,7 +1245,8 @@ def saveToReports(path, mimetype=None, user=None, folderName=None):
     reportsFolderId = Setting().get(PluginSettings.HUI_REPORTS_FOLDER)
     reportsFolder = Folder().load(reportsFolderId, force=True, exc=False)
     if not reportsFolder:
-        raise Exception('Reports folder not specified.')
+        msg = 'Reports folder not specified.'
+        raise Exception(msg)
     if folderName:
         reportsFolder = Folder().createFolder(
             reportsFolder, folderName, creator=user, reuseExisting=True)

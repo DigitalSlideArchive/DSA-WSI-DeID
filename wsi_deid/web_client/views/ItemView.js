@@ -120,19 +120,25 @@ wrap(ItemView, 'render', function (render) {
         parentElem.append(inputControl);
     };
 
-    const resizeRedactSquare = (elem) => {
+    const resizeRedactSquare = (elem, settings) => {
         const image = elem.find('.g-widget-auximage-image img');
         if (!image.length) {
             return;
         }
         const minwh = Math.min(image.width(), image.height());
         if (minwh > 0) {
+            let redw = minwh;
+            let redh = minwh;
+            if (settings.redact_macro_long_axis_percent && settings.redact_macro_short_axis_percent && settings.redact_macro_long_axis_percent > 0 && settings.redact_macro_short_axis_percent > 0) {
+                redw = image.width() * (image.width() >= image.height() ? settings.redact_macro_long_axis_percent : settings.redact_macro_short_axis_percent) / 100;
+                redh = image.height() * (image.width() >= image.height() ? settings.redact_macro_short_axis_percent : settings.redact_macro_long_axis_percent) / 100;
+            }
             const redactsquare = elem.find('.g-widget-auximage-image-redact-square');
-            redactsquare.width(minwh);
-            redactsquare.height(minwh);
+            redactsquare.width(redw);
+            redactsquare.height(redh);
             return;
         }
-        window.setTimeout(() => resizeRedactSquare(elem), 1000);
+        window.setTimeout(() => resizeRedactSquare(elem, settings), 1000);
     };
 
     const resizeRedactBackground = (elem) => {
@@ -272,7 +278,7 @@ wrap(ItemView, 'render', function (render) {
                 if (keyname === 'macro') {
                     const redactsquare = $('<div class="g-widget-auximage-image-redact-square" title="This region will be blacked out"><div class="fill">&nbsp;</div></div>');
                     elem.find('.g-widget-auximage-image').append(redactsquare);
-                    resizeRedactSquare(elem);
+                    resizeRedactSquare(elem, settings);
                     if (!settings.redact_macro_square) {
                         const check = $('<span class="g-hui-redact-square-span"><input type="checkbox" class="g-hui-redact-square"></input>Partial</span>');
                         if ((redactList.images[keyname] || {}).square) {

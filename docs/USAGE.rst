@@ -328,6 +328,11 @@ Checking on Running Jobs
 
 You can check on running background jobs by selecting your user name in the upper right and selecting "My Jobs".  The Jobs page shows running and completed jobs.  Selecting a running job will show its progress.
 
+Alternate Import - Direct From Assetstore
+-----------------------------------------
+
+Girder supports importing files directly from an assetstore.  See the Girder documentation on how this is done.  If images and folders are imported into the ``Unfiled`` folder, they are treated as if they were imported via the ``Import`` button from the import folder.  Because the general import allows importing any files, you may have non-image files in the system.
+
 Redaction
 =========
 

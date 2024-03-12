@@ -78,12 +78,15 @@ def move_item(item, user, settingkey, options=None):
     """
     folderId = Setting().get(settingkey)
     if not folderId:
-        raise RestException('The appropriate folder is not configured.')
+        msg = 'The appropriate folder is not configured.'
+        raise RestException(msg)
     folder = Folder().load(folderId, force=True)
     if not folder:
-        raise RestException('The appropriate folder does not exist.')
+        msg = 'The appropriate folder does not exist.'
+        raise RestException(msg)
     if str(folder['_id']) == str(item['folderId']):
-        raise RestException('The item is already in the appropriate folder.')
+        msg = 'The item is already in the appropriate folder.'
+        raise RestException(msg)
     folder, origFolders = create_folder_hierarchy(item, user, folder)
     if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
         quarantineInfo = {
@@ -92,18 +95,19 @@ def move_item(item, user, settingkey, options=None):
             'originalBaseParentId': item['baseParentId'],
             'originalUpdated': item['updated'],
             'quarantineUserId': user['_id'],
-            'quarantineTime': datetime.datetime.utcnow()
+            'quarantineTime': datetime.datetime.utcnow(),
         }
     rejectInfo = None
     if settingkey == PluginSettings.HUI_REJECTED_FOLDER and options is not None:
         rejectReason = options.get('rejectReason', None)
         if rejectReason:
             rejectInfo = {
-                'rejectReason': rejectReason
+                'rejectReason': rejectReason,
             }
         requireRejectReason = config.getConfig('require_reject_reason')
         if requireRejectReason and rejectInfo is None:
-            raise RestException('A rejection reason is required.')
+            msg = 'A rejection reason is required.'
+            raise RestException(msg)
     # move the item
     item = Item().move(item, folder)
     if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
@@ -143,11 +147,13 @@ def process_item(item, user=None):
     origFolderId = Setting().get(PluginSettings.HUI_ORIGINAL_FOLDER)
     procFolderId = Setting().get(PluginSettings.HUI_PROCESSED_FOLDER)
     if not origFolderId or not procFolderId:
-        raise RestException('The appropriate folder is not configured.')
+        msg = 'The appropriate folder is not configured.'
+        raise RestException(msg)
     origFolder = Folder().load(origFolderId, force=True)
     procFolder = Folder().load(procFolderId, force=True)
     if not origFolder or not procFolder:
-        raise RestException('The appropriate folder does not exist.')
+        msg = 'The appropriate folder does not exist.'
+        raise RestException(msg)
     creator = User().load(item['creatorId'], force=True)
     # Generate the redacted file first, so if it fails we don't do anything
     # else
@@ -222,7 +228,7 @@ def ocr_item(item, user):
         type='wsi_deid.ocr_job',
         user=user,
         asynchronous=True,
-        args=(item,)
+        args=(item,),
     )
     Job().scheduleJob(job=ocr_job)
     return {
@@ -323,7 +329,7 @@ class WSIDeIDResource(Resource):
     @autoDescribeRoute(
         Description('Check if a folder is a project folder.')
         .modelParam('id', model=Folder, level=AccessType.READ)
-        .errorResponse()
+        .errorResponse(),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def isProjectFolder(self, folder):
@@ -372,7 +378,7 @@ class WSIDeIDResource(Resource):
         .jsonParam('options', 'Additional information pertaining to the action.',
                    required=False, paramType='body')
         .errorResponse()
-        .errorResponse('Write access was denied on the item.', 403)
+        .errorResponse('Write access was denied on the item.', 403),
     )
     @access.user
     def itemAction(self, item, action, options):
@@ -394,7 +400,7 @@ class WSIDeIDResource(Resource):
         .modelParam('id', model=Item, level=AccessType.READ)
         .jsonParam('redactList', 'A JSON object containing the redactList to set',
                    paramType='body', requireObject=True)
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def setRedactList(self, item, redactList):
@@ -402,7 +408,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Ingest data from the import folder asynchronously.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def ingest(self):
@@ -412,7 +418,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Export recently finished items to the export folder asynchronously.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def export(self):
@@ -422,7 +428,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Export all finished items to the export folder asynchronously.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def exportAll(self):
@@ -435,14 +441,14 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Run OCR to find label text on items in the import folder without OCR metadata')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def ocrReadyToProcess(self):
         user = self.getCurrentUser()
         itemIds = []
         ingestFolder = Folder().load(Setting().get(
-            PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE
+            PluginSettings.HUI_INGEST_FOLDER), user=user, level=AccessType.WRITE,
         )
         resp = {'action': 'ocrall'}
         for _, file in Folder().fileList(ingestFolder, user, data=False):
@@ -468,7 +474,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Get the ID of the next unprocessed item.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def nextUnprocessedItem(self):
@@ -494,7 +500,7 @@ class WSIDeIDResource(Resource):
         Description(
             'Get the IDs of the next two folders with unprocessed items and '
             'the id of the finished folder.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def nextUnprocessedFolders(self):
@@ -522,7 +528,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Get settings that affect the UI.')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def getSettings(self):
@@ -537,7 +543,7 @@ class WSIDeIDResource(Resource):
         .param('id', 'The ID of the resource.', paramType='path')
         .param('type', 'The type of the resource (folder, user, collection).')
         .errorResponse('ID was invalid.')
-        .errorResponse('Read access was denied for the resource.', 403)
+        .errorResponse('Read access was denied for the resource.', 403),
     )
     def getSubtreeCount(self, id, type):
         user = self.getCurrentUser()
@@ -609,7 +615,7 @@ class WSIDeIDResource(Resource):
                dataType='boolean', default=False, required=False)
         .pagingParams(defaultSort='lowerName')
         .errorResponse()
-        .errorResponse('Read access was denied on the parent folder.', 403)
+        .errorResponse('Read access was denied on the parent folder.', 403),
     )
     @access.public(scope=TokenScope.DATA_READ)
     def folderItemList(self, folder, images, limit, offset, sort, recurse):
@@ -667,7 +673,7 @@ class WSIDeIDResource(Resource):
                'reject, quarantine, unquarantine, finish, ocr.', paramType='path',
                enum=['process', 'reject', 'quarantine', 'unquarantine', 'finish', 'ocr'])
         .errorResponse()
-        .errorResponse('Write access was denied on the item.', 403)
+        .errorResponse('Write access was denied on the item.', 403),
     )
     @access.user
     def itemListAction(self, ids, action):
@@ -687,7 +693,7 @@ class WSIDeIDResource(Resource):
             with ProgressContext(
                 True, user=user, title='%s items' % pp.capitalize(),
                 message='%s %s' % (pp.capitalize(), items[0]['name']),
-                total=len(items), current=0
+                total=len(items), current=0,
             ) as ctx:
                 try:
                     for idx, item in enumerate(items):
@@ -720,7 +726,7 @@ class WSIDeIDResource(Resource):
                required=False, dataType='int')
         .param('recurse', 'Return items recursively under this folder.',
                dataType='boolean', default=False, required=False)
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def folderAction(self, folder, action, limit=None, recurse=False):
@@ -739,7 +745,7 @@ class WSIDeIDResource(Resource):
     @autoDescribeRoute(
         Description('Get the list of known and allowed image names for refiling.')
         .modelParam('id', model=Item, level=AccessType.READ)
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def getRefileList(self, item):
@@ -758,7 +764,7 @@ class WSIDeIDResource(Resource):
     @autoDescribeRoute(
         Description('Get the list of known and allowed image names for refiling.')
         .modelParam('id', model=Folder, level=AccessType.READ)
-        .errorResponse()
+        .errorResponse(),
     )
     @access.user
     def getRefileListFolder(self, folder):
@@ -777,7 +783,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Get the current import schema')
-        .errorResponse()
+        .errorResponse(),
     )
     @access.admin
     def getSchema(self):
@@ -791,7 +797,7 @@ class WSIDeIDResource(Resource):
         .param('imageId', 'The new imageId')
         .param('tokenId', 'The new tokenId', required=False)
         .errorResponse()
-        .errorResponse('Write access was denied on the item.', 403)
+        .errorResponse('Write access was denied on the item.', 403),
     )
     @access.user
     def refileItem(self, item, imageId, tokenId):
@@ -800,7 +806,8 @@ class WSIDeIDResource(Resource):
         user = self.getCurrentUser()
         if imageId and imageId != item['name'].split('.', 1)[0] and Item().findOne({
                 'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
-            raise RestException('An image with that name already exists.')
+            msg = 'An image with that name already exists.'
+            raise RestException(msg)
         if not imageId:
             imageId = TokenOnlyPrefix + tokenId
         uploadInfo = item.get('wsi_uploadInfo')
@@ -820,7 +827,7 @@ class WSIDeIDResource(Resource):
         .modelParam('id', model=Item, level=AccessType.READ)
         .param('tokenId', 'The new tokenId', required=True)
         .jsonParam('refileData', 'Data used instead of internal data', paramType='body')
-        .errorResponse('Write access was denied on the item.', 403)
+        .errorResponse('Write access was denied on the item.', 403),
     )
     @access.user
     def refileItemFull(self, item, tokenId, refileData):
@@ -838,7 +845,7 @@ class WSIDeIDResource(Resource):
         .param('limit', 'Maximum number of items in folder to process',
                required=False, dataType='int')
         .param('recurse', 'Return items recursively under this folder.',
-               dataType='boolean', default=False, required=False)
+               dataType='boolean', default=False, required=False),
     )
     @access.user
     def refileFolderFull(self, folder, tokenId, limit=None, recurse=False):
@@ -864,7 +871,7 @@ class WSIDeIDResource(Resource):
         Description('Refile multiple images at once.')
         .jsonParam('imageRefileData', 'Data used to refile images', paramType='body')
         .errorResponse()
-        .errorResponse('Write access was denied for an item.', 403)
+        .errorResponse('Write access was denied for an item.', 403),
     )
     @access.user
     def refileItems(self, imageRefileData):
@@ -879,7 +886,8 @@ class WSIDeIDResource(Resource):
             imageId = imageRefileData[itemId]['imageId']
             if imageId and imageId != item['name'].split('.', 1)[0] and Item().findOne({
                     'name': {'$regex': '^' + re.escape(imageId) + r'\..*'}}):
-                raise RestException('An image with that name already exists.')
+                msg = 'An image with that name already exists.'
+                raise RestException(msg)
             if not imageId:
                 imageId = TokenOnlyPrefix + tokenId
             uploadInfo = item.get('wsi_uploadInfo')
@@ -895,7 +903,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(
         Description('Pass a set of values to the Matching API.')
-        .jsonParam('match', 'JSON match data', paramType='body')
+        .jsonParam('match', 'JSON match data', paramType='body'),
     )
     @access.public
     def callMatchingAPI(self, match):
@@ -923,7 +931,7 @@ class WSIDeIDResource(Resource):
 
     @autoDescribeRoute(  # noqa
         Description('Simulate the SEER*DMS Matching API for testing.')
-        .jsonParam('match', 'JSON match data', paramType='body')
+        .jsonParam('match', 'JSON match data', paramType='body'),
     )
     @access.public
     def fakeMatchingAPI(self, match):  # noqa
@@ -984,7 +992,7 @@ def addSystemEndpoints(apiRoot):
     .notes('Must be a system administrator to call this.')
     .param('includeSettings', 'False to only show config; true to include full '
            'settings.', required=False, dataType='boolean', default=False)
-    .errorResponse('You are not a system administrator.', 403)
+    .errorResponse('You are not a system administrator.', 403),
 )
 @boundHandler
 def getCurrentConfig(self, includeSettings=False):
@@ -1001,7 +1009,6 @@ def getCurrentConfig(self, includeSettings=False):
                         result[k][subk] = json.loads(json.dumps(subv))
                     except Exception:
                         print(k, subk, subv)
-                        pass
         elif not callable(v):
             result[k] = v
     if includeSettings:
