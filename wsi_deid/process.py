@@ -84,7 +84,7 @@ def get_generated_title(item):
         'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
         'internal;isyntax;scanner_operator_id',
     }:
-        if redactList['metadata'].get(key):
+        if redactList['metadata'].get(key) and redactList['metadata'].get(key)['value']:
             return redactList['metadata'].get(key)['value']
     # TODO: Pull from appropriate 'meta' if not otherwise present
     return title
@@ -1549,6 +1549,9 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
                 imageDrawFont = PIL.ImageFont.load_default()
         textL, textT, textR, textB = imageDrawFont.getbbox(title)
         textW = textR - textL
+        # if there is no width, there is no title
+        if not textW:
+            return
         textH = textB  # from old imageDraw.textsize(title, imageDrawFont)
         if iter != 1 and (textW > targetW * 0.95 or textW < targetW * 0.85):
             fontSize = fontSize * targetW * 0.9 / textW
