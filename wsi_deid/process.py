@@ -915,7 +915,7 @@ def redact_format_hamamatsu_redact_wsi(tileSource, ifds, geojson, tempdir):
             reduced.crop(0, 0, min(32, reduced.width), min(32, reduced.height)).tiffsave(wsiPath)
             logger.info('Redacting wsi - saving jpeg')
             jpegPos = os.path.getsize(wsiPath)
-            reduced.jpegsave(jpegPath, Q=quality, subsample_mode=pyvips.ForeignJpegSubsample.OFF)
+            reduced.jpegsave(jpegPath, Q=quality, subsample_mode=pyvips.ForeignSubsample.OFF)
             # Add restart markers to the jpeg
             if tifftools.Tag.NDPI_MCU_STARTS.value not in ifd['tags']:
                 restartInterval = int(math.ceil(ifdw / 8))
