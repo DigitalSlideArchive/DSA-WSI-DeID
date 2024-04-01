@@ -18,7 +18,7 @@ def start_ocr_item_job(job):
         Job().updateJob(
             job,
             log='Expected a Girder item as an argument\n',
-            status=JobStatus.ERROR
+            status=JobStatus.ERROR,
         )
         return
     item = job_args[0]
@@ -30,9 +30,9 @@ def start_ocr_item_job(job):
         message = f'Attempting to find label text for file {item["name"]} resulted in {str(e)}.'
         status = JobStatus.ERROR
     if status == JobStatus.SUCCESS and len(label_barcode) > 0:
-        message = f'Found label barcode for file {item["name"]}: {label_barcode}.\n',
+        message = f'Found label barcode for file {item["name"]}: {label_barcode}.\n'
     if status == JobStatus.SUCCESS and len(label_text) > 0:
-        message = f'Found label text for file {item["name"]}: {label_text}.\n',
+        message = f'Found label text for file {item["name"]}: {label_text}.\n'
     else:
         message = f'Could not find label text for file {item["name"]}\n'
     Job().updateJob(job, log=message, status=status)
@@ -68,14 +68,14 @@ def start_ocr_batch_job(job):
     Job().updateJob(
         job,
         log='Starting batch job to find label text on items.\n',
-        status=JobStatus.RUNNING
+        status=JobStatus.RUNNING,
     )
     job_args = job.get('args', None)
     if job_args is None:
         Job().updateJob(
             job,
             log='Expected a list of girder items as an argument.\n',
-            status=JobStatus.ERROR
+            status=JobStatus.ERROR,
         )
         return
     itemIds = job_args[0]
@@ -208,14 +208,14 @@ def associate_unfiled_images(job):  # noqa
     Job().updateJob(
         job,
         log='Starting job to associate unfiled images with upload data.\n',
-        status=JobStatus.RUNNING
+        status=JobStatus.RUNNING,
     )
     job_args = job.get('args', None)
     if job_args is None or len(job_args) != 3:
         Job().updateJob(
             job,
             log='Expected a list of girder items and upload information as arguments.\n',
-            status=JobStatus.ERROR
+            status=JobStatus.ERROR,
         )
         return
     itemIds, uploadInfo, reportInfo = job_args
@@ -255,7 +255,7 @@ def associate_unfiled_images(job):  # noqa
             if len(label_text) > 0:
                 for key, value in uploadInfo.items():
                     # key is the TokenID from the import spreadsheet, and value is associated info
-                    matchTextFields = config.getConfig('import_text_association_columns')
+                    matchTextFields = config.getConfig('import_text_association_columns') or []
                     uploadFields = value.get('fields', {})
                     text_to_match = [
                         uploadFields[field] for field in matchTextFields if field in uploadFields]

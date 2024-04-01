@@ -1,4 +1,6 @@
+import json
 import os
+import re
 
 import girder
 import PIL.Image
@@ -14,6 +16,7 @@ from girder.utility import setting_utilities
 from pkg_resources import DistributionNotFound, get_distribution
 
 from . import assetstore_import
+from .config import configSchemas
 from .constants import PluginSettings
 from .import_export import SftpMode
 from .rest import WSIDeIDResource, addSystemEndpoints
@@ -66,13 +69,119 @@ def validateRemoteSftpPort(doc):
         doc['value'] = None
     else:
         if not isinstance(value, int):
-            raise ValidationException('Remote SFTP Port must be an integer value')
+            msg = 'Remote SFTP Port must be an integer value'
+            raise ValidationException(msg)
 
 
 @setting_utilities.validator(PluginSettings.WSI_DEID_SFTP_MODE)
 def validateSettingSftpMode(doc):
-    if not doc['value'] in [mode.value for mode in SftpMode]:
-        raise ValidationException('SFTP Mode must be one of "local", "remote", or "both"', 'value')
+    if doc['value'] not in [mode.value for mode in SftpMode]:
+        msg = 'SFTP Mode must be one of "local", "remote", or "both"'
+        raise ValidationException(msg, 'value')
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'add_title_to_label',
+    PluginSettings.WSI_DEID_BASE + 'always_redact_label',
+    PluginSettings.WSI_DEID_BASE + 'redact_macro_square',
+    PluginSettings.WSI_DEID_BASE + 'show_import_button',
+    PluginSettings.WSI_DEID_BASE + 'show_export_button',
+    PluginSettings.WSI_DEID_BASE + 'show_next_item',
+    PluginSettings.WSI_DEID_BASE + 'show_next_folder',
+    PluginSettings.WSI_DEID_BASE + 'require_redact_category',
+    PluginSettings.WSI_DEID_BASE + 'require_reject_reason',
+    PluginSettings.WSI_DEID_BASE + 'edit_metadata',
+    PluginSettings.WSI_DEID_BASE + 'show_metadata_in_lists',
+    PluginSettings.WSI_DEID_BASE + 'reimport_if_moved',
+    PluginSettings.WSI_DEID_BASE + 'validate_image_id_field',
+})
+def validateBoolean(doc):
+    if doc.get('value', None) is not None:
+        doc['value'] = str(doc['value']).lower() in {'true', 'on', 'yes'}
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'redact_macro_long_axis_percent',
+    PluginSettings.WSI_DEID_BASE + 'redact_macro_short_axis_percent',
+})
+def validateDecimalPercent(doc):
+    if doc.get('value', None) is not None:
+        doc['value'] = float(doc['value'])
+        if doc['value'] < 0 or doc['value'] > 100:
+            msg = 'Percent must be between 0 and 100'
+            raise ValidationException(msg)
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'folder_name_field',
+})
+def validateFolderNameField(doc):
+    if doc.get('value', None):
+        doc['value'] = str(doc['value']).strip()
+    if not doc['value']:
+        doc['value'] = None
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'image_name_field',
+})
+def validateImageNameField(doc):
+    if doc.get('value', None) is not None:
+        doc['value'] = str(doc['value']).strip()
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'new_token_pattern',
+})
+def validateNewTokenPattern(doc):
+    if doc.get('value', None) is not None:
+        doc['value'] = str(doc['value']).strip()
+        if doc['value'] and '@' not in doc['value'] and '#' not in doc['value']:
+            msg = 'The token pattern must contain at least one @ or # character for templating'
+            raise ValidationException(msg)
+    if not doc['value']:
+        doc['value'] = None
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_aperio',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_hamamatsu',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_philips',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_isyntax',
+    PluginSettings.WSI_DEID_BASE + 'import_text_association_columns',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_aperio',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_hamamatsu',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_philips',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_isyntax',
+    PluginSettings.WSI_DEID_BASE + 'phi_pii_types',
+    PluginSettings.WSI_DEID_BASE + 'reject_reasons',
+    PluginSettings.WSI_DEID_BASE + 'upload_metadata_add_to_images',
+    PluginSettings.WSI_DEID_BASE + 'upload_metadata_for_export_report',
+})
+def validateJsonSchema(doc):
+    import jsonschema
+
+    if doc.get('value', None):
+        schemakey = doc['key']
+        if schemakey.startswith(PluginSettings.WSI_DEID_BASE):
+            schemakey = schemakey[len(PluginSettings.WSI_DEID_BASE):]
+        if schemakey not in configSchemas and '_key' in schemakey:
+            schemakey = schemakey.split('_keys')[0] + '_keys'
+        if isinstance(doc['value'], str):
+            doc['value'] = json.loads(doc['value'])
+        jsonschema.validate(instance=doc['value'], schema=configSchemas[schemakey])
+        if '_keys' in schemakey:
+            for k, v in doc['value'].items():
+                try:
+                    re.compile(k)
+                    re.compile(v)
+                except Exception:
+                    msg = f'All keys and values if {doc["key"]} must be regular expressions'
+                    raise ValidationException(msg)
+    else:
+        doc.get('value', None)
 
 
 class GirderPlugin(plugin.GirderPlugin):
