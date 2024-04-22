@@ -154,6 +154,7 @@ class APISearch:
             req = requests.post(self.url, headers=headers, data=json.dumps(query))
         except Exception:
             self.logger.exception('Failed to query API')
+            return []
         return req.json()
 
     def lookupQueries(self, queryList):

@@ -759,7 +759,7 @@ wrap(ItemViewWidget, 'render', function (render) {
         }
         // sort the results
         const sorted = {};
-        Object.keys(internal[parts[1]]).sort().forEach((k) => {
+        Object.keys(internal[parts[1]] || {}).sort().forEach((k) => {
             sorted[k] = internal[parts[1]][k];
         });
         internal[parts[1]] = sorted;
