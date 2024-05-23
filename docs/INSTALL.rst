@@ -36,7 +36,7 @@ Hardware Requirements
 
 The recommended hardware is 32 GBytes of memory on a system with at least 4 cores.  If you are using OCR, it is highly recommended to have an NVidia Cuda-capable GPU.
 
-The minimum hardware is 4 GBytes of memory on a system with at least 2 cores (12 GBytes if using iSyntax files).
+The minimum hardware is 4 GBytes of memory on a system with at least 2 cores, 8 GBytes is using OCR, and 12 GBytes if using iSyntax files.
 
 The speed of your storage greatly affects the speed of the system.  SSD drives will for import, local storage, and export are recommended.
 

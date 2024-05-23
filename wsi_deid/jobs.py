@@ -1,4 +1,5 @@
 import concurrent.futures
+import os
 
 from girder import logger
 from girder.models.item import Item
@@ -227,7 +228,8 @@ def associate_unfiled_images(job):  # noqa
         # for itemId in itemIds:
         #     label_text = get_label_text_for_item(itemId, job)
         label_text_list = []
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+                max_workers=max(1, os.cpu_count() // 2)) as executor:
             futures = []
             for itemId in itemIds:
                 futures.append(executor.submit(get_label_text_for_item, itemId, job))
