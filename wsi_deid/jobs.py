@@ -188,7 +188,7 @@ def addToReport(reportInfo, item, data):
         return
     report = None
     for entry in reportInfo['files']:
-        if entry['path'] == file['path']:
+        if entry['path'] == file.get('path', file.get('s3Key')):
             report = entry
             break
     if not report:
