@@ -551,7 +551,7 @@ class WSIDeIDResource(Resource):
         doc = model.load(id=id, user=self.getCurrentUser(), level=AccessType.READ)
         if not hasattr(self, '_pendingSubtreeCounts'):
             self._pendingSubtreeCounts = {}
-        key = (user['_id'], doc['_id'])
+        key = (user['_id'] if user else None, doc['_id'])
         try:
             # Don't make the request a second time if we made it recently
             # and think it is pending.  Some subtree counts can take minutes

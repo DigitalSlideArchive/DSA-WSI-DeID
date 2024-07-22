@@ -96,10 +96,10 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash && \
 
 RUN mkdir -p /fuse --mode=a+rwx
 
-RUN mkdir -p wsi_deid && \
+RUN mkdir -p /wsi_deid && \
     mkdir -p /conf
 
-WORKDIR wsi_deid
+WORKDIR /wsi_deid
 
 COPY . .
 
@@ -114,6 +114,8 @@ RUN python -m pip install --no-cache-dir \
     # girder-homepage \
     # Use prebuilt wheels whenever possible \
     --find-links https://girder.github.io/large_image_wheels
+
+RUN python -m pip install 'python-bidi<0.5'
 
 # Download ocr model
 RUN python -c 'import easyocr,PIL.Image,numpy;OCRReader = easyocr.Reader(["en"], verbose=False, quantize=False);print(OCRReader.readtext(numpy.asarray(PIL.Image.open("tests/data/sample_label.jpg")),contrast_ths=0.75,adjust_contrast=1.0))'
