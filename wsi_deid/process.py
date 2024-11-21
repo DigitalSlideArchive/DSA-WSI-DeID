@@ -1724,6 +1724,18 @@ def get_image_barcode(item):
     return results
 
 
+def get_image_name(prefix, info):
+    template = config.getConfig('name_template') or '{tokenId}'
+    try:
+        name = template.format(tokenId=prefix, **info['fields'])
+        if name != template and name:
+            return name
+    except Exception:
+        logger.exception(
+            'Could not fill name template (%r) with tokenId=%s, %r', template, prefix, info)
+    return prefix
+
+
 def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     """
     Refile an item to a new name and folder.

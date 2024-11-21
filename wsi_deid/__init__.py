@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import string
 
 import girder
 import PIL.Image
@@ -139,6 +140,26 @@ def validateNewTokenPattern(doc):
         if doc['value'] and '@' not in doc['value'] and '#' not in doc['value']:
             msg = 'The token pattern must contain at least one @ or # character for templating'
             raise ValidationException(msg)
+    if not doc['value']:
+        doc['value'] = None
+
+
+@setting_utilities.validator({
+    PluginSettings.WSI_DEID_BASE + 'name_template',
+})
+def validateStringTemplate(doc):
+    if doc.get('value', None) is not None:
+        doc['value'] = re.sub(
+            r'\{tokenid\}', '{tokenId}', str(doc['value']).strip(),
+            flags=re.IGNORECASE)
+        try:
+            names = [fn for _, fn, _, _ in string.Formatter().parse(doc['value']) if fn is not None]
+        except Exception:
+            names = []
+        if not len(names):
+            msg = 'The template string must contain at least one reference in brases'
+            raise ValidationException(msg)
+
     if not doc['value']:
         doc['value'] = None
 

@@ -9,7 +9,7 @@ from girder_jobs.models.job import Job, JobStatus
 
 from . import config, matching_api
 from .constants import TokenOnlyPrefix
-from .process import get_image_barcode, get_image_text, refile_image
+from .process import get_image_barcode, get_image_name, get_image_text, refile_image
 
 
 def start_ocr_item_job(job):
@@ -163,8 +163,9 @@ def match_images_via_api(imageIds, userId, job, reportInfo):
         tokenId = result[0]['token_id']
         info = {'fields': result[0].get('tumors')[0]}
         oldName = item['name']
-        item = refile_image(item, user, tokenId, TokenOnlyPrefix + tokenId,
-                            {TokenOnlyPrefix + tokenId: info})
+        newNameRoot = get_image_name(tokenId, info)
+        item = refile_image(item, user, tokenId, TokenOnlyPrefix + newNameRoot,
+                            {TokenOnlyPrefix + newNameRoot: info})
         Job().updateJob(
             job,
             log=f'Moved item {oldName} to folder {tokenId} as {item["name"]} based on api lookup\n',
