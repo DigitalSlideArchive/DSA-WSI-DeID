@@ -332,7 +332,6 @@ If ``InputFileName`` is added to the list of export fields in the ``upload_metad
   import_text_association_columns = ["SurgPathNum", "First_Name", "Last_Name", "Date_of_Birth"]
   ...
 
-
 Choosing Custom Metadata To Add to Exported Images
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -354,7 +353,6 @@ If the setting is absent or set to ``None``, then all metadata from the upload f
   upload_metadata_add_to_images = None
   ...
 
-
 Creating New TokenIDs for Refiling Images
 +++++++++++++++++++++++++++++++++++++++++
 
@@ -369,6 +367,18 @@ For example, if the specified pattern is ``0123#@@1###``, a randomly generated T
   [wsi_deid]
   ...
   new_token_pattern = "####@@#####"
+  ...
+
+Naming Images Based on Database Values
+++++++++++++++++++++++++++++++++++++++
+
+By default, images filed based on database lookup are named based on their ``tokenId`` and a unique image number.  This can be changed to include data from the database lookup, if it is exists.  The ``name_template`` specifies how this is done; the default is ``{tokenId}``.  You can include, for instance, a tumor record number by changing it to ``{tokenId}_{tumor_record_number}``.  Note that if all fields are not present, it will default to the tokenId.
+
+.. code-block:: python
+
+  [wsi_deid]
+  ...
+  name_templaye = "{tokenId}"
   ...
 
 An Example to Allow All Import Files

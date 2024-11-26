@@ -196,19 +196,19 @@ function addControls(key, settings) {
             {
                 key: 'redactlist',
                 text: 'Redact Checked',
-                class: 'btn-info disabled',
+                class: 'btn-primary disabled',
                 action: 'list/process',
                 check: () => settings.show_metadata_in_lists
             }, {
                 key: 'import',
                 text: 'Import',
-                class: 'btn-info',
+                class: 'btn-primary',
                 action: 'ingest',
                 check: () => settings.show_import_button !== false
             }, {
                 key: 'ocr',
                 text: 'Find label text',
-                class: 'btn-info',
+                class: 'btn-primary',
                 action: 'ocrall',
                 check: _.constant(true)
             }
@@ -217,13 +217,13 @@ function addControls(key, settings) {
             {
                 key: 'export',
                 text: 'Export Recent',
-                class: 'btn-info',
+                class: 'btn-primary',
                 action: 'export',
                 check: () => settings.show_export_button !== false
             }, {
                 key: 'exportall',
                 text: 'Export All',
-                class: 'btn-info',
+                class: 'btn-primary',
                 action: 'exportall',
                 check: () => settings.show_export_button !== false
             }
@@ -232,7 +232,7 @@ function addControls(key, settings) {
             {
                 key: 'finishlist',
                 text: 'Approve Checked',
-                class: 'btn-info disabled',
+                class: 'btn-primary disabled',
                 action: 'list/finish',
                 check: () => settings.show_metadata_in_lists
             }
@@ -241,7 +241,7 @@ function addControls(key, settings) {
             {
                 key: 'redactlist',
                 text: 'Redact Checked',
-                class: 'btn-info disabled',
+                class: 'btn-primary disabled',
                 action: 'list/process',
                 check: () => settings.show_metadata_in_lists
             }
@@ -250,7 +250,7 @@ function addControls(key, settings) {
             {
                 key: 'import',
                 text: 'Import',
-                class: 'btn-info',
+                class: 'btn-primary',
                 action: 'ingest',
                 check: () => settings.show_import_button !== false
             }

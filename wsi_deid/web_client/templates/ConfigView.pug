@@ -193,6 +193,14 @@ form#g-wsi_deid-form(role="form")
         | All of the settings in this section can be specified through the Girder configuration file.  If changed via these settings, these values override the values in the configuration file.
 
     .form-group
+      label(for="g-wsi-deid-base_name_template") Image Name Template
+      p.g-hui-description
+        | By default, items imported and matched to a database are given a name of the returned tokenId and a unique image number.  Additional data from the database record can be added as part of the name.  The template is in the python format string style.
+      input#g-wsi-deid-base_name_template.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_name_template'] || '',
+          title='A python template string style, such as "{tokenId}"',
+          spellcheck="false")
+    .form-group
       input#g-wsi-deid-base_add_title_to_label.input-sm(type="checkbox", checked=(settings['wsi_deid.base_add_title_to_label'] ? "checked" : undefined))
       label(for="g-wsi-deid-base_add_title_to_label") Add File Name To Label
       p.g-hui-description
