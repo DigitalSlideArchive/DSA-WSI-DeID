@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 LABEL maintainer="Kitware, Inc. <kitware@kitware.com>"
 
 # See logs faster; don't write pyc or pyo files
@@ -50,8 +50,8 @@ RUN apt-get update && \
     rdfind \
     # for isyntax libraries \
     gdebi \
-    libegl1-mesa \
-    libgles2-mesa \
+    libegl1-mesa-dev \
+    libgles2-mesa-dev \
     libjpeg-dev \
     liblcms2-dev \
     libtinyxml-dev \
@@ -80,6 +80,7 @@ RUN pyenv update && \
     find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
     rm -rf /tmp/* /var/tmp/* && \
     # This makes duplicate python library files hardlinks of each other \
+    find /.pyenv -name 'libpython*.a' -delete && \
     rdfind -minsize 1048576 -makehardlinks true -makeresultsfile false /.pyenv
 
 RUN pip install --no-cache-dir virtualenv && \
@@ -88,11 +89,18 @@ RUN pip install --no-cache-dir virtualenv && \
 
 ENV PATH="/venv/bin:$PATH"
 
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash && \
-    apt-get update && \
-    apt-get install --no-install-recommends --yes \
-    nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Use nvm to install node
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Default node version
+RUN . ~/.bashrc && \
+    nvm install 14 && \
+    nvm alias default 14 && \
+    nvm use default && \
+    rm -rf /root/.nvm/.cache && \
+    ln -s $(dirname `which npm`) /usr/local/node
+
+ENV PATH="/usr/local/node:$PATH"
 
 RUN mkdir -p /fuse --mode=a+rwx
 
@@ -113,7 +121,12 @@ RUN python -m pip install --no-cache-dir \
     # Add additional girder plugins here \
     # girder-homepage \
     # Use prebuilt wheels whenever possible \
-    --find-links https://girder.github.io/large_image_wheels
+    --find-links https://girder.github.io/large_image_wheels && \
+    rm -r /root/.cache/pip && \
+    find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
+    rm -rf /tmp/* /var/tmp/* && \
+    rdfind -minsize 32768 -makehardlinks true -makeresultsfile false /pyenv && \
+    rdfind -minsize 32768 -makehardlinks true -makeresultsfile false /usr/local/bin
 
 # Download ocr model
 RUN python -c 'import easyocr,PIL.Image,numpy;OCRReader = easyocr.Reader(["en"], verbose=False, quantize=False);print(OCRReader.readtext(numpy.asarray(PIL.Image.open("tests/data/sample_label.jpg")),contrast_ths=0.75,adjust_contrast=1.0))'
