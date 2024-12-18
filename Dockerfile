@@ -21,6 +21,7 @@ RUN apt-get update && \
     fuse \
     git \
     less \
+    libtiff5-dev \
     libmagic-dev \
     vim \
     # needed for easyocr \
