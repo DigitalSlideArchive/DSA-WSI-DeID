@@ -21,7 +21,7 @@ To download the repository directly, go to the `Releases Page <https://github.co
 
 The software is known to work with a variety of operating systems:
 
-- Windows 10 with Windows Subsystem for Linux (WSL) installed and Docker Desktop
+- Windows 10 or Windows 11 with Windows Subsystem for Linux (WSL) installed and Docker Desktop
 
 - Ubuntu (version 16.04 and later)
 
