@@ -78,6 +78,7 @@ def get_generated_title(item):
     """
     redactList = get_redact_list(item)
     title = os.path.splitext(item['name'])[0]
+    # ##DWM::
     for key in {
         'internal;openslide;aperio.Title',
         'internal;openslide;hamamatsu.Reference',
@@ -98,6 +99,7 @@ def determine_format(tileSource):
     :returns: the vendor or None if unknown.
     """
     metadata = tileSource.getInternalMetadata() or {}
+    # ##DWM::
     if tileSource.name == 'openslide':
         if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
             return metadata['openslide']['openslide.vendor']
@@ -155,6 +157,7 @@ def get_standard_redactions(item, title):
     return redactList
 
 
+# ##DWM::
 def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
     metadata = tileSource.getInternalMetadata() or {}
     title_redaction_list_entry = generate_system_redaction_list_entry(title)
@@ -284,6 +287,7 @@ def metadata_field_count(tileSource, format, redactList):
             else:
                 redactable += 1
             continue
+        # ##DWM::
         for subkey in metadata[mainkey]:
             key = 'internal;%s;%s' % (mainkey, subkey)
             if format == 'aperio' and re.match(
@@ -315,6 +319,7 @@ def model_information(tileSource, format):
     :param format: the vendor or None if unknown.
     :returns: a string of model information or None.
     """
+    # ##DWM::
     metadata = tileSource.getInternalMetadata()
     for key in ('aperio.ScanScope ID', 'hamamatsu.Product'):
         if metadata.get('openslide', {}).get(key):
@@ -436,6 +441,7 @@ def redact_item(item, tempdir):
     return file, info
 
 
+# ##DWM::
 def aperio_value_list(item, redactList, title):
     """
     Get a list of aperio values that can be joined with | to form the aperio
@@ -608,6 +614,7 @@ def polygons_to_svg(polygons, width, height, cropAllowed=True, offsetx=0, offset
     return svg
 
 
+# ##DWM::
 def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImage):
     """
     Redact aperio files.
@@ -783,6 +790,7 @@ def redact_wsi_geojson(geojson, width, height, origImage):
     return redactedImage
 
 
+# ##DWM::
 def redact_format_aperio_philips_redact_wsi(tileSource, ifds, geojson, tempdir):
     """
     Given a geojson list of polygons, remove them from the wsi.
@@ -1661,6 +1669,7 @@ def get_image_text(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
+    # ##DWM::
     if image_format in ['aperio', 'philips', 'isyntax']:
         key = 'label'
     elif image_format == 'hamamatsu':
@@ -1708,6 +1717,7 @@ def get_image_barcode(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
+    # ##DWM::
     if image_format in ['aperio', 'philips', 'isyntax']:
         key = 'label'
     elif image_format == 'hamamatsu':

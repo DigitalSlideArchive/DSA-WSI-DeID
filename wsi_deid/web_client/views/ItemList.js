@@ -28,6 +28,9 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
         if (meta.xml && Object.keys(meta.xml).some((key) => key.startsWith('PIM_DP_'))) {
             return formats.philips;
         }
+        if (meta.omeinfo) {
+            return formats.ometiff;
+        }
         return formats.none;
     };
 
@@ -70,11 +73,11 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
                         }
                         value = value[keylist[i]];
                     }
-                    if (matchFieldPattern(keyname, hideFieldPatterns, undefined, value)) {
+                    if (matchFieldPattern(keyname, hideFieldPatterns, undefined, value) || ['internal;populatedLevels'].includes(keyname)) {
                         return;
                     }
                     i._metadict[keyname] = value;
-                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource'].indexOf(keyname) >= 0) {
+                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource', 'internal;populatedLevels'].includes(keyname)) {
                         i._visible.push(keylist);
                         if (info._visible.indexOf(keylist) < 0) {
                             info._visible.push(keylist);
