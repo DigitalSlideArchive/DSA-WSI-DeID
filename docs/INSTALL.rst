@@ -23,9 +23,9 @@ The software is known to work with a variety of operating systems:
 
 - Windows 10 or Windows 11 with Windows Subsystem for Linux (WSL) installed and Docker Desktop
 
-- Ubuntu (version 16.04 and later)
+- Ubuntu (version 18.04 and later)
 
-- CentOS (version 7 and later)
+- AlmaLinux (version 9 or later).
 
 - Windows Server 2019.  This operating system require some additional changes beyond the default install configuration, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019.
 
@@ -34,9 +34,9 @@ Note: the software can work on OSX, but using OCR of label data is unusably slow
 Hardware Requirements
 ~~~~~~~~~~~~~~~~~~~~~
 
-The recommended hardware is 32 GBytes of memory on a system with at least 4 cores.  If you are using OCR, it is highly recommended to have an NVidia Cuda-capable GPU.
+The recommended hardware is 32 GBytes of memory on a system with at least 4 cores.  If you are using OCR, it is recommended to have an NVidia Cuda-capable GPU.
 
-The minimum hardware is 4 GBytes of memory on a system with at least 2 cores, 8 GBytes is using OCR, and 12 GBytes if using iSyntax files.
+The minimum hardware is 4 GBytes of memory on a system with at least 2 cores, 8 GBytes if using OCR, and 12 GBytes if using iSyntax files.
 
 The speed of your storage greatly affects the speed of the system.  SSD drives will for import, local storage, and export are recommended.
 
