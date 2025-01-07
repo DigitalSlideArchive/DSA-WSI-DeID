@@ -77,12 +77,20 @@ def get_generated_title(item):
     :returns: a title.
     """
     redactList = get_redact_list(item)
-    title = os.path.splitext(item['name'])[0]
+    title = splitallext(item['name'])[0]
+    print('CHECK A')
+    print(redactList)
     for key in {
         'internal;openslide;aperio.Title',
         'internal;openslide;hamamatsu.Reference',
         'internal;xml;PIIM_DP_SCANNER_OPERATOR_ID',
         'internal;isyntax;scanner_operator_id',
+        'internal;omereduced;Image:0:Pixels:TiffData:0:UUID:FileName',
+        'internal;omereduced;Image:1:Pixels:TiffData:0:UUID:FileName',
+        'internal;omereduced;Image:2:Pixels:TiffData:0:UUID:FileName',
+        'internal;omereduced;Image:0:Pixels:TiffData:0:UUID:text',
+        'internal;omereduced;Image:1:Pixels:TiffData:0:UUID:text',
+        'internal;omereduced;Image:2:Pixels:TiffData:0:UUID:text',
     }:
         if redactList['metadata'].get(key) and redactList['metadata'].get(key)['value']:
             return redactList['metadata'].get(key)['value']
@@ -105,6 +113,8 @@ def determine_format(tileSource):
         return 'isyntax'
     if 'xml' in metadata and any(k.startswith('PIM_DP_') for k in metadata['xml']):
         return 'philips'
+    if 'omeinfo' in metadata:
+        return 'ometiff'
     return None
 
 
@@ -192,6 +202,35 @@ def get_standard_redactions_format_hamamatsu(item, tileSource, tiffinfo, title):
         if metadata['openslide'].get('hamamatsu.%s' % key):
             redactList['metadata']['internal;openslide;hamamatsu.%s' % key] = \
                 metadata['openslide']['hamamatsu.%s' % key][:4] + '/01/01'
+    return redactList
+
+
+def get_standard_redactions_format_ometiff(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+        },
+    }
+    for key in {
+        'Image:0:Pixels:TiffData:0:UUID:FileName',
+        'Image:1:Pixels:TiffData:0:UUID:FileName',
+        'Image:2:Pixels:TiffData:0:UUID:FileName',
+        'Image:0:Pixels:TiffData:0:UUID:text',
+        'Image:1:Pixels:TiffData:0:UUID:text',
+        'Image:2:Pixels:TiffData:0:UUID:text',
+    }:
+        if key in metadata.get('omereduced', {}):
+            redactList['metadata']['internal;omereduced;' + key] = (
+                generate_system_redaction_list_entry(title))
+    for key in {
+        'Series 0 Date',
+    }:
+        if key in metadata.get('omereduced', {}):
+            redactList['metadata']['internal;omereduced;' + key] = (
+                generate_system_redaction_list_entry(
+                    '01/01/' + metadata['omereduced'][key][6:],
+                ))
     return redactList
 
 
@@ -322,6 +361,8 @@ def model_information(tileSource, format):
     for key in ('DICOM_MANUFACTURERS_MODEL_NAME', 'DICOM_DEVICE_SERIAL_NUMBER'):
         if metadata.get('xml', {}).get(key):
             return metadata['xml'][key]
+    if 'omereduced' in metadata and 'Series 0 ScanScope ID' in metadata['omereduced']:
+        return metadata['omereduced']['Series 0 ScanScope ID']
 
 
 def fadvise_willneed(item):
@@ -489,7 +530,10 @@ def redact_tiff_tags(ifds, redactList, title):
             tiffkey = key.rsplit(';tiff;', 1)[-1]
         if ':' in tiffkey:
             tiffkey, tiffdir = tiffkey.rsplit(':', 1)
-            tiffdir = int(tiffdir)
+            try:
+                tiffdir = int(tiffdir)
+            except ValueError:
+                continue
         if tiffkey in tifftools.Tag:
             tag = tifftools.Tag[tiffkey].value
             redactedTags.setdefault(tiffdir, {})
@@ -702,17 +746,19 @@ def redact_format_aperio_add_image(key, image, ifds, firstAssociatedIdx, tempdir
     :param ifds: ifds of output file.
     :param firstAssociatedIdx: ifd index of first associated image.
     :param tempdir: a directory for work files and the final result.
-    :param aperioValues: a list of aperio metadata values.
+    :param aperioValues: a list of aperio metadata values or None for an
+        ometiff.
     """
     imagePath = os.path.join(tempdir, '%s.tiff' % key)
     image.save(imagePath, format='tiff', compression='jpeg', quality=90)
     imageinfo = tifftools.read_tiff(imagePath)
-    imageDescription = aperioValues[0].split('\n', 1)[1] + '\n%s %dx%d' % (
-        key, image.width, image.height)
-    imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
-        'datatype': tifftools.Datatype.ASCII,
-        'data': imageDescription,
-    }
+    if aperioValues is not None:
+        imageDescription = aperioValues[0].split('\n', 1)[1] + '\n%s %dx%d' % (
+            key, image.width, image.height)
+        imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDescription.value] = {
+            'datatype': tifftools.Datatype.ASCII,
+            'data': imageDescription,
+        }
     imageinfo['ifds'][0]['tags'][tifftools.Tag.NewSubfileType] = {
         'data': [9 if key == 'macro' else 1], 'datatype': tifftools.Datatype.LONG}
     imageinfo['ifds'][0]['tags'][tifftools.Tag.ImageDepth] = {
@@ -1058,6 +1104,76 @@ def redact_format_hamamatsu_replace_macro(macroImage, ifds, tempdir):
     imageifd['tags'][tifftools.Tag.StripByteCounts.value]['data'][0] = jlen
     imageifd['size'] += jlen
     ifds[macroifd] = imageifd
+
+
+def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroImage):
+    """
+    Redact ometiff files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    import large_image_source_ometiff.girder_source
+
+    tileSource = ImageItem().tileSource(item)
+    sourcePath = tileSource._getLargeImagePath()
+    logger.info('Redacting ometiff file %s', sourcePath)
+    tiffinfo = tifftools.read_tiff(sourcePath)
+    ifds = tiffinfo['ifds']
+    if redactList.get('area', {}).get('_wsi', {}).get('geojson'):
+        ifds = redact_format_aperio_philips_redact_wsi(
+            tileSource, ifds, redactList['area']['_wsi']['geojson'], tempdir)
+        ImageItem().removeThumbnailFiles(item)
+    tiffSource = large_image_source_ometiff.girder_source.OMETiffGirderTileSource(item)
+    mainImageDir = [dir._directoryNum for dir in tiffSource._tiffDirectories[::-1] if dir]
+    firstAssociatedIdx = max(mainImageDir) + 1
+    # redact other images
+    for idx in range(len(ifds) - 1, 0, -1):
+        ifd = ifds[idx]
+        key = None
+        keyparts = ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
+            'data', '').split('\n', 1)[-1].strip().split()
+        if len(keyparts) and keyparts[0].lower() and not keyparts[0][0].isdigit():
+            key = keyparts[0].lower()
+        if (key is None and ifd['tags'].get(tifftools.Tag.NewSubfileType.value) and
+                ifd['tags'][tifftools.Tag.NewSubfileType.value]['data'][0] &
+                tifftools.Tag.NewSubfileType.bitfield.ReducedImage.value):
+            key = 'label' if ifd['tags'][
+                tifftools.Tag.NewSubfileType.value]['data'][0] == 1 else 'macro'
+        if key in redactList['images'] or key == 'label' or (key == 'macro' and macroImage):
+            ifds.pop(idx)
+    # Add back label and macro image
+    if macroImage:
+        redact_format_aperio_add_image(
+            'macro', macroImage, ifds, firstAssociatedIdx, tempdir, None)
+        # ##DWM:: update xml
+    if labelImage:
+        redact_format_aperio_add_image(
+            'label', labelImage, ifds, firstAssociatedIdx, tempdir, None)
+        # ##DWM:: update xml
+    # redact general tiff tags
+    redact_tiff_tags(ifds, redactList, title)
+    add_deid_metadata(item, ifds)
+    outputPath = os.path.join(tempdir, 'ometiff.ome.tiff')
+    tifftools.write_tiff(ifds, outputPath)
+    logger.info('Redacted ometiff file %s as %s', sourcePath, outputPath)
+
+    # ##DWM::
+    """
+    msg = f'FAILED: {outputPath}'
+    import shutil
+    shutil.copy(outputPath, '/tmp/test.ometiff.ome.tiff')
+    raise Exception(msg)
+    """
+
+    return outputPath, 'image/tiff'
 
 
 PhilipsTagElements = {  # Group, Element, Format
@@ -1487,7 +1603,7 @@ def redact_format_isyntax(item, tempdir, redactList, title, labelImage, macroIma
     if len(result) < tileSource._xmllen:
         parts = result.rsplit(b'</', 1)
         result = parts[0] + (b' ' * (tileSource._xmllen - len(result))) + b'</' + parts[1]
-    ext = os.path.splitext(sourcePath)[1]
+    ext = splitallext(sourcePath)[1]
     if not ext:
         ext = '.isyntax'
     outputPath = os.path.join(tempdir, 'philips' + ext)
@@ -1661,7 +1777,7 @@ def get_image_text(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
@@ -1708,7 +1824,7 @@ def get_image_barcode(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
@@ -1766,7 +1882,7 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     parentFolder = Folder().findOne({'name': tokenId, 'parentId': ingestFolder['_id']})
     if not parentFolder:
         parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
-    newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
+    newImageName = f'{imageId}{splitallext(item["name"])[-1]}'
     originalName = item['name']
     item['name'] = newImageName
     item = Item().move(item, parentFolder)
@@ -1786,3 +1902,10 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
         del item['wsi_uploadInfo']
         item = Item().save(item)
     return item
+
+
+def splitallext(name):
+    if '.' in name:
+        basename, ext = name.split('.', 1)
+        return basename, '.' + ext
+    return name, ''
