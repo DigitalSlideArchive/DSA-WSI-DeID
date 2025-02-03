@@ -394,7 +394,6 @@ For example, using the following sample files in the ``devops/wsi_deid`` folder:
 A ``docker-compose.local.yml`` could then be specified such as::
 
     ---
-    version: '3'
     services:
       girder:
         # Use the latest published or locally built docker image

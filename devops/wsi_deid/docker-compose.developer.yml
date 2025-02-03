@@ -13,7 +13,6 @@
 # `docker-compose down` and `docker-compose up`, or via the system/restart
 # enndpoint.
 ---
-version: '3'
 services:
   girder:
     image: dsarchive/wsi_deid:latest

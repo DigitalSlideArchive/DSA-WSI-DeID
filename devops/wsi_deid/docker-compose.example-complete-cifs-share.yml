@@ -1,7 +1,6 @@
 ---
 # Note - this example should be run as the only docker-compose file, not as a
 # modification from the default docker-compose.yml file.
-version: '3'
 services:
   girder:
     # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to
@@ -44,7 +43,7 @@ services:
     # //smb.server.uri/share_name is the name of the windows samba share.
     # In the share, this creates a directory called wsideid and then has
     # subdirectories called import, export, assetstore, logs, and db (db is
-    # created via the mongo contaienr).  These are then linked to appropriate
+    # created via the mongo container).  These are then linked to appropriate
     # locations inside the docker.
     command: bash -c "
       apt-get update &&
