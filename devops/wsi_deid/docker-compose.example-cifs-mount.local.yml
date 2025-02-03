@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
   girder:
     # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0) to

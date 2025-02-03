@@ -53,7 +53,6 @@ Import and Export Paths
 If you want to import and export data from your local filesystem into the system, you will need to set up import and export paths, by mounting specific directories for import and export of files.  This set up is most readily done by creating a secondary docker-compose yaml file in the ``devops/wsi_deid`` directory, named ``docker-compose.local.yml`` which contains the following content (note that Windows Server 2019 may require changes to this file, see `below for an example and comments <#windows-server-2019>`__ on using WS 2019)::
 
     ---
-    version: '3'
     services:
       girder:
         # Change "stable" to a version number (e.g., dsarchive/wsi_deid:v1.0.0)
@@ -168,7 +167,6 @@ Mongo is the database used to store metadata and track files.  You can check the
 If this shows the error ``MongoDB 5.0+ requires a CPU with AVX support``, you are probably running the system in a virtual machine of some sort.  Either enable AVX support on that virtual machine or adjust the ``docker-compose.local.yml`` file to use an older version of Mongo.  This could be done, for example, by adding::
 
     ---
-    version: '3'
     services:
       mongodb:
         image: "mongo:4.4"
@@ -224,7 +222,6 @@ The WSI DeID software is based on the Girder data management system.  There are 
 For example, to install the Girder LDAP plugin to support LDAP authentication, modify your ``docker-compose.local.yml`` file, changing the starting command::
 
     ---
-    version: '3'
     services:
       girder:
         command: |

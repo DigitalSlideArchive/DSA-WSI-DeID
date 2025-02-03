@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
   girder:
     # For the original pilot project, set this to dsarchive/wsi_deid:v2.2.1

@@ -1,5 +1,4 @@
 ---
-version: '3'
 services:
   girder:
     image: dsarchive/wsi_deid:v2.2.1
