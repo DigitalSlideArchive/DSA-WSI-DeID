@@ -7,9 +7,9 @@ from .utilities import provisionBoundServer, provisionDefaultSchemaBoundServer, 
 
 
 @pytest.mark.plugin('wsi_deid')
-@pytest.mark.parametrize('spec', (
+@pytest.mark.parametrize('spec', [
     'wsi_deidSpec.js',
-))
+])
 def testWebClient(boundServer, db, spec, provisionBoundServer, resetConfig):  # noqa
     import wsi_deid.import_export
 
@@ -20,9 +20,9 @@ def testWebClient(boundServer, db, spec, provisionBoundServer, resetConfig):  # 
 
 
 @pytest.mark.plugin('wsi_deid')
-@pytest.mark.parametrize('spec', (
+@pytest.mark.parametrize('spec', [
     'wsi_deidDefaultSchemaSpec.js',
-))
+])
 def testDefaultSchemaWebClient(boundServer, db, spec, provisionDefaultSchemaBoundServer, mocker):  # noqa
     def mockStartOcrForUnfiled(*args):
         return None
@@ -33,6 +33,6 @@ def testDefaultSchemaWebClient(boundServer, db, spec, provisionDefaultSchemaBoun
         '..', 'wsi_deid',
         'web_client',
         'tests',
-        spec
+        spec,
     )
     runWebClientTest(boundServer, specPath, 15000)
