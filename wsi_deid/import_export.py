@@ -22,7 +22,8 @@ from girder_jobs.models.job import Job, JobStatus
 from girder_large_image.models.image_item import ImageItem
 
 from . import config, process
-from .constants import ExportResult, PluginSettings, ProjectFolders, SftpMode, TokenOnlyPrefix
+from .constants import (ExportResult, PluginSettings, ProjectFolders, SftpMode,
+                        SystemRedactedReason, TokenOnlyPrefix)
 
 XLSX_MIMETYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 EXPORT_HISTORY_KEY = 'wsi_deidExported'
@@ -1123,8 +1124,8 @@ def buildExportDataSet(report):
                 data['Total_VendorMetadataFields_ModifiedOrCreated'] = len(
                     info['redactList']['metadata'])
                 data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ', '.join(sorted(
-                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()),
-                ) or 'N/A'
+                    k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
+                    if not v.get('reason') or v.get('reason') == SystemRedactedReason)) or 'N/A'
                 data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'Yes' if (
                     info['details']['redactionCount']['images'] or
                     info['details']['redactionCount']['metadata']) else 'No'
@@ -1132,10 +1133,11 @@ def buildExportDataSet(report):
                     'details']['redactionCount']['metadata']
                 data['Addtl_UserIdentifiedPHIPII_MetadataFields'] = ', '.join(sorted(
                     k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
-                    if v.get('reason'))) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason)) or 'N/A'
                 data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['metadata'].items()
-                    if v.get('reason') and v.get('category')})) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason and
+                    v.get('category')})) or 'N/A'
                 data['Addtl_UserIdentifiedPHIPII_DetailedType_MetadataFields'] = ', '.join(sorted(
                     {
                         v['reason'] for k, v in info['redactList']['metadata'].items()
@@ -1146,13 +1148,15 @@ def buildExportDataSet(report):
                     'details']['redactionCount']['images']
                 data['UserIdentifiedPHIPII_ImageComponents'] = ', '.join(sorted(
                     k for k, v in info['redactList']['images'].items()
-                    if v.get('reason'))) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason)) or 'N/A'
                 data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['images'].items()
-                    if v.get('reason') and v.get('category')})) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason and
+                    v.get('category')})) or 'N/A'
                 data['UserIdentifiedPHIPII_DetailedType_ImageComponents'] = ', '.join(sorted({
                     v['reason'] for k, v in info['redactList']['images'].items()
-                    if v.get('reason') and v.get('category') == 'Personal_Info'})) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason and
+                    v.get('category') == 'Personal_Info'})) or 'N/A'
             except KeyError:
                 pass
         dataList.append(data)
