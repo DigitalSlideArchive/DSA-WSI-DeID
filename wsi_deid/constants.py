@@ -56,4 +56,6 @@ ProjectFolders = {
 # token) information and not name (ImageID) information.
 TokenOnlyPrefix = '_folder_'
 
+SystemRedactedReason = 'System Redacted'
+
 SettingDefault.defaults[PluginSettings.WSI_DEID_SFTP_MODE] = SftpMode.LOCAL_EXPORT_ONLY
