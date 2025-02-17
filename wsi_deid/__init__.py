@@ -146,6 +146,7 @@ def validateNewTokenPattern(doc):
 
 @setting_utilities.validator({
     PluginSettings.WSI_DEID_BASE + 'name_template',
+    PluginSettings.WSI_DEID_BASE + 'folder_template',
 })
 def validateStringTemplate(doc):
     if doc.get('value', None) is not None:
