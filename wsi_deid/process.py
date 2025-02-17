@@ -1724,8 +1724,9 @@ def get_image_barcode(item):
     return results
 
 
-def get_image_name(prefix, info):
-    template = config.getConfig('name_template') or '{tokenId}'
+def get_image_name(prefix, info, forFolder=False):
+    template = config.getConfig(
+        'name_template' if not forFolder else 'folder_template') or '{tokenId}'
     try:
         name = template.format(tokenId=prefix, **info['fields'])
         if name != template and name:

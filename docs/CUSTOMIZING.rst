@@ -374,11 +374,14 @@ Naming Images Based on Database Values
 
 By default, images filed based on database lookup are named based on their ``tokenId`` and a unique image number.  This can be changed to include data from the database lookup, if it is exists.  The ``name_template`` specifies how this is done; the default is ``{tokenId}``.  You can include, for instance, a tumor record number by changing it to ``{tokenId}_{tumor_record_number}``.  Note that if all fields are not present, it will default to the tokenId.
 
+Similarly, images are collected into folders based on their ``tokenId``.  This can be changed in the same manner as the name.  The ``folder_template`` specifies how this is done; the default is ``{tokenId}``.
+
 .. code-block:: python
 
   [wsi_deid]
   ...
-  name_templaye = "{tokenId}"
+  name_template = "{tokenId}"
+  folder_template = "{tokenId}"
   ...
 
 An Example to Allow All Import Files
