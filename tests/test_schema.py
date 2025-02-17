@@ -40,16 +40,16 @@ csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,99,Biopsy,C717-Brain stem,30,0579XY112001_99_30,01-A.svs"""
 
 
-@pytest.mark.parametrize('csv,errorlist', (
+@pytest.mark.parametrize(('csv', 'errorlist'), [
     (csv2, [None]),
     (csv1, [
         None,
         ['Invalid Spec_Site in D3'],
         ['Invalid Proc_Type in C4'],
-        ['Invalid TokenID in A5', 'Invalid ImageID in row 5; not composed of TokenID, Proc_Seq, and Slide_ID'],
-        ['Invalid Proc_Seq in B6', 'Invalid ImageID in row 6; not composed of TokenID, Proc_Seq, and Slide_ID'],
-        ['Invalid Slide_ID in E7', 'Invalid ImageID in row 7; not composed of TokenID, Proc_Seq, and Slide_ID'],
-        ['Invalid ImageID in F8', 'Invalid ImageID in row 8; not composed of TokenID, Proc_Seq, and Slide_ID'],
+        ['Invalid TokenID in A5', 'Invalid ImageID in row 5; not composed of TokenID, Proc_Seq, and Slide_ID'],  # noqa
+        ['Invalid Proc_Seq in B6', 'Invalid ImageID in row 6; not composed of TokenID, Proc_Seq, and Slide_ID'],  # noqa
+        ['Invalid Slide_ID in E7', 'Invalid ImageID in row 7; not composed of TokenID, Proc_Seq, and Slide_ID'],  # noqa
+        ['Invalid ImageID in F8', 'Invalid ImageID in row 8; not composed of TokenID, Proc_Seq, and Slide_ID'],  # noqa
         ['Invalid InputFileName in G9'],
     ]),
     (csv3, [["Invalid row 2 ('Spec_Site' is a required property)"]]),
@@ -62,15 +62,15 @@ csv6 = """TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
         ['Invalid Slide_ID in E5'],
         ['Invalid Slide_ID in E6'],
     ]),
-))
-def test_schema(tmp_path, csv, errorlist, resetConfig, db):
+])
+def test_schema(tmp_path, csv, errorlist, resetConfig, db):  # noqa
     import wsi_deid.import_export
 
     wsi_deid.import_export.SCHEMA_FILE_PATH = os.path.join(
         os.path.dirname(wsi_deid.import_export.SCHEMA_FILE_PATH), 'importManifestSchema.test.json')
     validator = getSchemaValidator()
     dest = tmp_path / 'test.csv'
-    open(dest, 'wt').write(csv)
+    open(dest, 'w').write(csv)
     df, header_row_number = readExcelData(str(dest))
     for row_num, row in enumerate(df.itertuples()):
         rowAsDict = dict(row._asdict())

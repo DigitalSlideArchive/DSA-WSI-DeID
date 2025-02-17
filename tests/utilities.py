@@ -12,22 +12,22 @@ from .datastore import datastore
 
 @pytest.fixture
 def provisionServer(server, admin, fsAssetstore, tmp_path):
-    yield _provisionServer(tmp_path)
+    return _provisionServer(tmp_path)
 
 
 @pytest.fixture
 def provisionBoundServer(boundServer, admin, fsAssetstore, tmp_path):
-    yield _provisionServer(tmp_path)
+    return _provisionServer(tmp_path)
 
 
 @pytest.fixture
 def provisionDefaultSchemaServer(server, admin, fsAssetstore, tmp_path):
-    yield _provisionDefaultSchemaServer(tmp_path)
+    return _provisionDefaultSchemaServer(tmp_path)
 
 
 @pytest.fixture
 def provisionDefaultSchemaBoundServer(boundServer, admin, fsAssetstore, tmp_path):
-    yield _provisionDefaultSchemaServer(tmp_path)
+    return _provisionDefaultSchemaServer(tmp_path)
 
 
 def _provisionServer(tmp_path):
@@ -74,8 +74,8 @@ def _provisionDefaultSchemaServer(tmp_path):
             'SurgPathNum',
             'First_Name',
             'Last_Name',
-            'Date_of_Birth_mmddyyyy'
-        ]
+            'Date_of_Birth_mmddyyyy',
+        ],
     }
     import provision  # noqa
     provision.provision()
@@ -97,7 +97,7 @@ def _provisionDefaultSchemaServer(tmp_path):
         'SEER_Mouse_1_17158540.svs',
         'SEER_Mouse_1_17158541.svs',
         'SEER_Mouse_1_17158542.svs',
-        'SEER_Mouse_1_17158543.svs'
+        'SEER_Mouse_1_17158543.svs',
     }:
         path = datastore.fetch(filename)
         shutil.copy(path, str(importPath / filename))

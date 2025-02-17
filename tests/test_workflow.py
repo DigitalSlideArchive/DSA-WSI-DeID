@@ -92,8 +92,8 @@ def test_workflow_with_default_schema(server, provisionDefaultSchemaServer, user
             'SurgPathNum',
             'First_Name',
             'Last_Name',
-            'Date_of_Birth_mmddyyyy'
-        ]
+            'Date_of_Birth_mmddyyyy',
+        ],
     }
 
     unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)

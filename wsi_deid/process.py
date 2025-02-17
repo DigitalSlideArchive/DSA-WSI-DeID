@@ -1049,7 +1049,7 @@ def redact_format_hamamatsu_replace_macro(macroImage, ifds, tempdir):
     imagePath = os.path.join(tempdir, 'macro.tiff')
     tifftools.write_tiff(ifds[macroifd], imagePath)
     image = io.BytesIO()
-    macroImage.save(image, 'jpeg', qaulity=90)
+    macroImage.save(image, 'jpeg', quality=90)
     jpos = os.path.getsize(imagePath)
     jlen = len(image.getvalue())
     imageifd = tifftools.read_tiff(imagePath)['ifds'][0]
@@ -1321,7 +1321,7 @@ def imageToBase64(image, quality=85):
     :returns: a base64 string.
     """
     jpeg = io.BytesIO()
-    image.save(jpeg, 'jpeg', qaulity=quality)
+    image.save(jpeg, 'jpeg', quality=quality)
     return base64.b64encode(jpeg.getvalue()).decode()
 
 
@@ -1542,12 +1542,12 @@ def add_title_to_image(image, title, previouslyAdded=False, minWidth=384,
                 font='/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf',
                 size=int(fontSize * targetW),
             )
-        except IOError:
+        except OSError:
             try:
                 imageDrawFont = PIL.ImageFont.truetype(
                     size=int(fontSize * targetW),
                 )
-            except IOError:
+            except OSError:
                 imageDrawFont = PIL.ImageFont.load_default()
         textL, textT, textR, textB = imageDrawFont.getbbox(title)
         textW = textR - textL

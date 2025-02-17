@@ -3,7 +3,7 @@ from enum import Enum
 from girder.settings import SettingDefault
 
 
-class PluginSettings(object):
+class PluginSettings:
     HUI_INGEST_FOLDER = 'histomicsui.ingest_folder'
     HUI_QUARANTINE_FOLDER = 'histomicsui.quarantine_folder'
     HUI_PROCESSED_FOLDER = 'histomicsui.processed_folder'

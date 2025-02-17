@@ -72,7 +72,7 @@ WSI DeID Version: %s
                     public=public, creator=adminUser, reuseExisting=True)
                 Folder().createFolder(
                     folder, 'Disabled', parentType='folder',
-                    public=public, creator=adminUser, reuseExisting=True
+                    public=public, creator=adminUser, reuseExisting=True,
                 )
                 Upload().uploadFromFile(
                     open('wsi_deid/schema/importManifestSchema.json', 'rb'),
