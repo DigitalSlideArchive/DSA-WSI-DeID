@@ -112,5 +112,5 @@ Export
 ~~~~~~
 
 The equivalent of the **Export Recent** button is
-``PUT wsi_deid/action/export``, and of the **Export All** button is
-``PUT wsi_deid/action/exportall``.
+``PUT wsi_deid/action/export``, of the **Export All** button is
+``PUT wsi_deid/action/exportall``, and of the **Report** button is ``PUT wsi_deid/action/exportreport``.

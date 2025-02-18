@@ -39,6 +39,7 @@ function performAction(action) {
         ingest: { done: 'Import completed.', fail: 'Failed to import.' },
         export: { done: 'Recent export task completed.', fail: 'Failed to export recent items.  Check export file location for disk drive space or other system issues.' },
         exportall: { done: 'Export all task completed.', fail: 'Failed to export all items.  Check export file location for disk drive space or other system issues.' },
+        exportreport: { done: 'Report task completed.', fail: 'Failed to generate report.' },
         ocrall: { done: 'Started background job to find label text on WSIs in this folder.', fail: 'Failed to start background task to find label text for images.' }
     };
 
@@ -124,6 +125,9 @@ function performAction(action) {
                 }
             }
         }
+        if (resp.action === 'exportreport') {
+            text = 'Report image status.';
+        }
         if (resp.action === 'ocrall') {
             if (resp.ocrJobId) {
                 events.once('g:alert', () => {
@@ -138,7 +142,7 @@ function performAction(action) {
                 $('#g-alerts-container:last div.alert:last').append($('<span> </span>')).append($('<a/>').text('See the Excel report for more details.').attr('href', `/#item/${resp.reportItemId}`));
             }, this);
         }
-        if (resp.sftp_enabled) {
+        if (resp.sftp_enabled && resp.action !== 'exportreport') {
             const message = ' Transfer of files to remote server via SFTP started in background.';
             const sftpAlertInfo = $(`<span>${message} </span>`);
             if (resp.sftp_job_id) {
@@ -225,6 +229,12 @@ function addControls(key, settings) {
                 text: 'Export All',
                 class: 'btn-primary',
                 action: 'exportall',
+                check: () => settings.show_export_button !== false
+            }, {
+                key: 'exportreport',
+                text: 'Report',
+                class: 'btn-primary',
+                action: 'exportreport',
                 check: () => settings.show_export_button !== false
             }
         ],
