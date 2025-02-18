@@ -1126,14 +1126,17 @@ def buildExportDataSet(report):
                 data['Automatic_DEID_PHIPII_MetadataFieldsModifiedRedacted'] = ', '.join(sorted(
                     k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
                     if not v.get('reason') or v.get('reason') == SystemRedactedReason)) or 'N/A'
-                data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'Yes' if (
-                    info['details']['redactionCount']['images'] or
-                    info['details']['redactionCount']['metadata']) else 'No'
-                data['Total_Addtl_UserIdentifiedPHIPII_MetadataFields'] = info[
-                    'details']['redactionCount']['metadata']
-                data['Addtl_UserIdentifiedPHIPII_MetadataFields'] = ', '.join(sorted(
+                userMeta = sorted(
                     k.rsplit(';', 1)[-1] for k, v in info['redactList']['metadata'].items()
-                    if v.get('reason') and v.get('reason') != SystemRedactedReason)) or 'N/A'
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason)
+                userImages = sorted(
+                    k for k, v in info['redactList']['images'].items()
+                    if v.get('reason') and v.get('reason') != SystemRedactedReason)
+                data['Addtl_UserIdentifiedPHIPII_BINARY'] = 'Yes' if (
+                    len(userMeta) or len(userImages)) else 'No'
+                data['Total_Addtl_UserIdentifiedPHIPII_MetadataFields'] = len(userMeta)
+                data['Addtl_UserIdentifiedPHIPII_MetadataFields'] = ', '.join(userMeta) or 'N/A'
+
                 data['Addtl_UserIdentifiedPHIPII_Category_MetadataFields'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['metadata'].items()
                     if v.get('reason') and v.get('reason') != SystemRedactedReason and
@@ -1144,11 +1147,8 @@ def buildExportDataSet(report):
                         if v.get('reason') and v.get('category') == 'Personal_Info'})) or 'N/A'
                 data['Total_VendorImageComponents'] = info[
                     'details']['fieldCount']['images']
-                data['Total_UserIdentifiedPHIPII_ImageComponents'] = info[
-                    'details']['redactionCount']['images']
-                data['UserIdentifiedPHIPII_ImageComponents'] = ', '.join(sorted(
-                    k for k, v in info['redactList']['images'].items()
-                    if v.get('reason') and v.get('reason') != SystemRedactedReason)) or 'N/A'
+                data['Total_UserIdentifiedPHIPII_ImageComponents'] = len(userImages)
+                data['UserIdentifiedPHIPII_ImageComponents'] = ', '.join(userImages) or 'N/A'
                 data['UserIdentifiedPHIPII_Category_ImageComponents'] = ', '.join(sorted({
                     v['category'] for k, v in info['redactList']['images'].items()
                     if v.get('reason') and v.get('reason') != SystemRedactedReason and
