@@ -301,6 +301,7 @@ class WSIDeIDResource(Resource):
         self.resourceName = 'wsi_deid'
         self.route('PUT', ('action', 'export'), self.export)
         self.route('PUT', ('action', 'exportall'), self.exportAll)
+        self.route('PUT', ('action', 'exportreport'), self.exportReport)
         # self.route('PUT', ('action', 'finishlist'), self.finishItemList)
         self.route('PUT', ('action', 'ingest'), self.ingest)
         self.route('PUT', ('action', 'list', ':action'), self.itemListAction)
@@ -437,6 +438,19 @@ class WSIDeIDResource(Resource):
         with ProgressContext(True, user=user, title='Exporting all finished items') as ctx:
             result = import_export.exportItems(ctx, user, True)
         result['action'] = 'exportall'
+        return result
+
+    @autoDescribeRoute(
+        Description('Generate a report of the items in the system.')
+        .errorResponse(),
+    )
+    @access.user
+    def exportReport(self):
+        setResponseTimeLimit(86400)
+        user = self.getCurrentUser()
+        with ProgressContext(True, user=user, title='Reporting on items') as ctx:
+            result = import_export.exportItems(ctx, user, True, True)
+        result['action'] = 'exportreport'
         return result
 
     @autoDescribeRoute(

@@ -700,7 +700,7 @@ def reportSummary(*args, **kwargs):
     return result
 
 
-def exportItems(ctx, user=None, all=False):
+def exportItems(ctx, user=None, all=False, onlyReport=False):
     """
     Export all or all recent items in the Finished directory.  Mark each
     exported item as having been exported.
@@ -709,6 +709,8 @@ def exportItems(ctx, user=None, all=False):
     :param user: the user triggering this.
     :param all: True to export all items.  False to only export items that have
         not been previously exported.
+    :param onlyReport: True to only generate the report, not to actually do the
+        export.
     """
     sftp_mode = SftpMode(Setting().get(PluginSettings.WSI_DEID_SFTP_MODE))
     export_enabled = sftp_mode in [SftpMode.LOCAL_EXPORT_ONLY, SftpMode.SFTP_AND_EXPORT]
@@ -716,14 +718,14 @@ def exportItems(ctx, user=None, all=False):
     logger.info('Export begin (all=%s)' % all)
     exportPath = Setting().get(PluginSettings.WSI_DEID_EXPORT_PATH)
     exportFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
-    if not exportPath or not exportFolderId:
+    if (not exportPath or not exportFolderId) and not onlyReport:
         msg = 'Export path and/or finished folder not specified.'
         raise Exception(msg)
     exportFolder = Folder().load(exportFolderId, force=True, exc=True)
     report = []
     summary = {}
     totalByteCount = 0
-    if sftp_enabled:
+    if sftp_enabled and not onlyReport:
         job_title = f'Remote export: {user["login"]}, {datetime.datetime.now()}'
         sftp_job = Job().createLocalJob(
             module='wsi_deid.import_export',
@@ -735,23 +737,24 @@ def exportItems(ctx, user=None, all=False):
             args=(exportFolder, user, all),
         )
         Job().scheduleJob(job=sftp_job)
-    if export_enabled:
-        for mode in ('measure', 'copy'):
+    if export_enabled or onlyReport:
+        for mode in (('measure', 'copy') if not onlyReport else ('measure',)):
             byteCount = 0
             for filepath, file in Folder().fileList(exportFolder, user, data=False):
                 byteCount += exportItemsNext(
-                    mode, ctx, byteCount, totalByteCount, filepath, file, exportPath, user, report)
+                    mode, ctx, byteCount, totalByteCount, filepath, file,
+                    exportPath, user, report, onlyReport=onlyReport)
             totalByteCount = byteCount
         logger.info('Exported files')
         exportNoteRejected(report, user, all, EXPORT_HISTORY_KEY)
         logger.info('Exported note others')
-        file = exportReport(ctx, exportPath, report, user)
+        file = exportReport(ctx, exportPath, report, user, onlyReport=onlyReport)
         logger.info('Exported generated report')
         summary = reportSummary(report, file=file)
         logger.info('Exported done')
     summary['sftp_enabled'] = sftp_enabled
     summary['local_export_enabled'] = export_enabled
-    if sftp_enabled:
+    if sftp_enabled and not onlyReport:
         summary['sftp_job_id'] = sftp_job['_id']
     return summary
 
@@ -972,7 +975,7 @@ def sftp_one_item(filepath, file, destination, sftp_client, job, export_all, use
 
 
 def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
-                    exportPath, user, report):
+                    exportPath, user, report, onlyReport=False):
     """
     Export an item or report on its size.
 
@@ -985,6 +988,8 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
     :param exportPath: the destination for the export.
     :param user: the user triggering this.
     :param report: a collected report list.
+    :param onlyReport: True to only generate the report, not to actually do the
+        export.
     :returns: the number of bytes that are copied.  If mode is measure, no
         copying is actually done.
     """
@@ -998,7 +1003,7 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
     destPath = os.path.join(exportPath, filepath)
     destFolder = os.path.dirname(destPath)
     if os.path.exists(destPath):
-        if mode == 'copy':
+        if mode == 'copy' or onlyReport:
             if os.path.getsize(destPath) == file['size']:
                 report.append({'item': item, 'status': 'present'})
             else:
@@ -1021,6 +1026,11 @@ def exportItemsNext(mode, ctx, byteCount, totalByteCount, filepath, file,
                 'item': item,
                 'status': 'finished',
                 'time': newExportRecord['time'],
+            })
+        elif onlyReport:
+            report.append({
+                'item': item,
+                'status': 'ready',
             })
         return file['size']
 
@@ -1188,7 +1198,7 @@ def buildExportDataSet(report):
     return df
 
 
-def exportReport(ctx, exportPath, report, user):
+def exportReport(ctx, exportPath, report, user, onlyReport=False):
     """
     Create an export report.
 
@@ -1196,10 +1206,13 @@ def exportReport(ctx, exportPath, report, user):
     :param exportPath: directory for exports
     :param report: a list of files that were exported.
     :param user: the user triggering this.
+    :param onlyReport: True to only generate the report, not to actually do the
+        export.
     :return: the Girder file with the report
     """
     ctx.update(message='Generating report')
-    exportName = 'DeID Export Job %s.xlsx' % datetime.datetime.now().strftime('%Y%m%d %H%M%S')
+    basename = 'DeID Export Job' if not onlyReport else 'DeID Report'
+    exportName = f'{basename} {datetime.datetime.now().strftime("%Y%m%d %H%M%S")}.xlsx'
     df = buildExportDataSet(report)
     reportFolder = 'Export Job Reports'
     path = os.path.join(exportPath, exportName)
