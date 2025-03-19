@@ -1059,9 +1059,7 @@ def exportNoteRejected(report, user, all, metadataProperty, allFiles=True):
         folder = Folder().load(folderId, force=True, exc=True)
         for _, file in Folder().fileList(folder, user, data=False):
             item = Item().load(file['itemId'], force=True, exc=True)
-            try:
-                ImageItem().tileSource(item)
-            except Exception:
+            if 'largeImage' not in item or 'expected' in item['largeImage']:
                 continue
             if skipExport(item, all, metadataProperty):
                 continue
@@ -1121,12 +1119,21 @@ def buildExportDataSet(report):
         if data['DSAImageStatus'] != 'AvailableToProcess':
             data['Last_DEID_RunDate'] = row['item'].get(
                 'modified', row['item']['created']).strftime(timeformat)
+
         if 'redacted' in row['item']['meta']:
+            redactedEntry = row['item']['meta']
+        else:
             try:
-                info = row['item']['meta']['redacted'][-1]
+                redactedEntry = process.process_item(row['item'], dryrun=True)['meta']
+            except Exception:
+                redactedEntry = None
+        if redactedEntry:
+            try:
+                info = redactedEntry['redacted'][-1]
+                data['LastUser'] = process.get_user_name(row['item'])
                 data['ScannerMake'] = info['details']['format'].capitalize()
                 data['ScannerModel'] = info['details']['model']
-                data['ByteSize_InboundWSI'] = row['item']['meta']['redacted'][0]['originalSize']
+                data['ByteSize_InboundWSI'] = redactedEntry['redacted'][0]['originalSize']
                 data['ByteSize_ExportedWSI'] = info['redactedSize']
                 data['Total_VendorMetadataFields'] = info[
                     'details']['fieldCount']['metadata']['redactable'] + info[
@@ -1173,6 +1180,7 @@ def buildExportDataSet(report):
     df = pd.DataFrame(dataList, columns=[
         'Last_DEID_RunDate', 'Date_DEID_Export',
         *exportFields,
+        'LastUser',
         'ScannerMake', 'ScannerModel',
         'DSAImageStatus', *statusReasonFields,
         'ByteSize_InboundWSI',

@@ -74,7 +74,7 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
                         return;
                     }
                     i._metadict[keyname] = value;
-                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource'].indexOf(keyname) >= 0) {
+                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource', 'internal;populatedLevels'].indexOf(keyname) >= 0) {
                         i._visible.push(keylist);
                         if (info._visible.indexOf(keylist) < 0) {
                             info._visible.push(keylist);

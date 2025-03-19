@@ -233,7 +233,7 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
             const keyname = elem.attr('keyname');
-            if (!keyname || ['internal;tilesource'].indexOf(keyname) >= 0) {
+            if (!keyname || ['internal;tilesource', 'internal;populatedLevels'].indexOf(keyname) >= 0) {
                 return;
             }
             elem.find('.g-hui-redact').remove();

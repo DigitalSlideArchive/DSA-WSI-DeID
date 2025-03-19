@@ -1,10 +1,12 @@
 import base64
 import copy
+import datetime
 import io
 import math
 import os
 import re
 import subprocess
+import tempfile
 import threading
 import time
 import xml.etree.ElementTree
@@ -17,15 +19,19 @@ import PIL.ImageOps
 import pyvips
 import tifftools
 from girder import logger
+from girder.exceptions import GirderException
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
+from girder.models.upload import Upload
+from girder.models.user import User
 from girder_large_image.models.image_item import ImageItem
 from large_image.tilesource import dictToEtree
 from lxml import etree as lxmlElementTree
 
-from . import config
-from .constants import PluginSettings, TokenOnlyPrefix
+from . import config, import_export
+from .constants import PluginSettings, ProjectFolders, TokenOnlyPrefix
 
 OCRLock = threading.Lock()
 OCRReader = None
@@ -362,7 +368,7 @@ def redact_image_area(image, geojson):
     return redacted_image
 
 
-def redact_item(item, tempdir):
+def redact_item(item, tempdir, dryrun=False):  # noqa
     """
     Redact a Girder item.  Based on the redact metadata, determine what
     redactions are necessary and perform them.
@@ -373,6 +379,7 @@ def redact_item(item, tempdir):
         removed from the system.
     :param tempdir: a temporary directory to put all work files and the final
         result.
+    :param dryrun: if True, don't actually call the redaction functions.
     :returns: the generated filepath.  The filepath ends in the original
         extension, its name is not important.
     :returns: a dictionary of information including 'mimetype'.
@@ -420,7 +427,10 @@ def redact_item(item, tempdir):
     if func is None:
         msg = 'Cannot redact this format.'
         raise Exception(msg)
-    file, mimetype = func(item, tempdir, redactList, newTitle, labelImage, macroImage)
+    if not dryrun:
+        file, mimetype = func(item, tempdir, redactList, newTitle, labelImage, macroImage)
+    else:
+        file, mimetype = None, None
     info = {
         'format': format,
         'model': model_information(tileSource, format),
@@ -1769,6 +1779,8 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     newImageName = f'{imageId}.{item["name"].split(".")[-1]}'
     originalName = item['name']
     item['name'] = newImageName
+    if user:
+        item['updatedId'] = user['_id']
     item = Item().move(item, parentFolder)
     redactList = get_standard_redactions(item, imageId)
     itemMetadata = {
@@ -1786,3 +1798,213 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
         del item['wsi_uploadInfo']
         item = Item().save(item)
     return item
+
+
+def process_item(item, user=None, dryrun=False):  # noqa
+    """
+    Copy an item to the original folder.  Modify the item by processing it and
+    generating a new, redacted file.  Move the item to the processed folder.
+
+    :param item: the item model to move.
+    :param user: the user performing the processing.
+    :param dryrun: True to not actually change the item.
+    :returns: the item after move.
+    """
+    from . import __version__
+
+    origFolderId = Setting().get(PluginSettings.HUI_ORIGINAL_FOLDER)
+    procFolderId = Setting().get(PluginSettings.HUI_PROCESSED_FOLDER)
+    if not origFolderId or not procFolderId:
+        msg = 'The appropriate folder is not configured.'
+        raise GirderException(msg)
+    origFolder = Folder().load(origFolderId, force=True)
+    procFolder = Folder().load(procFolderId, force=True)
+    if not origFolder or not procFolder:
+        msg = 'The appropriate folder does not exist.'
+        raise GirderException(msg)
+    creator = User().load(item['creatorId'], force=True)
+    # Generate the redacted file first, so if it fails we don't do anything
+    # else
+    with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
+        try:
+            filepath, info = redact_item(item, tempdir, dryrun)
+        except Exception as e:
+            logger.exception('Failed to redact item')
+            raise GirderException(e.args[0])
+        if not dryrun:
+            origFolder, _ = create_folder_hierarchy(item, user, origFolder)
+            origItem = Item().copyItem(item, creator, folder=origFolder)
+            origItem = Item().setMetadata(origItem, {
+                'wsi_deidProcessed': {
+                    'itemId': str(item['_id']),
+                    'time': datetime.datetime.utcnow().isoformat(),
+                    'user': str(user['_id']) if user else None,
+                },
+            })
+            ImageItem().delete(item)
+        origSize = 0
+        for childFile in Item().childFiles(item):
+            origSize += childFile['size']
+            if not dryrun:
+                File().remove(childFile)
+        newName = item['name']
+        if not dryrun:
+            if len(os.path.splitext(newName)[1]) <= 1:
+                newName = os.path.splitext(item['name'])[0] + os.path.splitext(filepath)[1]
+            newSize = os.path.getsize(filepath)
+            with open(filepath, 'rb') as f:
+                Upload().uploadFromFile(
+                    f, size=os.path.getsize(filepath), name=newName,
+                    parentType='item', parent=item, user=creator,
+                    mimeType=info['mimetype'])
+            item = Item().load(item['_id'], force=True)
+        else:
+            newSize = origSize
+        item['name'] = newName
+    if user:
+        item['updatedId'] = user['_id']
+    item.setdefault('meta', {})
+    item['meta'].setdefault('redacted', [])
+    item['meta']['redacted'].append({
+        'user': str(user['_id']) if user else None,
+        'time': datetime.datetime.utcnow().isoformat(),
+        'originalSize': origSize,
+        'redactedSize': newSize,
+        'redactList': item['meta'].get('redactList'),
+        'details': info,
+        'version': __version__,
+    })
+    item['meta'].pop('quarantine', None)
+    allPreviousExports = {}
+    for history_key in [import_export.EXPORT_HISTORY_KEY, import_export.SFTP_HISTORY_KEY]:
+        if history_key in item['meta']:
+            allPreviousExports[history_key] = item['meta'][history_key]
+        item['meta'].pop(history_key, None)
+    item['meta']['redacted'][-1]['previousExports'] = allPreviousExports
+    item['updated'] = datetime.datetime.utcnow()
+    if not dryrun:
+        try:
+            redactList = item['meta'].get('redactList') or {}
+            if redactList.get('area', {}).get('_wsi', {}).get('geojson') or any(
+                    redactList['images'][key].get('geojson')
+                    for key in redactList.get('images', {})):
+                ImageItem().removeThumbnailFiles(item)
+
+        except Exception:
+            ImageItem().removeThumbnailFiles(item)
+        item = move_item(item, user, PluginSettings.HUI_PROCESSED_FOLDER)
+    return item
+
+
+def move_item(item, user, settingkey, options=None):
+    """
+    Move an item to one of the folders specified by a setting.
+
+    :param item: the item model to move.
+    :param user: a user for folder creation.
+    :param settingkey: one of the PluginSettings values.
+    :returns: the item after move.
+    """
+    folderId = Setting().get(settingkey)
+    if not folderId:
+        msg = 'The appropriate folder is not configured.'
+        raise GirderException(msg)
+    folder = Folder().load(folderId, force=True)
+    if not folder:
+        msg = 'The appropriate folder does not exist.'
+        raise GirderException(msg)
+    if str(folder['_id']) == str(item['folderId']):
+        msg = 'The item is already in the appropriate folder.'
+        raise GirderException(msg)
+    folder, origFolders = create_folder_hierarchy(item, user, folder)
+    if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
+        quarantineInfo = {
+            'originalFolderId': item['folderId'],
+            'originalBaseParentType': item['baseParentType'],
+            'originalBaseParentId': item['baseParentId'],
+            'originalUpdated': item['updated'],
+            'quarantineUserId': user['_id'],
+            'quarantineTime': datetime.datetime.utcnow(),
+        }
+    rejectInfo = None
+    if settingkey == PluginSettings.HUI_REJECTED_FOLDER and options is not None:
+        rejectReason = options.get('rejectReason', None)
+        if rejectReason:
+            rejectInfo = {
+                'rejectReason': rejectReason,
+            }
+        requireRejectReason = config.getConfig('require_reject_reason')
+        if requireRejectReason and rejectInfo is None:
+            msg = 'A rejection reason is required.'
+            raise GirderException(msg)
+    if user:
+        item['updatedId'] = user['_id']
+    # move the item
+    item = Item().move(item, folder)
+    if settingkey == PluginSettings.HUI_QUARANTINE_FOLDER:
+        # When quarantining, add metadata and don't prune folders
+        item = Item().setMetadata(item, {'quarantine': quarantineInfo})
+    if settingkey == PluginSettings.HUI_REJECTED_FOLDER and rejectInfo is not None:
+        item = Item().setMetadata(item, {'reject': rejectInfo})
+    else:
+        # Prune empty folders
+        for origFolder in origFolders[::-1]:
+            if Folder().findOne({'parentId': origFolder['_id'], 'parentCollection': 'folder'}):
+                break
+            if Item().findOne({'folderId': origFolder['_id']}):
+                break
+            Folder().remove(origFolder)
+    return item
+
+
+def create_folder_hierarchy(item, user, folder):
+    """
+    Create a folder hierarchy that matches the original if the original is
+    under a project folder.
+
+    :param item: the item that will be moved or copied.
+    :param user: the user that will own the created folders.
+    :param folder: the destination project folder.
+    :returns: a destination folder that is either the folder passed to this
+        routine or a folder beneath it.
+    """
+    # Mirror the folder structure in the destination.  Remove empty folders in
+    # the original location.
+    projFolderIds = [Setting().get(val) for key, val in ProjectFolders.items()]
+    origPath = []
+    origFolders = []
+    itemFolder = Folder().load(item['folderId'], force=True)
+    while itemFolder and str(itemFolder['_id']) not in projFolderIds:
+        origPath.insert(0, itemFolder['name'])
+        origFolders.insert(0, itemFolder)
+        if itemFolder['parentCollection'] != 'folder':
+            origPath = origFolders = []
+            itemFolder = None
+        else:
+            itemFolder = Folder().load(itemFolder['parentId'], force=True)
+    # create new folder structure
+    for name in origPath:
+        folder = Folder().createFolder(folder, name=name, creator=user, reuseExisting=True)
+    return folder, origFolders
+
+
+def get_user_name(item):
+    """
+    Get the most recent user to have worked on an item.
+    """
+    user = item['creatorId']
+    if 'updatedId' in item:
+        user = item['updatedId']
+    if 'meta' in item:
+        if 'wsi_deidProcessed' in item['meta']:
+            user = item['meta']['wsi_deidProcessed']['user'] or user
+        if 'redacted' in item['meta']:
+            try:
+                user = item['meta']['redacted'][-1]['user'] or user
+            except Exception:
+                pass
+    try:
+        user = User().load(user, force=True)
+        return f'{user["firstName"]} {user["lastName"]}'
+    except Exception:
+        return ''
