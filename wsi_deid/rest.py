@@ -317,6 +317,7 @@ class WSIDeIDResource(Resource):
         self.route('PUT', ('action', 'bulkRefile'), self.refileItems)
         self.route('PUT', ('item', ':id', 'redactList'), self.setRedactList)
         self.route('GET', ('item', ':id', 'refileList'), self.getRefileList)
+        self.route('GET', ('item', ':id', 'status'), self.itemStatus)
         self.route('GET', ('next_unprocessed_folders', ), self.nextUnprocessedFolders)
         self.route('GET', ('next_unprocessed_item', ), self.nextUnprocessedItem)
         self.route('GET', ('project_folder', ':id'), self.isProjectFolder)
@@ -325,6 +326,7 @@ class WSIDeIDResource(Resource):
         self.route('GET', ('settings',), self.getSettings)
         self.route('POST', ('matching', ), self.callMatchingAPI)
         self.route('POST', ('matching', 'wsi'), self.fakeMatchingAPI)
+        self.route('GET', ('status', ), self.allItemStatus)
         self._item_find = apiRoot.item._find
 
     @autoDescribeRoute(
@@ -988,6 +990,74 @@ class WSIDeIDResource(Resource):
             if len(results):
                 return results
         return results
+
+    def _allItemStatus(self):
+        project_folders = []
+        results = {'folders': {}, 'items': {}}
+        for key, val in ProjectFolders.items():
+            if key == 'original':
+                continue
+            projFolderId = Setting().get(val)
+            project_folders.append(ObjectId(projFolderId))
+            results['folders'][projFolderId] = {
+                'key': val,
+                'name': Folder().load(projFolderId, force=True)['name'],
+                'items': {}}
+        pipeline = [
+            {'$match': {'_id': {'$in': project_folders}}},
+            {'$graphLookup': {
+                'from': 'folder',
+                'startWith': '$_id',
+                'connectFromField': '_id',
+                'connectToField': 'parentId',
+                'as': 'descendants',
+                'restrictSearchWithMatch': {'parentCollection': 'folder'}}},
+            {'$project': {
+                'rootFolderId': '$_id', 'rootFolderName': '$name', 'allFolders': {
+                    '$concatArrays': [
+                        ['$_id'],
+                        {'$map': {'input': '$descendants', 'as': 'desc', 'in': '$$desc._id'}},
+                    ]}}},
+            {'$unwind': '$allFolders'},
+            {'$lookup': {
+                'from': 'item',
+                'localField': 'allFolders',
+                'foreignField': 'folderId',
+                'as': 'item'}},
+            {'$unwind': '$item'},
+            {'$project': {
+                'folderId': '$_id',
+                'folderName': '$name',
+                'itemId': '$item._id',
+                'itemName': '$item.name'}},
+        ]
+
+        for entry in Folder().collection.aggregate(pipeline):
+            results['folders'][str(entry['folderId'])]['items'][
+                str(entry['itemId'])] = {'name': entry['itemName']}
+            results['items'][str(entry['itemId'])] = {
+                'folder': results['folders'][str(entry['folderId'])]['key'],
+                'name': entry['itemName'],
+            }
+        return results
+
+    @autoDescribeRoute(
+        Description('Get the status of all tracked items in wsi_deid folders')
+        .errorResponse(),
+    )
+    @access.admin
+    def allItemStatus(self):
+        return self._allItemStatus()
+
+    @autoDescribeRoute(
+        Description('Get the status of a tracked item.')
+        .modelParam('id', model=Item, level=AccessType.READ)
+        .errorResponse(),
+    )
+    @access.admin
+    def itemStatus(self, item):
+        results = self._allItemStatus()
+        return results['items'].get(str(item['_id']), None)
 
 
 def addSystemEndpoints(apiRoot):
