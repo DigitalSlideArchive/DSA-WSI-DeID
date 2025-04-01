@@ -114,3 +114,12 @@ Export
 The equivalent of the **Export Recent** button is
 ``PUT wsi_deid/action/export``, of the **Export All** button is
 ``PUT wsi_deid/action/exportall``, and of the **Report** button is ``PUT wsi_deid/action/exportreport``.
+
+Status
+~~~~~~
+
+You can get the current state of all items in the system via the
+``GET wsi_deid/status`` endpoint, which returns a list of all items with the
+current stage of processing and a list of each process folder with the list of
+items beneath it,  The ``GET wsi_deid/item/{id}/status`` endpoint reports the
+current processing folder for that item.
