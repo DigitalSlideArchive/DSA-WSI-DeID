@@ -167,7 +167,9 @@ wrap(ItemView, 'render', function (render) {
                 return true;
             }
             if (keyname === 'macro' && settings.redact_macro_square) {
-                return true;
+                // We used to not allow redacting a custom area if it was asked
+                // to redact a square.  This logic has changed.
+                //   return true;
             }
             if (keyname === 'label' && settings.always_redact_label) {
                 return true;
