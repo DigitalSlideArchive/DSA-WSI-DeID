@@ -78,8 +78,6 @@ def get_generated_title(item):
     """
     redactList = get_redact_list(item)
     title = splitallext(item['name'])[0]
-    print('CHECK A')
-    print(redactList)
     for key in {
         'internal;openslide;aperio.Title',
         'internal;openslide;hamamatsu.Reference',
@@ -1106,7 +1104,7 @@ def redact_format_hamamatsu_replace_macro(macroImage, ifds, tempdir):
     ifds[macroifd] = imageifd
 
 
-def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroImage):
+def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroImage):  # noqa
     """
     Redact ometiff files.
 
@@ -1153,19 +1151,64 @@ def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroIma
     if macroImage:
         redact_format_aperio_add_image(
             'macro', macroImage, ifds, firstAssociatedIdx, tempdir, None)
-        # ##DWM:: update xml
+        # Do we need to update the ifd referenced in the xml?
     if labelImage:
         redact_format_aperio_add_image(
             'label', labelImage, ifds, firstAssociatedIdx, tempdir, None)
-        # ##DWM:: update xml
+        # Do we need to update the ifd referenced in the xml?
     # redact general tiff tags
     redact_tiff_tags(ifds, redactList, title)
+
+    reduced = {}
+    refs = {}
+    xmldict = tileSource.getInternalMetadata()['omeinfo']
+    tileSource._reduceInternalMetadata(reduced, xmldict, refs=refs)
+    process = []
+    for key in redactList.get('metadata', {}):
+        if key in refs:
+            newval = redactList['metadata'][key].get('value')
+            dref, dkey, didx, dskey = refs[key]
+            process.append(didx, dref, dkey, dskey, newval)
+    process.sort(reverse=True)
+    for didx, dref, dkey, dskey, newval in process:
+        if newval is None:
+            if didx is None:
+                del dref[dkey]
+            else:
+                dref[dkey][didx:didx + 1] = []
+        else:
+            if didx is None:
+                if dskey:
+                    dref[dkey][dskey] = newval
+                else:
+                    dref[dkey] = newval
+            else:
+                if dskey:
+                    dref[dkey][didx][dskey] = newval
+                else:
+                    dref[dkey][didx] = newval
+    ifds[0]['tags'][tifftools.Tag.ImageDescription.value] = {
+        'datatype': tifftools.Datatype.ASCII,
+        'data':
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<OME xmlns="http://www.openmicroscopy.org/Schemas/OME/2016-06" '
+            'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" '
+            # Should we inject a UUID here?
+            # 'UUID="urn:uuid:..." '
+            # where that would be the uuid v5 of the sha-1 hash of the rest of
+            # the xml
+            'xsi:schemaLocation="http://www.openmicroscopy.org/Schemas/OME/2016-06 '
+            'http://www.openmicroscopy.org/Schemas/OME/2016-06/ome.xsd">' +
+            ''.join(xml.etree.ElementTree.tostring(child, encoding='unicode')
+                    for child in dictToEtree(xmldict)) +
+            '</OME>',
+    }
+
     add_deid_metadata(item, ifds)
     outputPath = os.path.join(tempdir, 'ometiff.ome.tiff')
     tifftools.write_tiff(ifds, outputPath)
     logger.info('Redacted ometiff file %s as %s', sourcePath, outputPath)
 
-    # ##DWM::
     """
     msg = f'FAILED: {outputPath}'
     import shutil

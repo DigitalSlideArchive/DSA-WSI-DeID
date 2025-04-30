@@ -39,14 +39,15 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
     description='Digital Slide Archive Whole-Slide Image DeIdentification plugin',
     install_requires=[
         'easyocr',
-        'girder>=3.1.23.dev10',
+        'girder>=3.2.8',
         'girder-homepage',
         'histomicsui',
-        'large_image[tiff,ometiff,dicom,openslide,memcached,openjpeg,converter]',
+        'large_image[tiff,ometiff,dicom,openslide,memcached,openjpeg,converter]>=1.32.2',
         'lxml',
         'openpyxl',
         'pandas',
@@ -64,7 +65,7 @@ setup(
     packages=find_packages(exclude=['test', 'test.*']),
     url='https://github.com/DigitalSlideArchive',
     zip_safe=False,
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     entry_points={
         'girder.plugin': [
             'wsi_deid = wsi_deid:GirderPlugin',
