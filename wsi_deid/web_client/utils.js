@@ -8,6 +8,7 @@ import { restRequest } from '@girder/core/rest';
 const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
+    ometiff: 'ometiff',
     philips: 'philips',
     isyntax: 'isyntax',
     none: ''
@@ -172,12 +173,14 @@ function matchFieldPattern(keyname, fieldPatterns, elem, value) {
         if (keyname.match(new RegExp(metadataPattern))) {
             let _value = value;
             if (_value === undefined) {
-                _value = elem.find(`.large_image_metadata_value[keyname^="${sanitizedKeyname}"]`).text();
+                _value = elem.find(`.large_image_metadata_value[keyname^="${sanitizedKeyname}"]:first`).text();
             }
             const expectedValuePattern = new RegExp(fieldPatterns[metadataPattern]);
             // If the value of the metadata field matches the expected pattern,
             // hide the metadata field.
-            return expectedValuePattern.test(_value);
+            if (expectedValuePattern.test(_value)) {
+                return true;
+            }
         }
     }
     return false;

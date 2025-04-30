@@ -36,6 +36,10 @@ defaultConfig = {
     'no_redact_control_keys_format_hamamatsu': {
         r'^internal;openslide;hamamatsu\.SourceLens$': NUMERIC_VALUES,
     },
+    'no_redact_control_keys_format_ometiff': {
+        r'^internal;omereduced;(ImageLength|ImageWidth)$': NUMERIC_VALUES,
+        r'^internal;omereduced;(Series \d+ (AppMag|MPP))$': NUMERIC_VALUES,
+    },
     'no_redact_control_keys_format_philips': {},
     'no_redact_control_keys_format_isyntax': {},
     'hide_metadata_keys': {
@@ -54,6 +58,20 @@ defaultConfig = {
             r'|(X|Y)OffsetFromSlideCentre|ccd.(width|height)|(focalplane|slant)\.(left|right)'
             r'(top|bottom)|stage.center)'
         ): NUMERIC_VALUES,
+    },
+    'hide_metadata_keys_format_ometiff': {
+        r'^internal;omeinfo': '',
+        r'^internal;omereduced;(BitsPerSample|SamplesPerPixel|NewSubfileType|NumberOfChannels|Instrument:Objective:NominalMagnification|Image:.*:Pixels:|TileByteCounts|TileOffsets|TileWidth|TileLength)': NUMERIC_VALUES,  # noqa
+        r'^internal;omereduced;Series \d+ (DisplayColor|Exposure Scale|Exposure Time|Focus Offset|Left|Top|LineArea(X|Y)Offset|LineCameraSkew|OriginalHeight|OriginalWidth|StripeWidth)$': NUMERIC_VALUES,  # noqa
+        r'^internal;omereduced;Image:\d+:Pixels:(BigEndian|Interleaved)': r'^(true|false)$',
+        r'^internal;omereduced;Image:\d+:Pixels:.*(X|Y)Unit': r'^(mm|µm)$',
+        r'^internal;omereduced;Image:\d+:Pixels:DimensionOrder': r'^(XYCZT|XYC|XY|XYT|XYCT|XYZT)$',
+        r'^internal;omereduced;Image:\d+:Pixels:Type': r'^(uint8|uint16)$',
+        r'^internal;omereduced;.*PhotometricInterpretation': r'^(RGB|RGBA)$',
+        r'^internal;omereduced;Compression': r'^JPEG$',
+        r'^internal;omereduced;PlanarConfiguration': r'^Chunky$',
+        r'^internal;omereduced;schemaLocation': r'^http://www.openmicroscopy.org/Schemas/OME/.*xsd$',  # noqa
+        r'^internal;omereduced;Image:\d+:Name': r'^(macro|label) image$',
     },
     'hide_metadata_keys_format_philips': {},
     'hide_metadata_keys_format_isyntax': {

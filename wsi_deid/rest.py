@@ -178,8 +178,8 @@ def process_item(item, user=None):
             origSize += childFile['size']
             File().remove(childFile)
         newName = item['name']
-        if len(os.path.splitext(newName)[1]) <= 1:
-            newName = os.path.splitext(item['name'])[0] + os.path.splitext(filepath)[1]
+        if len(process.splitallext(newName)[1]) <= 1:
+            newName = process.splitallext(item['name'])[0] + process.splitallext(filepath)[1]
         newSize = os.path.getsize(filepath)
         with open(filepath, 'rb') as f:
             Upload().uploadFromFile(

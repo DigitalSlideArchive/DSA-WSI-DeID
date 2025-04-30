@@ -36,6 +36,8 @@ wrap(ItemView, 'render', function (render) {
             return formats.isyntax;
         } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;xml;PIM_DP_"]').length > 0) {
             return formats.philips;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;omeinfo"]').length > 0) {
+            return formats.ometiff;
         } else {
             return formats.none;
         }
@@ -235,11 +237,11 @@ wrap(ItemView, 'render', function (render) {
         this.$el.find('table[keyname="internal"] .large_image_metadata_value').each((idx, elem) => {
             elem = $(elem);
             const keyname = elem.attr('keyname');
-            if (!keyname || ['internal;tilesource'].indexOf(keyname) >= 0) {
+            if (!keyname || ['internal;tilesource'].includes(keyname)) {
                 return;
             }
             elem.find('.g-hui-redact').remove();
-            if (matchFieldPattern(keyname, hideFieldPatterns, this.$el)) {
+            if (matchFieldPattern(keyname, hideFieldPatterns, this.$el) || ['internal;populatedLevels'].includes(keyname)) {
                 elem.closest('tr').css('display', 'none');
                 let hideelem = elem.closest('tr').closest('tbody');
                 while (hideelem.length && !hideelem.find('tr:visible').length) {
