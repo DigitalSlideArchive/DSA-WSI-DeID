@@ -88,6 +88,22 @@ jobs:
       - tox:
           env: py311
       - coverage
+  py312:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py312
+      - coverage
+  py313:
+    executor: toxandnode
+    steps:
+      - checkout
+      - easyocr
+      - tox:
+          env: py313
+      - coverage
   lint_and_docs:
     executor: toxandnode
     steps:
@@ -214,6 +230,14 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+      - py312:
+          filters:
+            tags:
+              only: /^v.*/
+      - py313:
+          filters:
+            tags:
+              only: /^v.*/
       - lint_and_docs:
           filters:
             tags:
@@ -234,6 +258,8 @@ workflows:
             - py39
             - py310
             - py311
+            - py312
+            - py313
             - lint_and_docs
             - docker-compose
             - scan-docker
@@ -256,6 +282,8 @@ workflows:
       - py39
       - py310
       - py311
+      - py312
+      - py313
       - lint_and_docs
       - docker-compose
       - scan-docker:
@@ -267,6 +295,8 @@ workflows:
             - py39
             - py310
             - py311
+            - py312
+            - py313
             - lint_and_docs
             - docker-compose
             - scan-docker
