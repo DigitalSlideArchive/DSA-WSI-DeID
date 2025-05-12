@@ -5,3 +5,4 @@
 **/*.pyo
 *.egg-info
 *.tar
+Dockerfile
