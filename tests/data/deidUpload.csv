@@ -2,3 +2,5 @@ TokenID,Proc_Seq,Proc_Type,Spec_Site,Slide_ID,ImageID,InputFileName
 0579XY112001,02,Resection,C717-Brain stem,08,0579XY112001_02_08,aperio_jp2k.svs
 1234AB567001,01,Biopsy,C447-Skin of lower limb and hip,01,1234AB567001_01_01,hamamatsu.ndpi
 1234AB567001,02,Resection,C447-Skin of lower limb and hip,07,1234AB567001_02_07,philips.ptif
+1234AB567002,01,Biopsy,C447-Skin of lower limb and hip,05,1234AB567002_01_05,SEER_Mouse_13_17158640.ome.tiff
+
