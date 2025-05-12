@@ -40,7 +40,6 @@ RUN apt-get update && \
     libssl-dev \
     libxml2-dev \
     libxmlsec1-dev \
-    llvm \
     locales \
     make \
     tk-dev \
@@ -78,6 +77,7 @@ RUN pyenv update && \
     find $PYENV_ROOT/versions -type d '(' -name '__pycache__' -o -name 'test' -o -name 'tests' ')' -exec rm -rfv '{}' + >/dev/null && \
     find $PYENV_ROOT/versions -type f '(' -name '*.py[co]' -o -name '*.exe' ')' -exec rm -fv '{}' + >/dev/null && \
     echo $PYTHON_VERSIONS | tr " " "\n" > $PYENV_ROOT/version && \
+    rm -r /root/.cache/pip && \
     find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
     rm -rf /tmp/* /var/tmp/* && \
     # This makes duplicate python library files hardlinks of each other \
@@ -125,12 +125,15 @@ RUN python -m pip install --no-cache-dir \
     --find-links https://girder.github.io/large_image_wheels && \
     rm -r /root/.cache/pip && \
     find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
+    find /venv/lib -name '*.so' -o -name '*.so.*' -exec strip {} --strip-unneeded \; && \
     rm -rf /tmp/* /var/tmp/* && \
     rdfind -minsize 32768 -makehardlinks true -makeresultsfile false /pyenv && \
     rdfind -minsize 32768 -makehardlinks true -makeresultsfile false /usr/local/bin
 
 # Download ocr model
-RUN python -c 'import easyocr,PIL.Image,numpy;OCRReader = easyocr.Reader(["en"], verbose=False, quantize=False);print(OCRReader.readtext(numpy.asarray(PIL.Image.open("tests/data/sample_label.jpg")),contrast_ths=0.75,adjust_contrast=1.0))'
+RUN python -c 'import easyocr,PIL.Image,numpy;OCRReader = easyocr.Reader(["en"], verbose=False, quantize=False);print(OCRReader.readtext(numpy.asarray(PIL.Image.open("tests/data/sample_label.jpg")),contrast_ths=0.75,adjust_contrast=1.0))' && \
+    find / -xdev -name __pycache__ -type d -exec rm -r {} \+ && \
+    rm -rf /tmp/* /var/tmp/*
 
 # Build the girder web client
 RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM_CONFIG_LOGLEVEL=warn NPM_CONFIG_PROGRESS=false NPM_CONFIG_PREFER_OFFLINE=true \
