@@ -1165,12 +1165,15 @@ def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroIma
     tileSource._reduceInternalMetadata(reduced, xmldict, refs=refs)
     process = []
     for key in redactList.get('metadata', {}):
-        if key in refs:
+        rkey = key
+        if key.startswith('internal;omereduced;') and key not in refs:
+            rkey = key.split('internal;omereduced;', 1)[1]
+        if rkey in refs:
             newval = redactList['metadata'][key].get('value')
-            dref, dkey, didx, dskey = refs[key]
-            process.append(didx, dref, dkey, dskey, newval)
+            dref, dkey, didx, dskey = refs[rkey]
+            process.append((didx, dkey, dskey, rkey, dref, newval))
     process.sort(reverse=True)
-    for didx, dref, dkey, dskey, newval in process:
+    for didx, dkey, dskey, _, dref, newval in process:
         if newval is None:
             if didx is None:
                 del dref[dkey]
