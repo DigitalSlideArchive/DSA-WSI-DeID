@@ -42,7 +42,10 @@ def _provisionServer(tmp_path):
     os.makedirs(exportPath, exist_ok=True)
     Setting().set(PluginSettings.WSI_DEID_IMPORT_PATH, str(importPath))
     Setting().set(PluginSettings.WSI_DEID_EXPORT_PATH, str(exportPath))
-    for filename in {'aperio_jp2k.svs', 'hamamatsu.ndpi', 'philips.ptif'}:
+    for filename in {
+        'aperio_jp2k.svs', 'hamamatsu.ndpi', 'philips.ptif',
+        'SEER_Mouse_13_17158640.ome.tiff',
+    }:
         path = datastore.fetch(filename)
         shutil.copy(path, str(importPath / filename))
     dataPath = os.path.join(os.path.dirname(__file__), 'data')
