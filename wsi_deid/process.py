@@ -170,6 +170,7 @@ def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
         'images': {},
         'metadata': {
             'internal;openslide;aperio.Filename': title_redaction_list_entry,
+            'internal;openslide;aperio.ImageID': title_redaction_list_entry,
             'internal;openslide;aperio.Title': title_redaction_list_entry,
             'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
                 get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software')),
@@ -182,6 +183,15 @@ def get_standard_redactions_format_aperio(item, tileSource, tiffinfo, title):
                 '01/01/' + metadata['openslide']['aperio.Date'][6:],
             )
         )
+    for key in {
+        'aperio.DSR ID',
+        'aperio.Time',
+        'aperio.Time Zone',
+        'aperio.User',
+    }:
+        if metadata['openslide'].get(key):
+            redactList['metadata']['internal;openslide;' + key] = {
+                'value': None, 'automatic': True}
     return redactList
 
 
@@ -217,6 +227,7 @@ def get_standard_redactions_format_ometiff(item, tileSource, tiffinfo, title):
         'Image:0:Pixels:TiffData:0:UUID:text',
         'Image:1:Pixels:TiffData:0:UUID:text',
         'Image:2:Pixels:TiffData:0:UUID:text',
+        'Series 0 Filename',
     }:
         if key in metadata.get('omereduced', {}):
             redactList['metadata']['internal;omereduced;' + key] = (
@@ -229,6 +240,17 @@ def get_standard_redactions_format_ometiff(item, tileSource, tiffinfo, title):
                 generate_system_redaction_list_entry(
                     '01/01/' + metadata['omereduced'][key][6:],
                 ))
+    for key in {
+        'Series 0 DSR ID',
+        'Series 0 Time',
+        'Series 0 Time Zone',
+        'Series 0 ImageID',
+        'Series 0 User',
+        'UUID',
+    }:
+        if key in metadata.get('omereduced', {}):
+            redactList['metadata']['internal;omereduced;' + key] = {
+                'value': None, 'automatic': True}
     return redactList
 
 
