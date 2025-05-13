@@ -211,7 +211,7 @@ WSI files will be copied from the local import directory to the ``AvailableToPro
 Imported File Types and Folder Structures
 -----------------------------------------
 
-The WSI DeID expects to import WSI files from Aperio, Hamamatsu, or Philips scanners, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
+The WSI DeID expects to import WSI files from Aperio, Hamamatsu, Philips scanners, and some OME TIFF files, along with a single combined DeID Upload file (metadata file) that describes each of the WSI files to be imported. The DeID Upload file should be either an Excel file (identified by ending in .xls or .xlsx). More than one DeID Upload file may be placed in the mounted import directory, and all DeID Upload files of the correct type will be used in the import process. Any files other than WSI files and DeID Upload files will be ignored by the import process, meaning files ending in .txt, .xml, or .zip will be ignored. Files in the mounted import directory on the local filesystem can have any folder structure; the folder structure is not significant in the import process.
 
 Step 1 Users Place Original WSIs and DeID Upload File(s) in Local Folder
 ------------------------------------------------------------------------
@@ -460,6 +460,12 @@ These rules apply only to Philips TIFF files:
 * ``PIM_DP_UFS_BARCODE``: change or add to ImageID
 * ``DICOM_DATE_OF_LAST_CALIBRATION`` (if present): set to (year)0101
 * ``DICOM_ACQUISITION_DATETIME`` (if present): set to (year)0101 (time)
+
+These rules apply only to OME.TIFF files:
+
+* ``Series 0 Filename``: change or add to ImageID
+* ``Image FileName``: change or add to ImageID
+* ``Series 0 Date`` (if present), set to 01/01/(year)
 
 These rules apply only to Philips iSyntax files:
 
