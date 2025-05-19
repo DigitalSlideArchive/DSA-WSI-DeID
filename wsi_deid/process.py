@@ -89,6 +89,7 @@ def get_generated_title(item):
         'internal;omereduced;Image:0:Pixels:TiffData:0:UUID:text',
         'internal;omereduced;Image:1:Pixels:TiffData:0:UUID:text',
         'internal;omereduced;Image:2:Pixels:TiffData:0:UUID:text',
+        # ##DWM::
     }:
         if redactList['metadata'].get(key) and redactList['metadata'].get(key)['value']:
             return redactList['metadata'].get(key)['value']
@@ -105,7 +106,8 @@ def determine_format(tileSource):
     """
     metadata = tileSource.getInternalMetadata() or {}
     if tileSource.name == 'openslide':
-        if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
+        if metadata.get('openslide', {}).get('openslide.vendor') in {
+                'aperio', 'hamamatsu', 'dicom'}:
             return metadata['openslide']['openslide.vendor']
     if 'isyntax' in metadata:
         return 'isyntax'
@@ -254,6 +256,26 @@ def get_standard_redactions_format_ometiff(item, tileSource, tiffinfo, title):
     return redactList
 
 
+def get_standard_redactions_format_dicom(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    # TODO: DICOM
+    redactList = {
+        'images': {},
+        'metadata': {
+            # ##DWM::
+            # 'internal;openslide;hamamatsu.Reference': generate_system_redaction_list_entry(title),
+            # 'internal;openslide;tiff.Software': generate_system_redaction_list_entry(
+            #     get_deid_field(item, metadata.get('openslide', {}).get('tiff.Software')),
+            # ),
+        },
+    }
+    for key in {'ContentDate'}:
+        if metadata['openslide'].get('dicom.%s' % key):
+            redactList['metadata']['internal;openslide;dicom.%s' % key] = \
+                metadata['openslide']['dicom.%s' % key][:4] + '0101'
+    return redactList
+
+
 def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
     metadata = tileSource.getInternalMetadata() or {}
     redactList = {
@@ -363,6 +385,7 @@ def metadata_field_count(tileSource, format, redactList):
             if re.match(r'^internal;openslide;tiff.(ResolutionUnit|XResolution|YResolution)$', key):
                 continue
             redactable += 1
+            # TODO: DICOM
     return {'visible': shown, 'redactable': redactable, 'automatic': preset}
 
 
@@ -383,6 +406,7 @@ def model_information(tileSource, format):
             return metadata['xml'][key]
     if 'omereduced' in metadata and 'Series 0 ScanScope ID' in metadata['omereduced']:
         return metadata['omereduced']['Series 0 ScanScope ID']
+    # TODO: DICOM
 
 
 def fadvise_willneed(item):
@@ -1244,6 +1268,23 @@ def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroIma
     return outputPath, 'image/tiff'
 
 
+def redact_format_dicom(item, tempdir, redactList, title, labelImage, macroImage):  # noqa
+    """
+    Redact dicom files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    # TODO: DICOM
+
+
 PhilipsTagElements = {  # Group, Element, Format
     'DICOM_ACQUISITION_DATETIME': ('0x0008', '0x002A', 'IString'),
     'DICOM_BITS_ALLOCATED': ('0x0028', '0x0100', 'IUInt16'),
@@ -1845,7 +1886,7 @@ def get_image_text(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff', 'dicom']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
@@ -1892,7 +1933,7 @@ def get_image_barcode(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff', 'dicom']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
