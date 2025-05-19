@@ -2,7 +2,7 @@
 WSI DeID |build-status| |license-badge|
 =======================================
 
-This tool builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI/PII from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), Philips WSI, and some OME TIFF files.  It can work with Philips iSyntax files if provided with the appropriate SDK.
+This tool builds on the Digital Slide Archive, HistomicsUI, and Girder to provide controls and workflows for redacting PHI/PII from whole slide images (WSI).  Initially, this works with Aperio, Hamamatsu (ndpi), Philips WSI, some OME TIFF, and some DICOM files.  It can work with Philips iSyntax files if provided with the appropriate SDK.
 
 Developed by Kitware, Inc. with funding from The National Cancer Institute of the National Institutes of Health.
 

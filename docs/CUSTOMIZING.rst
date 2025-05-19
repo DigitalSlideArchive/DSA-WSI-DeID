@@ -126,6 +126,7 @@ Redaction can be disabled for certain metadata fields. This can be used for fiel
 * ``no_redact_control_keys_format_hamamatsu``
 * ``no_redact_control_keys_format_philips``
 * ``no_redact_control_keys_format_ometiff``
+* ``no_redact_control_keys_format_dicom``
 * ``no_redact_control_keys_format_isyntax``
 
 In order to disable redaction controls for certain metadata fields, you can add ``key: value`` pairs to the dictionaries in ``girder.local.conf``. Both the key and value need to be regular expressions. The ``key`` is a regular expression that will match your target metadata. The associated ``value`` should be a regular expression that matches the expected metadata value. For example, if your metadata should always contain an integer value, you could use the regular expression ``"\\d+"``. If you view an image and the metadata value does not match the expected expression, then redaction will be available for that metadata item.
@@ -151,6 +152,7 @@ If you are unfamilar with regular expressions, please consult a tutorial on them
   no_redact_control_keys_format_ometiff = {
       "^internal;omereduced;(ImageLength|ImageWidth)$": "^\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?)(\\s*,\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?))*\\s*$",
       "^internal;omereduced;(Series \\d+ (AppMag|MPP))$": "^\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?)(\\s*,\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?))*\\s*$"}
+  no_redact_control_keys_format_dicom = {}
   no_redact_control_keys_format_isyntax = {}
   ...
 
@@ -166,6 +168,7 @@ Similar to configuration for disabling redaction, if you wish to hide certain me
 * ``hide_metadata_keys_format_hamamatsu``
 * ``hide_metadata_keys_format_philips``
 * ``hide_metadata_keys_format_ometiff``
+* ``hide_metadata_keys_format_dicom``
 * ``hide_metadata_keys_format_isyntax``
 
 If these metadata items contain unexpected values (e.g., text where a number was expected), they will be visible and available for redaction.
@@ -195,6 +198,7 @@ If these metadata items contain unexpected values (e.g., text where a number was
       "^internal;omereduced;PlanarConfiguration": "^Chunky$",
       "^internal;omereduced;Series \\d+ (DisplayColor|Exposure Scale|Exposure Time|Focus Offset|Left|Top|LineArea(X|Y)Offset|LineCameraSkew|OriginalHeight|OriginalWidth|StripeWidth)$": "^\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?)(\\s*,\\s*[+-]?(\\d+([.]\\d*)?([eE][+-]?\\d+)?|[.]\\d+([eE][+-]?\\d+)?))*\\s*$",
       "^internal;omereduced;schemaLocation": "^http://www.openmicroscopy.org/Schemas/OME/.*xsd$"}
+  hide_metadata_keys_format_dicom = {}
   hide_metadata_keys_format_isyntax = {}
   ...
 
@@ -209,6 +213,7 @@ To show ALL possible metadata, set each of these values to ``{}``.
   hide_metadata_keys_format_hamamatsu = {}
   hide_metadata_keys_format_philips = {}
   hide_metadata_keys_format_ometiff = {}
+  hide_metadata_keys_format_dicom = {}
   hide_metadata_keys_format_isyntax = {}
   ...
 

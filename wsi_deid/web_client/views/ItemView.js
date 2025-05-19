@@ -678,7 +678,7 @@ wrap(ItemView, 'render', function (render) {
         this.events['click .g-matching-button'] = matchingButton;
         this.events['change .wsi-deid-reject-reason'] = (event) => rejectionReasonChanged(event, settings);
         /* Place an area redaction control in the item header */
-        if (hasRedactionControls && getFormat() !== 'isyntax') {
+        if (hasRedactionControls && !['isyntax', 'dicom'].includes(getFormat())) {
             const redactArea = ItemViewRedactAreaTemplate({});
             this.$el.find('.g-item-image-viewer-select .g-item-info-header').append(redactArea);
             this.events['click .g-item-info-header .g-widget-redact-area-container button'] = redactAreaWSI;

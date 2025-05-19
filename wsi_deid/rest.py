@@ -133,7 +133,7 @@ def quarantine_item(item, user, *args, **kwargs):
 histomicsui.handlers.quarantine_item = quarantine_item
 
 
-def process_item(item, user=None):
+def process_item(item, user=None):  # noqa
     """
     Copy an item to the original folder.  Modify the item by processing it and
     generating a new, redacted file.  Move the item to the processed folder.
@@ -159,10 +159,12 @@ def process_item(item, user=None):
     # else
     with tempfile.TemporaryDirectory(prefix='wsi_deid') as tempdir:
         try:
-            filepath, info = process.redact_item(item, tempdir)
+            filepaths, info = process.redact_item(item, tempdir)
         except Exception as e:
             logger.exception('Failed to redact item')
             raise RestException(e.args[0])
+        if not isinstance(filepaths, list):
+            filepaths = [filepaths]
         origFolder, _ = create_folder_hierarchy(item, user, origFolder)
         origItem = Item().copyItem(item, creator, folder=origFolder)
         origItem = Item().setMetadata(origItem, {
@@ -179,14 +181,25 @@ def process_item(item, user=None):
             File().remove(childFile)
         newName = item['name']
         if len(process.splitallext(newName)[1]) <= 1:
-            newName = process.splitallext(item['name'])[0] + process.splitallext(filepath)[1]
-        newSize = os.path.getsize(filepath)
-        with open(filepath, 'rb') as f:
-            Upload().uploadFromFile(
-                f, size=os.path.getsize(filepath), name=newName,
-                parentType='item', parent=item, user=creator,
-                mimeType=info['mimetype'])
+            newName = process.splitallext(item['name'])[0] + process.splitallext(filepaths[0])[1]
+        if len(filepaths) > 1:
+            newName = process.splitallext(item['name'])[0] + os.path.splitext(filepaths[0])[1]
+        newSize = 0
+        for filepath in filepaths:
+            newSize += os.path.getsize(filepath)
+            with open(filepath, 'rb') as f:
+                Upload().uploadFromFile(
+                    f, size=os.path.getsize(filepath),
+                    name=os.path.basename(filepath) if len(filepaths) > 1 else newName,
+                    parentType='item', parent=item, user=creator,
+                    mimeType=info['mimetype'])
         item = Item().load(item['_id'], force=True)
+        if len(filepaths) > 1:
+            ImageItem().delete(item)
+            item = Item().load(item['_id'], force=True)
+            ImageItem().createImageItem(
+                item, list(Item().childFiles(item, limit=1))[0], user=user, createJob=False)
+            item = Item().load(item['_id'], force=True)
         item['name'] = newName
     item.setdefault('meta', {})
     item['meta'].setdefault('redacted', [])

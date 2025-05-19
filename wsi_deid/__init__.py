@@ -169,15 +169,17 @@ def validateStringTemplate(doc):
     PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys',
     PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_aperio',
     PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_hamamatsu',
-    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_ometiff',
     PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_philips',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_ometiff',
+    PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_dicom',
     PluginSettings.WSI_DEID_BASE + 'hide_metadata_keys_format_isyntax',
     PluginSettings.WSI_DEID_BASE + 'import_text_association_columns',
     PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys',
     PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_aperio',
     PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_hamamatsu',
-    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_ometiff',
     PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_philips',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_ometiff',
+    PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_dicom',
     PluginSettings.WSI_DEID_BASE + 'no_redact_control_keys_format_isyntax',
     PluginSettings.WSI_DEID_BASE + 'phi_pii_types',
     PluginSettings.WSI_DEID_BASE + 'reject_reasons',
@@ -243,3 +245,16 @@ class GirderPlugin(plugin.GirderPlugin):
 
         events.bind('rest.post.assetstore/:id/import.after', 'wsi_deid',
                     assetstore_import.assetstoreImportEvent)
+
+        try:
+            import large_image_source_dicom
+            import large_image_source_openslide
+            from large_image.constants import SourcePriority
+
+            large_image_source_dicom.DICOMFileTileSource.extensions['dcm'] = SourcePriority.HIGH  # noqa
+            large_image_source_dicom.DICOMFileTileSource.mimeTypes['application/dicom'] = SourcePriority.HIGH  # noqa
+            large_image_source_openslide.OpenslideFileTileSource.extensions['dcm'] = SourcePriority.PREFERRED  # noqa
+            large_image_source_openslide.OpenslideFileTileSource.mimeTypes['application/dicom'] = SourcePriority.PREFERRED  # noqa
+            girder.logprint.info('Setting openslide as preferred dicom reader')
+        except Exception:
+            pass

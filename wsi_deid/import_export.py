@@ -363,6 +363,8 @@ def ingestOneItem(importFolder, imagePath, record, ctx, user, newItems):
         # TODO: When imageNameFiled is blank or undefined, use the folder name
         # plus a number
         name = (record[imageNameField] or '') + process.splitallext(record['name'])[1]
+        if name.endswith('.dcm'):
+            name = (record[imageNameField] or '') + '.dcm'
         mimeType = 'image/tiff'
         if Item().findOne({'name': {'$regex': '^%s\\.' % record[imageNameField]}}):
             return 'duplicate'

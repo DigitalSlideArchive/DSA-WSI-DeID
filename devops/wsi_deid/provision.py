@@ -103,6 +103,7 @@ WSI DeID Version: %s
                   '{"metadata": ["tile", "internal"], "images": ["label", "macro", "*"]}')
     Setting().set(liSettings.LARGE_IMAGE_SHOW_ITEM_EXTRA,
                   '{"metadata": ["tile", "internal"], "images": ["label", "macro", "*"]}')
+    Setting().set(liSettings.LARGE_IMAGE_MERGE_DICOM, True)
     # Set default SFTP/Export mode
     if not Setting().get(PluginSettings.WSI_DEID_SFTP_MODE):
         Setting().set(PluginSettings.WSI_DEID_SFTP_MODE, 'local')
