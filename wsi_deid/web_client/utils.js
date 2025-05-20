@@ -8,8 +8,9 @@ import { restRequest } from '@girder/core/rest';
 const formats = {
     aperio: 'aperio',
     hamamatsu: 'hamamatsu',
-    ometiff: 'ometiff',
     philips: 'philips',
+    ometiff: 'ometiff',
+    dicom: 'dicom',
     isyntax: 'isyntax',
     none: ''
 };

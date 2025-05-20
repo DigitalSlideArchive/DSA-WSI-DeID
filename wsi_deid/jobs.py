@@ -41,6 +41,8 @@ def start_ocr_item_job(job):
 
 def get_label_text_for_item(itemId, job):
     item = Item().load(itemId, force=True)
+    if item is None:
+        return
     Job().updateJob(job, log=f'Finding label text for file: {item["name"]}.\n')
     try:
         label_barcode = get_image_barcode(item)
@@ -147,6 +149,8 @@ def match_images_via_api(imageIds, userId, job, reportInfo):
     apisearch = matching_api.APISearch()
     for imageId in imageIds:
         item = Item().load(imageId, force=True)
+        if item is None:
+            continue
         if not len(item.get('meta', {}).get('label_ocr', {})) and not len(
                 item.get('meta', {}).get('label_barcodes', {})):
             remainingImages.add(imageId)
@@ -243,6 +247,8 @@ def associate_unfiled_images(job):  # noqa
             for future in futures:
                 label_text_list.append(future.result())
         for idx, itemId in enumerate(itemIds):
+            if label_text_list[idx] is None:
+                continue
             label_text, barcode_text = label_text_list[idx]
             # And, without concurrent futures, the code resumes here
             # TODO: do something with the barcode for matching
