@@ -21,3 +21,6 @@ CVE-2024-50302
 CVE-2024-53063
 # HIGH: ubuntu - kernel: netlink: terminate outstanding dump on socket close
 CVE-2024-53140
+
+# HIGH: python 3.8 setuptools
+CVE-2025-47273

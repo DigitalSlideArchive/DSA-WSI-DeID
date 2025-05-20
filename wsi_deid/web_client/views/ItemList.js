@@ -73,11 +73,11 @@ wrap(ItemListWidget, 'initialize', function (initialize) {
                         }
                         value = value[keylist[i]];
                     }
-                    if (matchFieldPattern(keyname, hideFieldPatterns, undefined, value) || ['internal;populatedLevels'].includes(keyname)) {
+                    if (matchFieldPattern(keyname, hideFieldPatterns, undefined, value) || ['internal;populatedLevels', 'internal;iccprofiles;0'].includes(keyname)) {
                         return;
                     }
                     i._metadict[keyname] = value;
-                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource', 'internal;populatedLevels'].includes(keyname)) {
+                    if (matchFieldPattern(keyname, disableRedactionPatterns, undefined, value) || ['internal;tilesource', 'internal;populatedLevels', 'internal;iccprofiles;0'].includes(keyname)) {
                         i._visible.push(keylist);
                         if (info._visible.indexOf(keylist) < 0) {
                             info._visible.push(keylist);

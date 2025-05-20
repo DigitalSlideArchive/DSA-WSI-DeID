@@ -38,6 +38,8 @@ wrap(ItemView, 'render', function (render) {
             return formats.philips;
         } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;omeinfo"]').length > 0) {
             return formats.ometiff;
+        } else if (this.$el.find('.large_image_metadata_value[keyname^="internal;openslide;openslide.vendor"]').text() === 'dicom') {
+            return formats.dicom;
         } else {
             return formats.none;
         }
@@ -241,7 +243,7 @@ wrap(ItemView, 'render', function (render) {
                 return;
             }
             elem.find('.g-hui-redact').remove();
-            if (matchFieldPattern(keyname, hideFieldPatterns, this.$el) || ['internal;populatedLevels'].includes(keyname)) {
+            if (matchFieldPattern(keyname, hideFieldPatterns, this.$el) || ['internal;populatedLevels', 'internal;iccprofiles;0'].includes(keyname)) {
                 elem.closest('tr').css('display', 'none');
                 let hideelem = elem.closest('tr').closest('tbody');
                 while (hideelem.length && !hideelem.find('tr:visible').length) {
