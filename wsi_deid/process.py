@@ -479,7 +479,7 @@ def redact_item(item, tempdir):
         fadvise_willneed(item)
         func = globals().get('redact_format_' + format)
     if func is None:
-        msg = 'Cannot redact this format.'
+        msg = f'Cannot redact format {format}; item {tileSource}.'
         raise Exception(msg)
     file, mimetype = func(item, tempdir, redactList, newTitle, labelImage, macroImage)
     info = {
