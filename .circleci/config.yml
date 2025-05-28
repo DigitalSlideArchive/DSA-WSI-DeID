@@ -56,22 +56,6 @@ commands:
           # Retry as codecov can be flaky
           command: for i in $(seq 1 10); do [ $i -gt 1 ] && echo "retrying $i" && sleep 5; ./codecov --disable search pycov gcov --file .tox/coverage/py_coverage.xml,.tox/coverage/cobertura-coverage.xml && s=0 && break || s=$?; done; (exit $s)
 jobs:
-  py38:
-    executor: toxandnode
-    steps:
-      - checkout
-      - easyocr
-      - tox:
-          env: py38
-      - coverage
-  py39:
-    executor: toxandnode
-    steps:
-      - checkout
-      - easyocr
-      - tox:
-          env: py39
-      - coverage
   py310:
     executor: toxandnode
     steps:
@@ -214,14 +198,6 @@ workflows:
   version: 2
   ci:
     jobs:
-      - py38:
-          filters:
-            tags:
-              only: /^v.*/
-      - py39:
-          filters:
-            tags:
-              only: /^v.*/
       - py310:
           filters:
             tags:
@@ -254,8 +230,6 @@ workflows:
               only: /^v.*/
       - publish-docker:
           requires:
-            - py38
-            - py39
             - py310
             - py311
             - py312
@@ -278,8 +252,6 @@ workflows:
               only:
                 - master
     jobs:
-      - py38
-      - py39
       - py310
       - py311
       - py312
@@ -291,8 +263,6 @@ workflows:
             - docker-compose
       - publish-docker:
           requires:
-            - py38
-            - py39
             - py310
             - py311
             - py312

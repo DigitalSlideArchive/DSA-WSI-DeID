@@ -195,10 +195,19 @@ def process_item(item, user=None):  # noqa
                     mimeType=info['mimetype'])
         item = Item().load(item['_id'], force=True)
         if len(filepaths) > 1:
-            ImageItem().delete(item)
-            item = Item().load(item['_id'], force=True)
-            ImageItem().createImageItem(
-                item, list(Item().childFiles(item, limit=1))[0], user=user, createJob=False)
+            for idx in range(len(filepaths)):
+                try:
+                    ImageItem().delete(item)
+                except Exception:
+                    pass
+                item = Item().load(item['_id'], force=True)
+                try:
+                    ImageItem().createImageItem(
+                        item, list(Item().childFiles(item))[idx], user=user, createJob=False)
+                    break
+                except Exception:
+                    if idx + 1 == len(filepaths):
+                        raise
             item = Item().load(item['_id'], force=True)
         item['name'] = newName
     item.setdefault('meta', {})
