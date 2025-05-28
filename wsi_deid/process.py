@@ -1,5 +1,6 @@
 import base64
 import copy
+import datetime
 import io
 import math
 import os
@@ -7,16 +8,19 @@ import re
 import subprocess
 import threading
 import time
+import uuid
 import xml.etree.ElementTree
 
-import numpy
+import numpy as np
 import PIL.Image
 import PIL.ImageDraw
 import PIL.ImageFont
 import PIL.ImageOps
+import pydicom
 import pyvips
 import tifftools
 from girder import logger
+from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.item import Item
 from girder.models.setting import Setting
@@ -89,6 +93,8 @@ def get_generated_title(item):
         'internal;omereduced;Image:0:Pixels:TiffData:0:UUID:text',
         'internal;omereduced;Image:1:Pixels:TiffData:0:UUID:text',
         'internal;omereduced;Image:2:Pixels:TiffData:0:UUID:text',
+        'internal;openslide;dicom.SeriesDescription',
+        'internal;openslide;dicom.StudyDescription',
     }:
         if redactList['metadata'].get(key) and redactList['metadata'].get(key)['value']:
             return redactList['metadata'].get(key)['value']
@@ -105,7 +111,8 @@ def determine_format(tileSource):
     """
     metadata = tileSource.getInternalMetadata() or {}
     if tileSource.name == 'openslide':
-        if metadata.get('openslide', {}).get('openslide.vendor') in ('aperio', 'hamamatsu'):
+        if metadata.get('openslide', {}).get('openslide.vendor') in {
+                'aperio', 'hamamatsu', 'dicom'}:
             return metadata['openslide']['openslide.vendor']
     if 'isyntax' in metadata:
         return 'isyntax'
@@ -254,6 +261,24 @@ def get_standard_redactions_format_ometiff(item, tileSource, tiffinfo, title):
     return redactList
 
 
+def get_standard_redactions_format_dicom(item, tileSource, tiffinfo, title):
+    metadata = tileSource.getInternalMetadata() or {}
+    redactList = {
+        'images': {},
+        'metadata': {
+            'internal;openslide;dicom.SeriesDescription':
+                generate_system_redaction_list_entry(title),
+            'internal;openslide;dicom.StudyDescription':
+                generate_system_redaction_list_entry(title),
+        },
+    }
+    for key in {'ContentDate'}:
+        if metadata['openslide'].get('dicom.%s' % key):
+            redactList['metadata']['internal;openslide;dicom.%s' % key] = \
+                metadata['openslide']['dicom.%s' % key][:4] + '0101'
+    return redactList
+
+
 def get_standard_redactions_format_philips(item, tileSource, tiffinfo, title):
     metadata = tileSource.getInternalMetadata() or {}
     redactList = {
@@ -375,7 +400,10 @@ def model_information(tileSource, format):
     :returns: a string of model information or None.
     """
     metadata = tileSource.getInternalMetadata()
-    for key in ('aperio.ScanScope ID', 'hamamatsu.Product'):
+    for key in (
+        'aperio.ScanScope ID', 'hamamatsu.Product',
+        'dicom.ManufacturerModelName', 'dicom.DeviceSerialNumber',
+    ):
         if metadata.get('openslide', {}).get(key):
             return metadata['openslide'][key]
     for key in ('DICOM_MANUFACTURERS_MODEL_NAME', 'DICOM_DEVICE_SERIAL_NUMBER'):
@@ -1233,15 +1261,152 @@ def redact_format_ometiff(item, tempdir, redactList, title, labelImage, macroIma
     outputPath = os.path.join(tempdir, 'ometiff.ome.tiff')
     tifftools.write_tiff(ifds, outputPath)
     logger.info('Redacted ometiff file %s as %s', sourcePath, outputPath)
-
-    """
-    msg = f'FAILED: {outputPath}'
-    import shutil
-    shutil.copy(outputPath, '/tmp/test.ometiff.ome.tiff')
-    raise Exception(msg)
-    """
-
     return outputPath, 'image/tiff'
+
+
+def write_dicom_image(pilImage, imgpath, anypath, imgtype, seriesNum):
+    if pilImage is None:
+        return
+    refds = pydicom.dcmread(imgpath or anypath, stop_before_pixels=True)
+    if imgpath:
+        uid = refds.SOPInstanceUID
+        seriesNum = refds.SeriesNumber
+        os.unlink(imgpath)
+    else:
+        uid = '2.25.' + str(uuid.uuid4().int)
+        imgpath = os.path.join(os.path.dirname(anypath), f'{refds.SOPInstanceUID}.dcm')
+    file_meta = pydicom.FileMetaDataset()
+    file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.77.1.6'
+    file_meta.MediaStorageSOPInstanceUID = uid
+    file_meta.ImplementationClassUID = pydicom.uid.PYDICOM_IMPLEMENTATION_UID
+    file_meta.ImplementationVersionName = f'PYDICOM {pydicom.__version__}'
+    # Uncompressed is pydicom.uid.ExplicitVRLittleEndian
+    file_meta.TransferSyntaxUID = pydicom.uid.JPEGBaseline8Bit
+    ds = pydicom.Dataset()
+    ds.file_meta = file_meta
+    ds.ImageType = ['ORIGINAL', 'PRIMARY', imgtype, 'NONE']
+    ds.SOPClassUID = file_meta.MediaStorageSOPClassUID
+    ds.SOPInstanceUID = uid
+    ds.StudyDate = getattr(refds, 'StudyDate', datetime.datetime.now().strftime('%Y%m%d'))
+    ds.ContentDate = ds.StudyDate
+    ds.StudyTime = getattr(refds, 'StudyTime', datetime.datetime.now().strftime('%H%M%S'))
+    ds.ContentTime = ds.StudyTime
+    ds.Modality = 'SM'
+    ds.VolumetricProperties = 'VOLUME'
+    ds.StudyInstanceUID = refds.StudyInstanceUID
+    ds.SeriesInstanceUID = refds.SeriesInstanceUID
+    ds.SeriesNumber = seriesNum
+    ds.InstanceNumber = getattr(refds, 'InstanceNumber', 1)
+    ds.FrameOfReferenceUID = getattr(refds, 'FrameOfReferenceUID', '2.25.' + str(uuid.uuid4().int))
+    ds.PositionReferenceIndicator = 'SLIDE_CORNER'
+    ds.DimensionOrganizationType = getattr(refds, 'DimensionOrganizationType', 'TILED_FULL')
+    ds.SamplesPerPixel = 3
+    # Uncompressed is ds.PhotometricInterpretation = 'RGB'
+    ds.PhotometricInterpretation = 'YBR_FULL_422'
+    ds.PlanarConfiguration = 0
+    ds.NumberOfFrames = 1
+    ds.Rows = pilImage.height
+    ds.Columns = pilImage.width
+    ds.BitsAllocated = 8
+    ds.BitsStored = 8
+    ds.HighBit = 7
+    ds.PixelRepresentation = 0
+    ds.BurnedInAnnotation = 'YES'
+    ds.LossyImageCompression = '01'
+    ds.LossyImageCompressionMethod = ['ISO_10918_1', 'ISO_10918_1']
+    ds.TotalPixelMatrixColumns = pilImage.width
+    ds.TotalPixelMatrixRows = pilImage.height
+    ds.SpecimenLabelInImage = 'YES'
+    ds.FocusMethod = 'AUTO'
+    ds.ExtendedDepthOfField = 'NO'
+    for prop in {
+        'AcquisitionDateTime', 'ReferringPhysicianName', 'PatientID',
+        'PatientName', 'PatientBirthDate', 'PatientSex', 'StudyID',
+    }:
+        setattr(ds, prop, getattr(refds, prop, ''))
+    for prop in {
+        'Manufacturer', 'ManufacturerModelName', 'DeviceSerialNumber',
+        'SoftwareVersions', 'ContainerIdentifier',
+    }:
+        setattr(ds, prop, getattr(refds, prop, 'Unknown'))
+    for prop in {
+        'FrameOfReferenceUID', 'DimensionOrganizationSequence',
+        'IssuerOfTheContainerIdentifierSequence', 'AcquisitionContextSequence',
+        'SpecimenDescriptionSequence', 'OpticalPathSequence',
+        'NumberOfOpticalPaths', 'TotalPixelMatrixFocalPlanes',
+        'SharedFunctionalGroupsSequence',
+    }:
+        if getattr(refds, prop, None):
+            setattr(ds, prop, getattr(refds, prop))
+    pilImage = pilImage.convert('RGB')
+    # Uncompressed is
+    # pixels = np.array(pilImage)
+    # ds.PixelData = pixels.tobytes()
+    pixels = io.BytesIO()
+    pilImage.save(pixels, format='JPEG', quality=90)
+    ds.PixelData = pydicom.encaps.encapsulate([pixels.getvalue()])
+    ds.is_little_endian = True
+    ds.is_implicit_VR = False
+
+    ds.save_as(imgpath, write_like_original=False)
+    return imgpath
+
+
+def redact_format_dicom(item, tempdir, redactList, title, labelImage, macroImage):
+    """
+    Redact dicom files.
+
+    :param item: the item to redact.
+    :param tempdir: a directory for work files and the final result.
+    :param redactList: the list of redactions (see get_redact_list).
+    :param title: the new title for the item.
+    :param labelImage: a PIL image with a new label image.
+    :param macroImage: a PIL image with a new macro image.  None to keep or
+        redact the current macro image.
+    :returns: (filepath, mimetype) The redacted filepath in the tempdir and
+        its mimetype.
+    """
+    files = []
+    for file in Item().childFiles(item):
+        files.append(File().getLocalFilePath(file))
+    redactDict = {k.split('internal;openslide;dicom.', 1)[-1]: v['value']
+                  for k, v in redactList['metadata'].items()}
+    labelpath = None
+    macropath = None
+    destfiles = []
+    maxSeriesNum = 0
+    for path in files:
+        # we can't do stop_before_pixels=True, as it wouldn't copy the image
+        ds = pydicom.dcmread(path)
+        destpath = os.path.join(tempdir, f'{ds.SOPInstanceUID}.dcm')
+        imgtype = getattr(ds, 'ImageType', None)
+        if 'LABEL' in imgtype:
+            if 'label' in redactList['images']:
+                continue
+            labelpath = destpath
+        elif 'OVERVIEW' in imgtype:
+            if 'macro' in redactList['images']:
+                continue
+            macropath = destpath
+        for element in ds:
+            if element.keyword in redactDict:
+                value = redactDict[element.keyword]
+                if value is not None and value != '':
+                    element.value = value
+                else:
+                    del ds[element.tag]
+        ds.save_as(destpath)
+        destfiles.append(destpath)
+        maxSeriesNum = max(maxSeriesNum, ds.SeriesNumber)
+    if labelImage:
+        path = write_dicom_image(labelImage, labelpath, destfiles[0], 'LABEL', maxSeriesNum + 1)
+        if path and path not in destfiles:
+            destfiles.append(path)
+    if macroImage:
+        path = write_dicom_image(macroImage, macropath, destfiles[0], 'OVERVIEW', maxSeriesNum + 2)
+        if path and path not in destfiles:
+            destfiles.append(path)
+    return destfiles, 'application/dicom'
 
 
 PhilipsTagElements = {  # Group, Element, Format
@@ -1808,7 +1973,7 @@ def get_text_from_associated_image(tile_source, label, reader):
         if rotate is not None:
             rotated_image = associated_image.transpose(rotate)
         text_results = reader.readtext(
-            numpy.asarray(associated_image if rotate is None else rotated_image),
+            np.asarray(associated_image if rotate is None else rotated_image),
             allowlist=get_allow_list(),
             contrast_ths=0.75,
             adjust_contrast=1.0,
@@ -1845,7 +2010,7 @@ def get_image_text(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff', 'dicom']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
@@ -1892,7 +2057,7 @@ def get_image_barcode(item):
     tile_source = ImageItem().tileSource(item)
     image_format = determine_format(tile_source)
     key = 'label'
-    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff']:
+    if image_format in ['aperio', 'philips', 'isyntax', 'ometiff', 'dicom']:
         key = 'label'
     elif image_format == 'hamamatsu':
         key = 'macro'
@@ -1951,6 +2116,8 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     if not parentFolder:
         parentFolder = Folder().createFolder(ingestFolder, tokenId, creator=user)
     newImageName = f'{imageId}{splitallext(item["name"])[-1]}'
+    if newImageName.endswith('.dcm'):
+        newImageName = f'{imageId}{os.path.splitext(item["name"])[-1]}'
     originalName = item['name']
     item['name'] = newImageName
     item = Item().move(item, parentFolder)

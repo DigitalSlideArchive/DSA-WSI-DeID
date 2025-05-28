@@ -36,11 +36,15 @@ defaultConfig = {
     'no_redact_control_keys_format_hamamatsu': {
         r'^internal;openslide;hamamatsu\.SourceLens$': NUMERIC_VALUES,
     },
+    'no_redact_control_keys_format_philips': {},
     'no_redact_control_keys_format_ometiff': {
         r'^internal;omereduced;(ImageLength|ImageWidth)$': NUMERIC_VALUES,
         r'^internal;omereduced;(Series \d+ (AppMag|MPP))$': NUMERIC_VALUES,
     },
-    'no_redact_control_keys_format_philips': {},
+    'no_redact_control_keys_format_dicom': {
+        r'^internal;openslide;dicom\.(Modality|PhotometricInterpretation)': r'',
+        r'^internal;openslide;dicom\.(SeriesNumber)': NUMERIC_VALUES,  # noqa
+    },
     'no_redact_control_keys_format_isyntax': {},
     'hide_metadata_keys': {
         r'^internal;openslide;openslide\.level\[': NUMERIC_VALUES,
@@ -59,6 +63,7 @@ defaultConfig = {
             r'(top|bottom)|stage.center)'
         ): NUMERIC_VALUES,
     },
+    'hide_metadata_keys_format_philips': {},
     'hide_metadata_keys_format_ometiff': {
         r'^internal;omeinfo': '',
         r'^internal;omereduced;(BitsPerSample|SamplesPerPixel|NewSubfileType|NumberOfChannels|Instrument:Objective:NominalMagnification|Image:.*:Pixels:|TileByteCounts|TileOffsets|TileWidth|TileLength)': NUMERIC_VALUES,  # noqa
@@ -73,7 +78,16 @@ defaultConfig = {
         r'^internal;omereduced;schemaLocation': r'^http://www.openmicroscopy.org/Schemas/OME/.*xsd$',  # noqa
         r'^internal;omereduced;Image:\d+:Name': r'^(macro|label) image$',
     },
-    'hide_metadata_keys_format_philips': {},
+    'hide_metadata_keys_format_dicom': {
+        r'^internal;openslide;dicom\.(BitsAllocated|BitsStored|Columns|HighBit|ImageOrientation.*|ImagedVolume.*|InstanceNumber|NumberOfFrames|NumberOfOpticalPaths|PixelRepresentation|PlanarConfiguration|Rows|SamplesPerPixel|TotalPixel.*)': NUMERIC_VALUES,  # noqa
+        r'^internal;openslide;dicom\.(BurnedInAnnotation|ExtendedDepthOfField|SpecimenLabelInImage)': r'^(NO|YES)$',  # noqa
+        r'^internal;openslide;dicom\.(FocusMethod)': r'^(AUTO|NONE)$',
+        r'^internal;openslide;dicom\.(ContainerTypeCodeSequence.*|DimensionOrganization.*|ImageType.*|Implementation.*|LossyImage.*|OpticalPathSequence.*|PositionReferenceIndicator|SharedFunctional.*|SpecimenDescriptionSequence.*|Volumetric.*)': r'',  # noqa
+        r'^internal;openslide;dicom\.(FrameOfReferenceUID|TransferSyntaxUID|MediaStorageSOPClassUID|MediaStorageSOPInstanceUID|SOPClassUID|SOPInstanceUID)': r'^[0-9]+(\.[0-9]+)+$',  # noqa
+        r'^internal;openslide;dicom\..*': r'^(|Unknown)$',
+        r'^internal;openslide;openslide.(associated.*|icc-size|level-count|mpp-x|mpp-y|quickhash-1|vendor)': NUMERIC_VALUES,  # noqa
+        r'^internal;iccprofiles$': r'',
+    },
     'hide_metadata_keys_format_isyntax': {
         r'^internal;(xml;|wsi;|xml$|wsi$)': '',
         r'^internal;isyntax;(is_UFS|is_UFSb|is_UVS|is_philips|isyntax_file_version)$': '',
