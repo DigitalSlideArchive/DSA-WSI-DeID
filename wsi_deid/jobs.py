@@ -81,7 +81,7 @@ def start_ocr_batch_job(job):
             status=JobStatus.ERROR,
         )
         return
-    itemIds = job_args[0]
+    itemIds = job_args
     try:
         for itemId in itemIds:
             get_label_text_for_item(itemId, job)
