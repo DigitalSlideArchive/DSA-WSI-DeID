@@ -127,8 +127,11 @@ def match_images_to_upload_data(imageIdsToItems, uploadInfo, userId, job, report
             item = Item().load(match, force=True)
             oldName = item['name']
             # Do we need to apply the name and folder templates here?
-            # newFolderName = get_image_name(tokenId, uploadInfo[imageId], True)
-            # newNameRoot = get_image_name(tokenId, uploadInfo[imageId])
+            # newFolderName = get_image_name(tokenId, uploadInfo[imageId], item, True)
+            # newNameRoot = get_image_name(tokenId, uploadInfo[imageId], item)
+            # item = refile_image(
+            #     item, user, newFolderName, TokenOnlyPrefix + newNameRoot,
+            #     {TokenOnlyPrefix + newNameRoot: uploadInfo})
             item = refile_image(item, user, tokenId, imageId, uploadInfo)
             remainingImages.discard(item['_id'])
             if uploadInfo.get(imageId, {}).get('fields', None):
@@ -170,8 +173,8 @@ def match_images_via_api(imageIds, userId, job, reportInfo):
         tokenId = result[0]['token_id']
         info = {'fields': result[0].get('tumors')[0]}
         oldName = item['name']
-        newFolderName = get_image_name(tokenId, info, True)
-        newNameRoot = get_image_name(tokenId, info)
+        newFolderName = get_image_name(tokenId, info, item, True)
+        newNameRoot = get_image_name(tokenId, info, item)
         item = refile_image(
             item, user, newFolderName, TokenOnlyPrefix + newNameRoot,
             {TokenOnlyPrefix + newNameRoot: info})

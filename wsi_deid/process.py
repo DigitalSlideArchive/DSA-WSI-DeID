@@ -1352,7 +1352,7 @@ def write_dicom_image(pilImage, imgpath, anypath, imgtype, seriesNum):
     return imgpath
 
 
-def redact_format_dicom(item, tempdir, redactList, title, labelImage, macroImage):
+def redact_format_dicom(item, tempdir, redactList, title, labelImage, macroImage):  # noqa
     """
     Redact dicom files.
 
@@ -1395,6 +1395,8 @@ def redact_format_dicom(item, tempdir, redactList, title, labelImage, macroImage
                     element.value = value
                 else:
                     del ds[element.tag]
+        if destpath not in {labelpath, macropath}:
+            ds.ModifiedImageDescription = get_deid_field(item)
         ds.save_as(destpath)
         destfiles.append(destpath)
         maxSeriesNum = max(maxSeriesNum, ds.SeriesNumber)
@@ -2073,17 +2075,68 @@ def get_image_barcode(item):
     return results
 
 
-def get_image_name(prefix, info, forFolder=False):
+def get_image_name(prefix, info, item, forFolder=False):
     template = config.getConfig(
         'name_template' if not forFolder else 'folder_template') or '{tokenId}'
+    tokens = set(re.findall(r'\{\s*([\w_][\w_0-9]*)(?:[!:][^}]*)?\s*\}', template))
+    ocrdict = parse_ocr_values(item, quiet=True)
+    fields = info['fields'].copy()
+    for k, v in ocrdict.items():
+        if k not in fields:
+            fields[k] = v
+    for k in tokens:
+        if k not in fields:
+            fields[k] = ''
+    fields.pop('tokenId')
     try:
-        name = template.format(tokenId=prefix, **info['fields'])
+        name = template.format(tokenId=prefix, **fields)
         if name != template and name:
             return name
     except Exception:
         logger.exception(
             'Could not fill name template (%r) with tokenId=%s, %r', template, prefix, info)
     return prefix
+
+
+def parse_ocr_values(item, quiet=False):
+    """
+    If an item has a label_ocr meta record and the ocr_parse_values setting
+    exists, check if any of the label data matches the parse expressions, and,
+    if so, add to the deidUpload metadata.
+    """
+    ocrdata = item['meta'].get('label_ocr')
+    if not ocrdata:
+        return {}
+    parselist = Setting().get(PluginSettings.WSI_DEID_BASE + 'ocr_parse_values')
+    if not parselist or not len(parselist):
+        return {}
+    results = {}
+    for parseentry in parselist:
+        key = parseentry['key']
+        if not key or key in results:
+            continue
+        try:
+            if 'regex' in parseentry:
+                matcher = re.compile(parseentry['regex'])
+            else:
+                matcher = re.compile('^' + ''.join(
+                    '[0-9]' if c == '#' else '[A-Za-z]' if c == '@' else
+                    re.escape(c) for c in parseentry['pattern']) + '$')
+        except Exception:
+            if not quiet:
+                logger.debug(f'Failed to generate matcher for {parseentry}')
+            continue
+        confidence = parseentry.get('confidence', 0.9)
+        for label, record in ocrdata.items():
+            if record.get('average_confidence', 0) < confidence:
+                continue
+            if not matcher.match(label):
+                continue
+            if not quiet:
+                logger.info(f'OCR text match for {key}: {label}')
+            results[key] = label
+            break
+    return results
 
 
 def refile_image(item, user, tokenId, imageId, uploadInfo=None):
@@ -2130,6 +2183,10 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
     else:
         itemMetadata['deidUpload'] = {}
     itemMetadata['deidUpload']['InputFileName'] = originalName
+    ocrdict = parse_ocr_values(item)
+    for k, v in ocrdict.items():
+        if k not in itemMetadata['deidUpload']:
+            itemMetadata['deidUpload'][k] = v
     item = Item().setMetadata(item, itemMetadata)
     itemMetadata['redactList'] = get_standard_redactions(item, imageId)
     item = Item().setMetadata(item, itemMetadata)
