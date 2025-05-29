@@ -23,9 +23,15 @@ def test_workflow(server, provisionServer, user):  # noqa
     importFolder = Folder().load(importFolderId, force=True, exc=True)
     finishedFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     finishedFolder = Folder().load(finishedFolderId, force=True, exc=True)
+    unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
+    unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
     assert len(list(Folder().fileList(importFolder))) == 0
     rest.ingestData(user, False)
     assert len(list(Folder().fileList(importFolder))) == 4
+    item = list(Folder().childItems(unfiledFolder))[0]
+    rest.process.refile_image(
+        item, user, '1234AB567003_01', '1234AB567003_01_06', item.get('wsi_uploadInfo'))
+    assert len(list(Folder().fileList(importFolder))) == 14
     for _, file in Folder().fileList(importFolder, user, data=False):
         itemId = file['itemId']
         item = Item().load(itemId, user=user)
@@ -33,9 +39,9 @@ def test_workflow(server, provisionServer, user):  # noqa
         item = Item().load(itemId, user=user)
         rest.move_item(item, user, PluginSettings.HUI_FINISHED_FOLDER)
     assert len(list(Folder().fileList(importFolder))) == 0
-    assert len(list(Folder().fileList(finishedFolder))) == 4
+    assert len(list(Folder().fileList(finishedFolder))) == 14
     rest.exportData(user, False)
-    assert len(os.listdir(exportPath)) == 4
+    assert len(os.listdir(exportPath)) == 5
 
 
 @pytest.mark.plugin('wsi_deid')
@@ -59,9 +65,15 @@ def test_workflow_with_options(server, provisionServer, user):  # noqa
     importFolder = Folder().load(importFolderId, force=True, exc=True)
     finishedFolderId = Setting().get(PluginSettings.HUI_FINISHED_FOLDER)
     finishedFolder = Folder().load(finishedFolderId, force=True, exc=True)
+    unfiledFolderId = Setting().get(PluginSettings.WSI_DEID_UNFILED_FOLDER)
+    unfiledFolder = Folder().load(unfiledFolderId, force=True, exc=True)
     assert len(list(Folder().fileList(importFolder))) == 0
     rest.ingestData(user, False)
     assert len(list(Folder().fileList(importFolder))) == 4
+    item = list(Folder().childItems(unfiledFolder))[0]
+    rest.process.refile_image(
+        item, user, '1234AB567003_01', '1234AB567003_01_06', item.get('wsi_uploadInfo'))
+    assert len(list(Folder().fileList(importFolder))) == 14
     for _, file in Folder().fileList(importFolder, user, data=False):
         itemId = file['itemId']
         item = Item().load(itemId, user=user)
@@ -69,9 +81,9 @@ def test_workflow_with_options(server, provisionServer, user):  # noqa
         item = Item().load(itemId, user=user)
         rest.move_item(item, user, PluginSettings.HUI_FINISHED_FOLDER)
     assert len(list(Folder().fileList(importFolder))) == 0
-    assert len(list(Folder().fileList(finishedFolder))) == 4
+    assert len(list(Folder().fileList(finishedFolder))) == 14
     rest.exportData(user, False)
-    assert len(os.listdir(exportPath)) == 4
+    assert len(os.listdir(exportPath)) == 5
 
 
 @pytest.mark.plugin('wsi_deid')
