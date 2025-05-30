@@ -98,6 +98,7 @@ defaultConfig = {
     ],
     'upload_metadata_add_to_images': None,
     'import_text_association_columns': [],
+    'ocr_parse_values': [],
     'folder_name_field': 'TokenID',
     'image_name_field': 'ImageID',
     'validate_image_id_field': True,
@@ -172,6 +173,21 @@ configSchemas = {
         '$schema': 'http://json-schema.org/schema#',
         'type': 'array',
         'items': {'type': 'string'}},
+    'ocr_parse_values': {
+        '$schema': 'http://json-schema.org/schema#',
+        'type': 'array',
+        'items': {
+            'type': 'object',
+            'properties': {
+                'key': {'type': 'string'},
+                'pattern': {'type': 'string'},
+                'regex': {'type': 'string'},
+                'confidence': {'type': 'number'},
+            },
+            'required': ['key'],
+            'oneOf': [{'required': ['pattern']}, {'required': ['regex']}],
+        },
+    },
     'no_redact_control_keys': {
         '$schema': 'http://json-schema.org/schema#',
         'patternProperties': {

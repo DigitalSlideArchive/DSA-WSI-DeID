@@ -312,6 +312,14 @@ form#g-wsi_deid-form(role="form")
           title='A JSON list of column names, like ["Name", "DOB", "PatientID"]',
           spellcheck="false")
     .form-group
+      label(for="g-wsi-deid-base_ocr_parse_values") Parse Values from OCR
+      p.g-hui-description
+        | This is a JSON list of values to parse from OCR records.  Each record is checked against each parse specification, and metadata is added based on successful parsing.  Each entry has "key", one of "pattern" or "regex", and optionally "confidence".  For example [{"key": "block", "pattern": "#@@", "confidence": 0.9}]
+      input#g-wsi-deid-base_ocr_parse_values.form-control.input-sm(
+          type="text", value=settings['wsi_deid.base_ocr_parse_values'] || '',
+          title='A JSON list of values to parse from OCR records.  Each entry has "key", one of "pattern" or "regex", and optionally "confidence".  For example [{"key": "block", "pattern": "#@@", "confidence": 0.9}]',
+          spellcheck="false")
+    .form-group
       input#g-wsi-deid-base_reimport_if_moved.input-sm(type="checkbox", checked=(settings['wsi_deid.base_reimport_if_moved'] ? "checked" : undefined))
       label(for="g-wsi-deid-base_reimport_if_moved") Reimport Files if Moved
       p.g-hui-description
