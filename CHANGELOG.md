@@ -5,6 +5,7 @@ See the release notes on each release for individual bug fixes; this document do
 ## Version 3.6
 
 - Support for DICOM redaction
+- Parse metadata from label OCR records
 
 ## Version 3.5
 
