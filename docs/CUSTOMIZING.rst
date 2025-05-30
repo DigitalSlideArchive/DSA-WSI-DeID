@@ -356,6 +356,16 @@ If ``InputFileName`` is added to the list of export fields in the ``upload_metad
   import_text_association_columns = ["SurgPathNum", "First_Name", "Last_Name", "Date_of_Birth"]
   ...
 
+Parsing Fields from OCR Data
+++++++++++++++++++++++++++++
+
+Data can be parsed from label data through OCR and used as if it had been read from any other metadata source.  The setting ``ocr_parse_values`` is a JSON list of values to parse from OCR records.
+
+Each record is checked against each parse specification, and metadata is added based on successful parsing.  Each entry has "key", one of "pattern" or "regex", and optionally "confidence".  For example ``[{"key": "block", "pattern": "#@@", "confidence": 0.9}]`` would match any OCR text consisting of a single digit and two letters (upper or lower case Latin alphabet) if the OCR had a confidence level of 0.9 or higher and store it as metadata called "block".  If the confidence is not specified, 0.9 is used.  A pattern matches exactly except ``#`` matches any digit (0-9) and ``@`` matches any letter.  If this isn't sufficient, a regular expression can be used to match instead.
+
+The parsed data can be used in places such as the file name template.
+
+
 Choosing Custom Metadata To Add to Exported Images
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
