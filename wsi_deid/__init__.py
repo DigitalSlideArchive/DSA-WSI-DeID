@@ -1,3 +1,4 @@
+import importlib.metadata
 import json
 import os
 import re
@@ -14,7 +15,6 @@ from girder.models.file import File
 from girder.models.folder import Folder
 from girder.models.setting import Setting
 from girder.utility import setting_utilities
-from pkg_resources import DistributionNotFound, get_distribution
 
 from . import assetstore_import
 from .config import configSchemas
@@ -23,8 +23,8 @@ from .import_export import SftpMode
 from .rest import WSIDeIDResource, addSystemEndpoints
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:
+    __version__ = importlib.metadata.version(__name__)
+except importlib.metadata.PackageNotFoundError:
     # package is not installed
     __version__ = '0.0.0'
 
