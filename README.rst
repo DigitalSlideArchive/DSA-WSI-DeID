@@ -29,5 +29,6 @@ Navigating the Documentation
 * `docs/GLOSSARY.rst <docs/GLOSSARY.rst>`_ contains a glossary of technical terms.
 * `docs/ERROR-TABLES.rst <docs/ERROR-TABLES.rst>`_ contains tables of explanations for error messages that users may encounter.
 * `docs/CUSTOMIZING.rst <docs/CUSTOMIZING.rst>`_ contains details on customizing the workflow for different use cases.
+* `docs/TASKS.rst <docs/TASKS.rst>`_ contains an alternative deployment to allow running external tasks, such as a slide selection algorithm.
 * `docs/APIUSAGE.rst <docs/APIUSAGE.rst>`_ describes how to make API called for perform common workflow actions.
 * `docs/rationale.md <docs/rationale.md>`_ contains a rationale of the SEER WSI DeID pilot project.
