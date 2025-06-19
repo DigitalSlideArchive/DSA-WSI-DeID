@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<executable>
+  <category>WSI DeID</category>
+  <title>Example Slide Selection</title>
+  <description>Select slides from a the approved folder based on some criteria.</description>
+  <version>1.0.0</version>
+  <documentation-url>https://github.com/DigitalSlideArchive/DSA-WSI-DeID</documentation-url>
+  <license>Apache 2.0</license>
+  <contributor>David Manthey (Kitware Inc)</contributor>
+  <parameters>
+    <label>Inputs</label>
+    <description>Input parameters</description>
+    <directory reference="_girder_id">
+      <name>source</name>
+      <longflag>source</longflag>
+      <description>The root folder of images that can be selected.  If unspecified, the Approved folder will be used.</description>
+      <label>Input Folder</label>
+      <channel>input</channel>
+    </directory>
+    <string>
+      <name>destination</name>
+      <longflag>dest</longflag>
+      <label>Destination</label>
+      <description>The Girder resource path where a folder of selected images will be created</description>
+      <default>/collection/Selected Slides/{date:%Y-%m-%d %H:%M:%S}</default>
+    </string>
+    <boolean>
+      <name>satisfactory</name>
+      <longflag>satisfactory</longflag>
+      <label>Satisfactory</label>
+      <description>Only use satisfactory images</description>
+      <default>true</default>
+    </boolean>
+    <integer>
+      <name>tumor</name>
+      <longflag>tumor</longflag>
+      <label>Tumor Images</label>
+      <description>Maximum number of tumor images to include per case</description>
+      <default>3</default>
+    </integer>
+    <integer>
+      <name>nontumor</name>
+      <longflag>nontumor</longflag>
+      <label>Non-Tumor Images</label>
+      <description>Maximum number of non-tumor images to include per case</description>
+      <default>1</default>
+    </integer>
+  </parameters>
+  <parameters advanced="true">
+    <label>Girder API URL and Key</label>
+    <description>A Girder API URL and token for Girder client</description>
+    <string>
+      <name>girderApiUrl</name>
+      <longflag>api-url</longflag>
+      <label>Girder API URL</label>
+      <description>A Girder API URL (e.g., https://girder.example.com:443/api/v1)</description>
+      <default></default>
+    </string>
+    <string>
+      <name>girderToken</name>
+      <longflag>girder-token</longflag>
+      <label>Girder Token</label>
+      <description>A Girder token</description>
+      <default></default>
+    </string>
+  </parameters>
+</executable>

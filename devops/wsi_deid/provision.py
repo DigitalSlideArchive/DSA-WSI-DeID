@@ -1,4 +1,5 @@
 import os
+import sys
 
 import girder.utility.config
 from girder.models import getDbConnection
@@ -91,6 +92,22 @@ WSI DeID Version: %s
             folder['name'] = folderName
             folder['public'] = public
             Folder().save(folder)
+    if os.environ.get('PROVISION') == 'tasks':
+        taskCollName = 'Tasks'
+        if Collection().findOne({'lowerName': taskCollName.lower()}) is None:
+            Collection().createCollection(taskCollName, adminUser)
+        taskCollection = Collection().findOne({'lowerName': taskCollName.lower()})
+        taskFolder = Folder().createFolder(
+            taskCollection, 'Slicer CLI Web Tasks', parentType='collection',
+            public=True, creator=adminUser, reuseExisting=True)
+        Setting().set('slicer_cli_web.task_folder', str(taskFolder['_id']))
+        Setting().set('worker.broker', 'amqp://guest:guest@rabbitmq')
+        Setting().set('worker.backend', 'rpc://guest:guest@rabbitmq')
+        Setting().set('worker.api_url', 'http://girder:8080/api/v1')
+        try:
+            os.chmod('/var/run/docker.sock', 0o777)
+        except Exception:
+            pass
     # Set default import/export paths
     if not Setting().get(PluginSettings.WSI_DEID_IMPORT_PATH):
         Setting().set(PluginSettings.WSI_DEID_IMPORT_PATH, '/import')
@@ -127,6 +144,12 @@ WSI DeID Version: %s
 
 
 if __name__ == '__main__':
+    if os.environ.get('PROVISION') == 'worker':
+        try:
+            os.chmod('/var/run/docker.sock', 0o777)
+        except Exception:
+            pass
+        sys.exit(0)
     # This loads plugins, allowing setting validation
     configureServer()
     provision()

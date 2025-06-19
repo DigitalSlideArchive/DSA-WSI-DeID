@@ -571,7 +571,7 @@ class WSIDeIDResource(Resource):
     @access.public(scope=TokenScope.DATA_READ)
     def getSettings(self):
         results = config.getConfig().copy()
-        for key in {PluginSettings.WSI_DEID_DB_API_URL}:
+        for key in {PluginSettings.WSI_DEID_DB_API_URL, PluginSettings.HUI_FINISHED_FOLDER}:
             results[key] = Setting().get(key)
         return results
 
