@@ -23,4 +23,5 @@ CVE-2024-29415
 CVE-2025-47273
 # HIGH: ubuntu - kernel: RDMA/erdma: Prevent use-after-free in erdma_accept_n
 CVE-2025-22088
-
+# HIGH: ubuntu - kernel: ovl: fix UAF in ovl_dentry_update_reval by moving dp
+CVE-2025-21887
