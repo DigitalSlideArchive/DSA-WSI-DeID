@@ -4,12 +4,6 @@
 # in case someone wants to use the older isyntax reader.  It is not directly
 # exposed
 
-# In ubuntu: these will be addressed by Ubuntu and shouldn't directly affect
-# the way we run
-
 # HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Packa
 CVE-2025-47273
-# HIGH: ubuntu - kernel: RDMA/erdma: Prevent use-after-free in erdma_accept_n
-CVE-2025-22088
-# HIGH: ubuntu - kernel: ovl: fix UAF in ovl_dentry_update_reval by moving dp
-CVE-2025-21887
+
