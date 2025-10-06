@@ -6,4 +6,8 @@
 
 # HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Packa
 CVE-2025-47273
+# HIGH: ubuntu - kernel: posix-cpu-timers: fix race between handle_posix_cpu_
+CVE-2025-38352
+# HIGH: ubuntu - kernel: x86/vmscape: Add conditional IBPB mitigation
+CVE-2025-40300
 
