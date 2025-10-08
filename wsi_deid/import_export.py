@@ -57,6 +57,7 @@ def readExcelData(filepathOrFptr):
     if 'excel' in mimetype or 'openxmlformats' in mimetype:
         reader = pd.read_excel
     df = reader(filepathOrFptr, header=potential_header, dtype=str)
+    df.rename(columns=lambda x: x.strip() if isinstance(x, str) else x, inplace=True)
     rows = df.shape[0]
     while potential_header < rows:
         # When the columns include TokenID, ImageID, this is the Header row.
@@ -70,6 +71,7 @@ def readExcelData(filepathOrFptr):
         if not ispath:
             fptr.seek(0)
         df = reader(filepathOrFptr, header=potential_header, dtype=str)
+        df.rename(columns=lambda x: x.strip() if isinstance(x, str) else x, inplace=True)
     err = (f'Was expecting columns named {folderNameField} and {imageNameField}.'
            if validateImageIDField else
            f'Was expecting a column named {folderNameField}.')
