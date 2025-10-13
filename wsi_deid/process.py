@@ -2179,7 +2179,7 @@ def refile_image(item, user, tokenId, imageId, uploadInfo=None):
         'redactList': redactList,
     }
     if uploadInfo and originalImageId in uploadInfo:
-        itemMetadata['deidUpload'] = uploadInfo[originalImageId]['fields']
+        itemMetadata['deidUpload'] = uploadInfo[originalImageId].get('fields', {})
     else:
         itemMetadata['deidUpload'] = {}
     itemMetadata['deidUpload']['InputFileName'] = originalName
