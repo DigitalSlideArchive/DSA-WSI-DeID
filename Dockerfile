@@ -104,6 +104,7 @@ RUN . ~/.bashrc && \
     npm install 'cross-spawn@^6.0.6' && \
     npm install 'form-data@^2.5.5' && \
     npm install 'http-cache-semantics@^4.1.1' && \
+    npm install 'qs@^6.14.1' && \
     npm install 'semver@^5.7.2' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm && \
     # ip package has an unaddressed HIGH CVE, ip-address is a direct sustitute \
@@ -117,6 +118,7 @@ RUN . ~/.bashrc && \
     npm install 'cross-spawn@^6.0.6' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/request && \
     npm install 'form-data@^2.5.5' && \
+    npm install 'qs@^6.14.1' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/string-width && \
     npm install 'ansi-regex@^3.0.1' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/yargs && \
