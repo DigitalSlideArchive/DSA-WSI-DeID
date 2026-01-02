@@ -6,8 +6,4 @@
 
 # HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Packa
 CVE-2025-47273
-# HIGH: ubuntu - kernel: ksmbd: fix Preauh_HashValue race condition
-CVE-2025-38561
-# HIGH: ubuntu - kernel: io_uring/futex: ensure io_futex_wait() cleans up pro
-CVE-2025-39698
 
