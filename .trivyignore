@@ -4,6 +4,17 @@
 # in case someone wants to use the older isyntax reader.  It is not directly
 # exposed
 
+# The other python issue can only be reached if a developer installs an unsafe
+# tarball via setuptools; it has not direct exposure
+
+# The ubuntu issues cannot be reached
+
+# HIGH: node-pkg - node-tar is a Tar for Node.js. The node-tar library (<= 7.5.
+CVE-2026-23745
 # HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Packa
 CVE-2025-47273
+# HIGH: python-pkg - jaraco.context Has a Path Traversal Vulnerability
+GHSA-58pv-8j8x-9vj2
+# HIGH: ubuntu - kernel: ksmbd: fix use-after-free in session logoff
+CVE-2025-37899
 
