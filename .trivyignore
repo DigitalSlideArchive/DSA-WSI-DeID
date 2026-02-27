@@ -9,16 +9,13 @@
 
 # The ubuntu issues cannot be reached
 
-# HIGH: node-pkg - node-tar: tar: node-tar: Arbitrary file overwrite and symlin
-CVE-2026-23745
-# HIGH: node-pkg - node-tar: tar: node-tar: Arbitrary file overwrite via Unicod
-CVE-2026-23950
-# HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Packa
+# HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Pac
 CVE-2025-47273
-# HIGH: python-pkg - jaraco.context: jaraco.context: Path traversal via malicious
+# HIGH: python-pkg - jaraco.context: jaraco.context: Path traversal via malicio
 CVE-2026-23949
-# HIGH: python-pkg - wheel: wheel: Privilege Escalation or Arbitrary Code Executi
+# HIGH: python-pkg - wheel: wheel: Privilege Escalation or Arbitrary Code Execu
 CVE-2026-24049
-# HIGH: ubuntu - kernel: ksmbd: fix use-after-free in session logoff
-CVE-2025-37899
-
+# HIGH: python-pkg - pillow: Pillow: Out-of-bounds Write via Specially Crafted
+CVE-2026-25990
+# HIGH: ubuntu - kernel: Kernel: Privilege escalation or denial of service in n
+CVE-2026-23111
