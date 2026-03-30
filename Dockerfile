@@ -150,7 +150,7 @@ RUN python -m pip install --no-cache-dir \
     # git+https://github.com/DigitalSlideArchive/DSA-WSI-DeID.git \
     . \
     # girder[mount] adds dependencies to show tiles from S3 assets \
-    girder[mount] \
+    'girder[mount]<5' \
     # Add additional girder plugins here \
     # girder-homepage \
     # Use prebuilt wheels whenever possible \
