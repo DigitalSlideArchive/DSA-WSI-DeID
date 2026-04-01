@@ -769,6 +769,11 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
                 tifftools.Tag.NewSubfileType.value]['data'][0] == 1 else 'macro'
         if key in redactList['images'] or key == 'label' or (key == 'macro' and macroImage):
             ifds.pop(idx)
+        elif idx:
+            if tifftools.Tag.ImageDescription.value in ifd['tags']:
+                newDesc = '|'.join(ifd['tags'][tifftools.Tag.ImageDescription.value][
+                    'data'].split('|', 1)[0:1] + aperioValues[1:])
+                ifd['tags'][tifftools.Tag.ImageDescription.value]['data'] = newDesc
     # Add back label and macro image
     if macroImage:
         redact_format_aperio_add_image(
