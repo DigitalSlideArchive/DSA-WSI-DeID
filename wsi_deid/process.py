@@ -759,7 +759,7 @@ def redact_format_aperio(item, tempdir, redactList, title, labelImage, macroImag
         ifd = ifds[idx]
         key = None
         keyparts = ifd['tags'].get(tifftools.Tag.ImageDescription.value, {}).get(
-            'data', '').split('\n', 1)[-1].strip().split()
+            'data', '').replace('\r', '\n').replace('\n\n', '\n').split('\n', 1)[-1].strip().split()
         if len(keyparts) and keyparts[0].lower() and not keyparts[0][0].isdigit():
             key = keyparts[0].lower()
         if (key is None and ifd['tags'].get(tifftools.Tag.NewSubfileType.value) and
