@@ -17,5 +17,9 @@ CVE-2026-23949
 CVE-2026-24049
 # HIGH: python-pkg - pillow: Pillow: Out-of-bounds Write via Specially Crafted
 CVE-2026-25990
-# HIGH: python-pkg - FITS GZIP decompression bomb in Pillow
+# HIGH: python-pkg - Pillow: Pillow: Denial of Service via decompression bomb i
 CVE-2026-40192
+# HIGH: python-pkg - Pillow is a Python imaging library. From version 10.3.0 to
+CVE-2026-42311
+# HIGH: ubuntu - kernel: crypto: algif_aead - Revert to operating out-of-place
+CVE-2026-31431
