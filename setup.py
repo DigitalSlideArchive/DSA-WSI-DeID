@@ -47,7 +47,7 @@ setup(
         'girder-homepage<5',
         'girder-worker[girder]<5',
         'histomicsui<=1.8.1',
-        'large-image[tiff,ometiff,openslide,memcached,converter]>=1.32.10,<=1.34.1',
+        'large-image[tiff,ometiff,openslide,memcached,converter]>=1.32.10,<1.35',
         'large-image-source-tiff[all]',
         'lxml',
         'openpyxl',
