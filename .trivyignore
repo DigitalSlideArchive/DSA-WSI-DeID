@@ -19,5 +19,349 @@ CVE-2026-24049
 CVE-2026-25990
 # HIGH: python-pkg - Pillow: Pillow: Denial of Service via decompression bomb i
 CVE-2026-40192
-# HIGH: python-pkg - Pillow is a Python imaging library. From version 10.3.0 to
+# HIGH: python-pkg - Pillow: python-pillow: Pillow: Arbitrary code execution vi
 CVE-2026-42311
+# HIGH: ubuntu - kernel: RDMA/siw: Remove direct link to net_device
+CVE-2024-57857
+# HIGH: ubuntu - kernel: drm/nouveau: fix a use-after-free in r535_gsp_rpc_push
+CVE-2025-38187
+# HIGH: ubuntu - kernel: Linux kernel: Denial of Service in perf subsystem due
+CVE-2025-38563
+# HIGH: ubuntu - kernel: ext4: guard against EA inode refcount underflow in xat
+CVE-2025-40190
+# HIGH: ubuntu - kernel: xen: AMD Zen 2 Processors: Privilege escalation via im
+CVE-2025-54518
+# HIGH: ubuntu - kernel: Input: lkkbd - disable pending work before freeing dev
+CVE-2025-71073
+# HIGH: ubuntu - kernel: drm/vkms: Convert to DRM's vblank timer
+CVE-2025-71315
+# HIGH: ubuntu - kernel: dst: fix races in rt6_uncached_list_del() and rt_del_u
+CVE-2026-23004
+# HIGH: ubuntu - kernel: Linux kernel: Denial of Service via unsafe requeue in
+CVE-2026-23066
+# HIGH: ubuntu - kernel: Linux kernel: Use-after-free in bonding module can cau
+CVE-2026-23171
+# HIGH: ubuntu - kernel: ALSA: usb-audio: Prevent excessive number of frames
+CVE-2026-23208
+# HIGH: ubuntu - kernel: ksmbd: add chann_lock to protect ksmbd_chann_list xarr
+CVE-2026-23226
+# HIGH: ubuntu - kernel: drm/exynos: vidi: use ctx->lock to protect struct vidi
+CVE-2026-23227
+# HIGH: ubuntu - kernel: Linux kernel: Denial of service due to a race conditio
+CVE-2026-23240
+# HIGH: ubuntu - kernel: Linux kernel: Denial of Service in mac80211 Wi-Fi due
+CVE-2026-23246
+# HIGH: ubuntu - kernel: Kernel: Denial of Service via DVB DVR ringbuffer reini
+CVE-2026-23253
+# HIGH: ubuntu - kernel: perf: Fix __perf_event_overflow() vs perf_remove_from_
+CVE-2026-23271
+# HIGH: ubuntu - kernel: drm/vmwgfx: Return the correct value in vmw_translate_
+CVE-2026-23317
+# HIGH: ubuntu - kernel: net: sched: avoid qdisc_reset_all_tx_gt() vs dequeue r
+CVE-2026-23340
+# HIGH: ubuntu - kernel: nfc: rawsock: cancel tx_work before socket teardown
+CVE-2026-23372
+# HIGH: ubuntu - kernel: net/sched: act_ife: Fix metalist update behavior
+CVE-2026-23378
+# HIGH: ubuntu - kernel: bpf, arm64: Force 8-byte alignment for JIT buffer to p
+CVE-2026-23383
+# HIGH: ubuntu - kernel: netfilter: xt_CT: drop pending enqueued packets on tem
+CVE-2026-23391
+# HIGH: ubuntu - kernel: bridge: cfm: Fix race condition in peer_mep deletion
+CVE-2026-23393
+# HIGH: ubuntu - kernel: Bluetooth: L2CAP: Fix accepting multiple L2CAP_ECRED_C
+CVE-2026-23395
+# HIGH: ubuntu - kernel: netfilter: bpf: defer hook memory release until rcu re
+CVE-2026-23412
+# HIGH: ubuntu - kernel: clsact: Fix use-after-free in init/destroy rollback as
+CVE-2026-23413
+# HIGH: ubuntu - kernel: net/sched: teql: Fix double-free in teql_master_xmit
+CVE-2026-23449
+# HIGH: ubuntu - kernel: netfilter: ctnetlink: fix use-after-free in ctnetlink_
+CVE-2026-23458
+# HIGH: ubuntu - kernel: NFSD: Hold net reference for the lifetime of /proc/fs/
+CVE-2026-31403
+# HIGH: ubuntu - kernel: media: dvb-net: fix OOB access in ULE extension header
+CVE-2026-31405
+# HIGH: ubuntu - kernel: bpf: Fix unsound scalar forking in maybe_fork_scalars(
+CVE-2026-31413
+# HIGH: ubuntu - kernel: Linux kernel (netfilter): Denial of Service via unsafe
+CVE-2026-31414
+# HIGH: ubuntu - kernel: ksmbd: fix OOB write in QUERY_INFO for compound reques
+CVE-2026-31432
+# HIGH: ubuntu - kernel: ksmbd: fix potencial OOB in get_file_all_info() for co
+CVE-2026-31433
+# HIGH: ubuntu - kernel: ext4: reject mount if bigalloc with s_first_data_block
+CVE-2026-31447
+# HIGH: ubuntu - kernel: ext4: validate p_idx bounds in ext4_ext_correct_indexe
+CVE-2026-31449
+# HIGH: ubuntu - kernel: xfs: save ailp before dropping the AIL lock in push ca
+CVE-2026-31454
+# HIGH: ubuntu - kernel: virtio_net: Fix UAF on dst_ops when IFF_XMIT_DST_RELEA
+CVE-2026-31469
+# HIGH: ubuntu - kernel: media: mc, v4l2: serialize REINIT and REQBUFS with req
+CVE-2026-31473
+# HIGH: ubuntu - kernel: can: isotp: fix tx.buf use-after-free in isotp_sendmsg
+CVE-2026-31474
+# HIGH: ubuntu - kernel: ksmbd: do not expire session on binding failure
+CVE-2026-31476
+# HIGH: ubuntu - kernel: drm/amd/display: Do not skip unrelated mode changes in
+CVE-2026-31488
+# HIGH: ubuntu - kernel: team: fix header_ops type confusion with non-Ethernet
+CVE-2026-31502
+# HIGH: ubuntu - kernel: iavf: fix out-of-bounds writes in iavf_get_ethtool_sta
+CVE-2026-31505
+# HIGH: ubuntu - kernel: net/smc: fix double-free of smc_spd_priv when tee() du
+CVE-2026-31507
+# HIGH: ubuntu - kernel: xfrm: prevent policy_hthresh.work from racing with net
+CVE-2026-31516
+# HIGH: ubuntu - kernel: bpf: Fix undefined behavior in interpreter sdiv/smod f
+CVE-2026-31525
+# HIGH: ubuntu - kernel: perf: Make sure to use pmu_ctx->pmu for groups
+CVE-2026-31528
+# HIGH: ubuntu - kernel: can: raw: fix ro->uniq use-after-free in raw_rcv()
+CVE-2026-31532
+# HIGH: ubuntu - kernel: smb: server: let send_done handle a completion without
+CVE-2026-31536
+# HIGH: ubuntu - kernel: wifi: cfg80211: cancel pmsr_free_wk in cfg80211_pmsr_w
+CVE-2026-31548
+# HIGH: ubuntu - kernel: futex: Require sys_futex_requeue() to have identical f
+CVE-2026-31554
+# HIGH: ubuntu - kernel: drm/amdgpu: Fix fence put before wait in amdgpu_amdkfd
+CVE-2026-31566
+# HIGH: ubuntu - kernel: media: mediatek: vcodec: fix use-after-free in encoder
+CVE-2026-31584
+# HIGH: ubuntu - kernel: mm: blk-cgroup: fix use-after-free in cgwb_release_wor
+CVE-2026-31586
+# HIGH: ubuntu - kernel: smb: client: fix OOB reads parsing symlink error respo
+CVE-2026-31613
+# HIGH: ubuntu - kernel: i2c: s3c24xx: check the size of the SMBUS message befo
+CVE-2026-31627
+# HIGH: ubuntu - kernel: mm: filemap: fix nr_pages calculation overflow in file
+CVE-2026-31648
+# HIGH: ubuntu - kernel: drm/i915/gt: fix refcount underflow in intel_engine_pa
+CVE-2026-31656
+# HIGH: ubuntu - kernel: xfrm: hold dev ref until after transport_finish NF_HOO
+CVE-2026-31663
+# HIGH: ubuntu - kernel: netfilter: nft_ct: fix use-after-free in timeout objec
+CVE-2026-31665
+# HIGH: ubuntu - kernel: af_unix: read UNIX_DIAG_VFS data under unix_state_lock
+CVE-2026-31673
+# HIGH: ubuntu - kernel: openvswitch: defer tunnel netdev_put to RCU release
+CVE-2026-31678
+# HIGH: ubuntu - kernel: net: ipv6: flowlabel: defer exclusive option free unti
+CVE-2026-31680
+# HIGH: ubuntu - kernel: fuse: reject oversized dirents in page cache
+CVE-2026-31694
+# HIGH: ubuntu - kernel: wifi: virt_wifi: remove SET_NETDEV_DEV to avoid use-af
+CVE-2026-31695
+# HIGH: ubuntu - kernel: net/packet: fix TOCTOU race on mmap'd vnet_hdr in tpac
+CVE-2026-31700
+# HIGH: ubuntu - kernel: ksmbd: fix out-of-bounds write in smb2_get_ea() EA ali
+CVE-2026-31705
+# HIGH: ubuntu - kernel: ksmbd: validate num_aces and harden ACE walk in smb_in
+CVE-2026-31706
+# HIGH: ubuntu - kernel: smb: client: fix OOB read in smb2_ioctl_query_info QUE
+CVE-2026-31708
+# HIGH: ubuntu - kernel: smb: client: validate the whole DACL before rewriting
+CVE-2026-31709
+# HIGH: ubuntu - kernel: ksmbd: require minimum ACE size in smb_check_perm_dacl
+CVE-2026-31712
+# HIGH: ubuntu - kernel: fs/ntfs3: validate rec->used in journal-replay file re
+CVE-2026-31716
+# HIGH: ubuntu - kernel: usb: gadget: f_uac1_legacy: validate control request s
+CVE-2026-31720
+# HIGH: ubuntu - kernel: usb: typec: ucsi: validate connector number in ucsi_no
+CVE-2026-31729
+# HIGH: ubuntu - kernel: usb: usbtmc: Flush anchored URBs in usbtmc_release
+CVE-2026-31758
+# HIGH: ubuntu - kernel: usb: ulpi: fix double free in ulpi_register_interface(
+CVE-2026-31759
+# HIGH: ubuntu - kernel: Bluetooth: hci_sync: fix stack buffer overflow in hci_
+CVE-2026-31772
+# HIGH: ubuntu - kernel: wifi: wilc1000: fix u8 overflow in SSID scan buffer si
+CVE-2026-31780
+# HIGH: ubuntu - kernel: bpf: Fix incorrect pruning due to atomic fetch precisi
+CVE-2026-43009
+# HIGH: ubuntu - kernel: bpf: sockmap: Fix use-after-free of sk->sk_socket in s
+CVE-2026-43016
+# HIGH: ubuntu - kernel: Bluetooth: hci_conn: fix potential UAF in set_cig_para
+CVE-2026-43019
+# HIGH: ubuntu - kernel: Bluetooth: SCO: fix race conditions in sco_sock_connec
+CVE-2026-43023
+# HIGH: ubuntu - kernel: bpf: Fix regsafe() for pointers to packet
+CVE-2026-43030
+# HIGH: ubuntu - kernel: HID: multitouch: Check to ensure report responses matc
+CVE-2026-43047
+# HIGH: ubuntu - kernel: HID: logitech-hidpp: Prevent use-after-free on force f
+CVE-2026-43049
+# HIGH: ubuntu - kernel: Bluetooth: MGMT: Fix list corruption and UAF in comman
+CVE-2026-43059
+# HIGH: ubuntu - kernel: netfilter: nft_ct: drop pending enqueued packets on re
+CVE-2026-43060
+# HIGH: ubuntu - kernel: eventpoll: defer struct eventpoll free to RCU grace pe
+CVE-2026-43074
+# HIGH: ubuntu - kernel: ocfs2: fix out-of-bounds write in ocfs2_write_end_inli
+CVE-2026-43075
+# HIGH: ubuntu - kernel: ocfs2: validate inline data i_size during inode read
+CVE-2026-43076
+# HIGH: ubuntu - kernel: net: ioam6: fix OOB and missing lock
+CVE-2026-43083
+# HIGH: ubuntu - kernel: netfilter: nfnetlink_queue: make hash table per queue
+CVE-2026-43084
+# HIGH: ubuntu - kernel: xfrm: Wait for RCU readers during policy netns exit
+CVE-2026-43091
+# HIGH: ubuntu - kernel: xsk: tighten UMEM headroom validation to account for t
+CVE-2026-43093
+# HIGH: ubuntu - kernel: HID: roccat: fix use-after-free in roccat_report_event
+CVE-2026-43111
+# HIGH: ubuntu - kernel: netfilter: ctnetlink: ensure safe access to master con
+CVE-2026-43116
+# HIGH: ubuntu - kernel: RDMA/irdma: Fix double free related to rereg_user_mr
+CVE-2026-43120
+# CRITICAL: ubuntu - kernel: ksmbd: fix signededness bug in smb_direct_prepare_
+CVE-2026-43185
+# HIGH: ubuntu - kernel: tcp: fix potential race in tcp_v6_syn_recv_sock()
+CVE-2026-43198
+# HIGH: ubuntu - kernel: media: chips-media: wave5: Fix Null reference while te
+CVE-2026-43263
+# HIGH: ubuntu - kernel: netfilter: flowtable: strictly check for maximum numbe
+CVE-2026-43329
+# HIGH: ubuntu - kernel: xfs: fix undersized l_iclog_roundoff values
+CVE-2026-43365
+# HIGH: ubuntu - kernel: drm/amdgpu: Fix use-after-free race in VM acquire
+CVE-2026-43370
+# HIGH: ubuntu - kernel: ceph: add a bunch of missing ceph_path_info initialize
+CVE-2026-43408
+# HIGH: ubuntu - kernel: ALSA: pcm: fix use-after-free on linked stream runtime
+CVE-2026-43437
+# HIGH: ubuntu - kernel: bonding: fix type confusion in bond_setup_by_slave()
+CVE-2026-43456
+# HIGH: ubuntu - kernel: ksmbd: validate inherited ACE SID length
+CVE-2026-43490
+# HIGH: ubuntu - kernel: rtmutex: Use waiter::task instead of current in remove
+CVE-2026-43499
+# HIGH: ubuntu - kernel: net/rds: handle zerocopy send cleanup before the messa
+CVE-2026-43502
+# HIGH: ubuntu - kernel: ipvs: skip ipv6 extension headers for csum checks
+CVE-2026-45850
+# HIGH: ubuntu - kernel: ext4: drop extent cache when splitting extent fails
+CVE-2026-45899
+# HIGH: ubuntu - kernel: eventpoll: fix ep_remove struct eventpoll / struct fil
+CVE-2026-46242
+# HIGH: ubuntu - kernel: ibmveth: Disable GSO for packets with small MSS
+CVE-2026-46273
+# HIGH: ubuntu - kernel: io-wq: check that the predecessor is hashed in io_wq_r
+CVE-2026-46274
+# HIGH: ubuntu - kernel: Bluetooth: hci_uart: fix UAFs and race conditions in c
+CVE-2026-46275
+# HIGH: ubuntu - kernel: nvmet: avoid recursive nvmet-wq flush in nvmet_ctrl_fr
+CVE-2026-46304
+# HIGH: ubuntu - kernel: net/sched: act_ct: Only release RCU read lock after ct
+CVE-2026-46319
+# HIGH: ubuntu - kernel: tap: free page on error paths in tap_get_user_xdp()
+CVE-2026-46320
+# HIGH: ubuntu - kernel: Revert "net/smc: Introduce TCP ULP support"
+CVE-2026-46330
+# HIGH: ubuntu - kernel: net/sched: act_pedit: extend the writable skb range pe
+CVE-2026-46331
+# HIGH: ubuntu - kernel: RDMA: During rereg_mr ensure that REREG_ACCESS is comp
+CVE-2026-52908
+# HIGH: ubuntu - kernel: ip6_vti: set netns_immutable on the fallback device
+CVE-2026-52909
+# HIGH: ubuntu - kernel: bpf: Free reuseport cBPF prog after RCU grace period
+CVE-2026-52910
+# HIGH: ubuntu - kernel: ksmbd: scope conn->binding slowpath to bound sessions
+CVE-2026-52911
+# HIGH: ubuntu - kernel: batman-adv: fix fragment reassembly length accounting
+CVE-2026-52914
+# HIGH: ubuntu - kernel: sctp: purge outqueue on stale COOKIE-ECHO handling
+CVE-2026-52924
+# CRITICAL: ubuntu - kernel: libceph: Fix potential out-of-bounds access in cru
+CVE-2026-52955
+# HIGH: ubuntu - kernel: libceph: Fix potential out-of-bounds access in osdmap_
+CVE-2026-52958
+# CRITICAL: ubuntu - kernel: nvmet-tcp: propagate nvmet_tcp_build_pdu_iovec() e
+CVE-2026-52989
+# CRITICAL: ubuntu - kernel: tipc: fix double-free in tipc_buf_append()
+CVE-2026-52993
+# CRITICAL: ubuntu - kernel: netfilter: conntrack: remove sprintf usage
+CVE-2026-53002
+# HIGH: ubuntu - kernel: ipv6: fix possible UAF in icmpv6_rcv()
+CVE-2026-53006
+# HIGH: ubuntu - kernel: bpf, sockmap: Take state lock for af_unix iter
+CVE-2026-53033
+# HIGH: ubuntu - kernel: bpf, arm64: Fix off-by-one in check_imm signed range c
+CVE-2026-53036
+# HIGH: ubuntu - kernel: ocfs2: validate bg_bits during freefrag scan
+CVE-2026-53040
+# HIGH: ubuntu - kernel: ocfs2/dlm: validate qr_numregions in dlm_match_regions
+CVE-2026-53043
+# HIGH: ubuntu - kernel: ksmbd: fix use-after-free from async crypto on Qualcom
+CVE-2026-53046
+# HIGH: ubuntu - kernel: quota: Fix race of dquot_scan_active() with quota deac
+CVE-2026-53050
+# HIGH: ubuntu - kernel: drm/komeda: fix integer overflow in AFBC framebuffer s
+CVE-2026-53068
+# HIGH: ubuntu - kernel: Bluetooth: l2cap: Add missing chan lock in l2cap_ecred
+CVE-2026-53071
+# HIGH: ubuntu - kernel: Bluetooth: fix locking in hci_conn_request_evt() with
+CVE-2026-53072
+# HIGH: ubuntu - kernel: bpf: fix mm lifecycle in open-coded task_vma iterator
+CVE-2026-53085
+# HIGH: ubuntu - kernel: net: bcmgenet: fix racing timeout handler
+CVE-2026-53086
+# HIGH: ubuntu - kernel: bpf: Fix ld_{abs,ind} failure path analysis in subprog
+CVE-2026-53090
+# HIGH: ubuntu - kernel: fs/omfs: reject s_sys_blocksize smaller than OMFS_DIR_
+CVE-2026-53130
+# HIGH: ubuntu - kernel: thunderbolt: Clamp XDomain response data copy to alloc
+CVE-2026-53148
+# HIGH: ubuntu - kernel: rxrpc: Fix the ACK parser to extract the SACK table fo
+CVE-2026-53151
+# HIGH: ubuntu - kernel: misc: fastrpc: fix DMA address corruption due to find_
+CVE-2026-53159
+# HIGH: ubuntu - kernel: IB/isert: Reject login PDUs shorter than ISER_HEADERS_
+CVE-2026-53176
+# HIGH: ubuntu - kernel: staging: rtl8723bs: rtw_mlme: add bounds checks before
+CVE-2026-53178
+# HIGH: ubuntu - kernel: wifi: nl80211: reject oversized EMA RNR lists
+CVE-2026-53182
+# HIGH: ubuntu - kernel: mptcp: allow subflow rcv wnd to shrink
+CVE-2026-53183
+# HIGH: ubuntu - kernel: zram: fix use-after-free in zram_bvec_write_partial()
+CVE-2026-53185
+# HIGH: ubuntu - kernel: RDMA/srp: bound SRP_RSP sense copy by the received len
+CVE-2026-53186
+# HIGH: ubuntu - kernel: USB: serial: io_ti: fix heap overflow in get_manuf_inf
+CVE-2026-53196
+# HIGH: ubuntu - kernel: ksmbd: fix use-after-free of a deferred file_lock on d
+CVE-2026-53198
+# HIGH: ubuntu - kernel: netfilter: nft_tunnel: fix use-after-free on object de
+CVE-2026-53212
+# CRITICAL: ubuntu - kernel: net: mvpp2: refill RX buffers before XDP or skb us
+CVE-2026-53215
+# HIGH: ubuntu - kernel: sctp: validate embedded INIT chunk and address list le
+CVE-2026-53224
+# HIGH: ubuntu - kernel: xfrm: policy: fix use-after-free on inexact bin in xfr
+CVE-2026-53239
+# HIGH: ubuntu - kernel: xsk: cache csum_start/csum_offset to fix TOCTOU in xsk
+CVE-2026-53250
+# HIGH: ubuntu - kernel: Bluetooth: RFCOMM: validate skb length in MCC handlers
+CVE-2026-53254
+# HIGH: ubuntu - kernel: Bluetooth: RFCOMM: hold listener socket in rfcomm_conn
+CVE-2026-53256
+# HIGH: ubuntu - kernel: l2tp: pppol2tp: hold reference to session in pppol2tp_
+CVE-2026-53262
+# HIGH: ubuntu - kernel: net/sched: act_api: use RCU with deferred freeing for
+CVE-2026-53264
+# HIGH: ubuntu - kernel: Linux kernel: netfilter: ebtables SNAT target writes t
+CVE-2026-53266
+# HIGH: ubuntu - kernel: netfilter: synproxy: add mutex to guard hook reference
+CVE-2026-53269
+# HIGH: ubuntu - kernel: ipvs: clear the svc scheduler ptr early on edit
+CVE-2026-53270
+# HIGH: ubuntu - kernel: ipv6: mcast: Fix use-after-free when processing MLD qu
+CVE-2026-53275
+# HIGH: ubuntu - kernel: KVM: x86: Fix shadow paging use-after-free due to unex
+CVE-2026-53359
