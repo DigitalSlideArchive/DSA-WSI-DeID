@@ -1,3 +1,5 @@
+import itertools
+
 import pytest
 
 from wsi_deid import matching_api
@@ -87,7 +89,7 @@ match_dob_cases = [
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
-@pytest.mark.parametrize(('token', 'expected_value'), match_dob_cases)
+@pytest.mark.parametrize(('token', 'expected_value'), match_dob_cases, ids=itertools.count())
 def test_api_search_add_matches_dob(api_search, token, expected_value):
     matches = {key: [] for key in api_search.matchers}
     match_key = 'date_of_birth'
@@ -120,7 +122,7 @@ match_dos_cases = [
 
 @pytest.mark.plugin('wsi_deid')
 @pytest.mark.plugin('large_image')
-@pytest.mark.parametrize(('token', 'expected_value'), match_dos_cases)
+@pytest.mark.parametrize(('token', 'expected_value'), match_dos_cases, ids=itertools.count())
 def test_api_search_add_matches_date_of_service(api_search, token, expected_value):
     matches = {key: [] for key in api_search.matchers}
     match_key = 'date_of_service'

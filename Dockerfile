@@ -177,9 +177,11 @@ RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM
     npm cache clear --force && \
     rm -rf /tmp/npm*
 
-RUN virtualenv /venv3.8 --python 3.8 && \
+RUN pip install --no-cache-dir 'virtualenv<21.5' && \
+    virtualenv /venv3.8 --python 3.8 && \
     /venv3.8/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
-    /venv/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc
+    /venv/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
+    pip install --no-cache-dir 'virtualenv>=21.5'
 
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
 
