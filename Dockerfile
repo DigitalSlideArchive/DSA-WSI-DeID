@@ -183,6 +183,8 @@ RUN pip install --no-cache-dir 'virtualenv<21.5' && \
     /venv/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
     pip install --no-cache-dir 'virtualenv>=21.5'
 
+RUN apt-get remove --auto-remove -y linux-libc-dev
+
 COPY ./devops/wsi_deid/girder.local.conf ./devops/wsi_deid/provision.py ./devops/wsi_deid/homepage.md /conf/
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
