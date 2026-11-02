@@ -8,14 +8,50 @@
 
 # The node issues cannot be reached
 
-# HIGH: node-pkg - brace-expansion: Brace-expansion: Denial of Service due to e
-CVE-2026-13149
-# HIGH: node-pkg - brace-expansion: Brace-expansion: Denial of Service via memo
-CVE-2026-14257
-# HIGH: node-pkg - brace-expansion: brace-expansion: Denial of Service via unbo
-CVE-2026-69152
 # HIGH: python-pkg - setuptools: Path Traversal Vulnerability in setuptools Pac
 CVE-2025-47273
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via infinite loop during
+CVE-2026-112390
+# HIGH: python-pkg - pillow: pillow: Denial of Service via zero-size images in
+CVE-2026-112392
+# CRITICAL: python-pkg - pillow: Pillow: Heap buffer overflow in _tiffWriteProc
+CVE-2026-112393
+# HIGH: python-pkg - pillow: pillow: Denial of Service via out-of-bounds memory
+CVE-2026-112397
+# CRITICAL: python-pkg - pillow: Pillow: Heap buffer overflow in FlashPix (FPX)
+CVE-2026-112398
+# HIGH: python-pkg - pillow: pillow: Denial of service via crafted APNG image
+CVE-2026-112399
+# HIGH: python-pkg - pillow: pillow: Denial of Service via memory exhaustion fr
+CVE-2026-112400
+# HIGH: python-pkg - pillow: pillow: Denial of service via double free during i
+CVE-2026-112402
+# CRITICAL: python-pkg - pillow: Pillow: Heap buffer overflow in ImagingJpegDec
+CVE-2026-112403
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via out-of-bounds read i
+CVE-2026-112404
+# HIGH: python-pkg - pillow: pillow: Denial of Service via infinite loop during
+CVE-2026-112406
+# HIGH: python-pkg - pillow: pillow: Denial of Service via unbounded memory exp
+CVE-2026-112892
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via invalid pointer free
+CVE-2026-112893
+# HIGH: python-pkg - pillow: pillow: Denial of Service via crafted multi-frame
+CVE-2026-112894
+# HIGH: python-pkg - pillow: pillow: Denial of service via crafted PDF during a
+CVE-2026-112895
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via out-of-bounds read i
+CVE-2026-112896
+# HIGH: python-pkg - pillow: pillow: Information disclosure via uninitialized b
+CVE-2026-112897
+# CRITICAL: python-pkg - pillow: Pillow: Argument Injection in Ghostscript call
+CVE-2026-112900
+# HIGH: python-pkg -  Pillow: Memory disclosure and segfault in libtiff encoder
+CVE-2026-112902
+# HIGH: python-pkg - filelock: filelock: Arbitrary file overwrite via insecure
+CVE-2026-112940
+# HIGH: python-pkg - msgpack: msgpack: Denial of Service via memory leak during
+CVE-2026-114613
 # HIGH: python-pkg - jaraco.context: jaraco.context: Path traversal via malicio
 CVE-2026-23949
 # HIGH: python-pkg - wheel: wheel: Privilege Escalation or Arbitrary Code Execu
@@ -46,5 +82,19 @@ CVE-2026-59200
 CVE-2026-59204
 # HIGH: python-pkg - Pillow: Pillow: Controlled native heap corruption in Image
 CVE-2026-59205
+# HIGH: python-pkg - pillow: pillow: Denial of Service via decompression bomb b
+CVE-2026-96637
+# HIGH: python-pkg - pillow: pillow: Denial of Service via duplicate page refer
+CVE-2026-96640
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via negative archive mem
+CVE-2026-96642
+# HIGH: python-pkg - pillow: Pillow: Denial of Service via out-of-bounds read i
+CVE-2026-96644
+# HIGH: python-pkg - pillow: pillow: Arbitrary code execution via JPEG encoder
+CVE-2026-96778
+# HIGH: python-pkg - urllib3: urllib3: Traffic interception via HTTPS proxy TLS
+CVE-2026-97687
+# HIGH: python-pkg - urllib3: urllib3: Denial of Service via unbounded memory a
+CVE-2026-97689
 # HIGH: python-pkg - MessagePack for Python: Out-of-bounds read / crash on Unpa
 GHSA-6v7p-g79w-8964
