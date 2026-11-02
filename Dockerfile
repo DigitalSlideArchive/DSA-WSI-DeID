@@ -99,20 +99,22 @@ RUN . ~/.bashrc && \
     nvm alias default 14 && \
     nvm use default && \
     cd /root/.nvm/versions/node/v14.21.3/lib && \
+    # upgrade packages to avoid security issues \
     npm install 'form-data@^2.5.5' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm && \
+    npm install 'brace-expansion@^1.1.12' && \
     npm install 'cross-spawn@^6.0.6' && \
+    npm install 'decode-uri-component@^0.5.1' && \
     npm install 'form-data@^2.5.5' && \
     npm install 'http-cache-semantics@^4.1.1' && \
     npm install 'minimatch@^3.1.3' && \
     npm install 'qs@^6.14.1' && \
     npm install 'semver@^5.7.2' && \
-    cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm && \
-    # ip package has an unaddressed HIGH CVE, ip-address is a direct sustitute \
+    # ip package has an unaddressed HIGH CVE, ip-address is a direct substitute \
     npm install --no-save ip-address && \
     rm -rf node_modules/ip && \
     mv node_modules/ip-address node_modules/ip && \
-    find / -xdev -name ip -exec grep '"version"' {}/package.json \; && \
+    # update subpackages that need it \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/term-size && \
     npm install 'cross-spawn@^6.0.6' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/execa && \
@@ -128,7 +130,11 @@ RUN . ~/.bashrc && \
     npm install 'http-cache-semantics@^4.1.1' && \
     cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/glob && \
     npm install 'minimatch@^3.1.3' && \
+    cd /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/query-string && \
+    npm install 'decode-uri-component@^0.5.1' && \
+    # We can't actually upgrade tar past 6.x \
     sed -i 's/4\.4\.19/8.0.0/g' /root/.nvm/versions/node/v14.21.3/lib/node_modules/npm/node_modules/tar/package.json && \
+    npm --version && \
     find / -xdev -name ip -exec grep '"version"' {}/package.json \; && \
     rm -rf /root/.nvm/.cache && \
     ln -s $(dirname `which npm`) /usr/local/node
