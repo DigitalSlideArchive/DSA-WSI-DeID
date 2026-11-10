@@ -8,9 +8,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH="/.pyenv/bin:/.pyenv/shims:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHON_VERSIONS="3.11 3.8"
+    PYTHON_VERSIONS="3.11"
 
 RUN apt-get update && \
+apt-get upgrade --yes && \
     # DEBIAN_FRONTEND=noninteractive apt-get install -qy tzdata && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
     software-properties-common \
@@ -183,11 +184,22 @@ RUN NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false NPM_CONFIG_AUDIT_LEVEL=high NPM
     npm cache clear --force && \
     rm -rf /tmp/npm*
 
-RUN pip install --no-cache-dir 'virtualenv<21.5' && \
-    virtualenv /venv3.8 --python 3.8 && \
-    /venv3.8/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
-    /venv/bin/python -m pip install git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
-    pip install --no-cache-dir 'virtualenv>=21.5'
+# Python 3.8 is only needed for the optional, user-supplied Philips iSyntax
+# SDK.  Since it is end-of-life, it is shipped packed rather than installed;
+# install_and_start_isyntax.sh unpacks it on demand.  Packing and removing must
+# happen in this same step so the unpacked files aren't left in a layer.
+RUN pyenv install 3.8 && \
+    PY38=$(pyenv versions --bare | grep '^3\.8') && \
+    python -m venv /tmp/oldvenv && \
+    /tmp/oldvenv/bin/pip install --no-cache-dir 'virtualenv<21.5' && \
+    /tmp/oldvenv/bin/virtualenv /venv3.8 --python "$PYENV_ROOT/versions/$PY38/bin/python" && \
+    /venv3.8/bin/python -m pip install --no-cache-dir git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
+    /venv/bin/python -m pip install --no-cache-dir git+https://github.com/DigitalSlideArchive/large_image_source_isyntax.git rpyc && \
+    find "$PYENV_ROOT/versions/$PY38" /venv3.8 -type d '(' -name '__pycache__' -o -name 'test' -o -name 'tests' ')' -exec rm -rf '{}' + && \
+    find "$PYENV_ROOT/versions/$PY38" -name 'libpython*.a' -delete && \
+    tar -C / -cJf /opt/python3.8.tar.xz ".pyenv/versions/$PY38" venv3.8 && \
+    rm -rf "$PYENV_ROOT/versions/$PY38" /venv3.8 /root/.cache/pip /root/.cache/virtualenv /tmp/* /var/tmp/* && \
+    pyenv rehash
 
 RUN apt-get remove --auto-remove -y linux-libc-dev
 
