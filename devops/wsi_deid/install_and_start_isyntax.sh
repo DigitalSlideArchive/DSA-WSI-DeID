@@ -3,6 +3,11 @@ set -e
 # Try to install the iSyntax library.  If we fail, start any way
 (
   export TERM="${TERM:=xterm}"
+  # Python 3.8 is end-of-life, so the image ships it packed; unpack it once
+  if [ ! -x /venv3.8/bin/python ]; then
+    echo 'Unpacking Python 3.8 environment'
+    tar -C / -xJf /opt/python3.8.tar.xz
+  fi
   # the installer needs Python 3.8 to be the first python it finds
   export PATH="/venv3.8/bin:$PATH"
   echo 'Listing isyntax directory'

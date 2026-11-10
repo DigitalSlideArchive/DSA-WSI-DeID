@@ -322,12 +322,16 @@ Prerequisites
 
 You must have either the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_commercial or the philips-pathologysdk-2.0-L1-ubuntu20_04_py38_research SDK, unzipped and placed in a location that can be mounted as a volume in the docker-compose configuration.
 
+The Philips SDK requires Python 3.8.  Python 3.8 is end-of-life, so the docker image does not have it installed.  Instead, a prebuilt Python 3.8 environment is included as a compressed archive (``/opt/python3.8.tar.xz``).  This means it does not run, and is not reported by vulnerability scanners, unless iSyntax support is enabled.
+
 Installation
 ~~~~~~~~~~~~
 
 Enable the appropriate volume command in girder container to the ``docker-compose.yml`` file to mount the main directory of the unzipped SDK to the internal ``isyntax`` directory.
 
 Switch the girder container start command to ``/wsi_deid/devops/wsi_deid/install_and_start_isyntax.sh``.
+
+When the container starts, this script unpacks the Python 3.8 environment to ``/venv3.8`` (and the interpreter it uses under ``/.pyenv/versions``) if it isn't already present, runs the Philips installer, and then starts the server.
 
 Use ``docker-compose up`` as with other installations.
 
